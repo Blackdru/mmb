@@ -213,23 +213,17 @@ class MatchmakingService {
         return null; // Not enough players (might have been removed by another process)
       }
 
-      // Calculate prize pool (90% of total entry fees, 10% platform fee)
+      // Calculate prize pool (80% of total entry fees, 20% platform fee)
       const totalEntryFees = entryFee * playersToMatch;
-      const prizePool = totalEntryFees * 0.9;
+      const prizePool = totalEntryFees * 0.8;
       logger.info(`Calculated prize pool: ₹${prizePool.toFixed(2)} from total entry fees ₹${totalEntryFees.toFixed(2)}.`);
 
       // Create game and process payments in transaction
       const result = await prisma.$transaction(async (tx) => {
-        // Initialize gameData based on gameType
+        // Initialize gameData for MemoryGame only
         let initialGameData = {};
-        if (gameType === 'CLASSIC_LUDO') {
-          initialGameData = gameService.initializeLudoGameBoard(playersToMatch);
-        } else if (gameType === 'FAST_LUDO') {
-          initialGameData = gameService.initializeLudoGameBoard(playersToMatch);
-        } else if (gameType === 'MEMORY') {
+        if (gameType === 'MEMORY') {
           initialGameData = gameService.initializeMemoryGameBoard();
-        } else if (gameType === 'SNAKES_LADDERS') {
-          initialGameData = gameService.initializeSnakesLaddersGameBoard(playersToMatch);
         }
 
         // Create game

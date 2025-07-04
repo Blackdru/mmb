@@ -21,17 +21,11 @@ const gameStateManager = require('./src/services/gameStateManager');
 const matchmakingService = require('./src/services/matchmakingService');
 const gameService = require('./src/services/gameService');
 const MemoryGameService = require('./src/services/MemoryGame');
-const FastLudoService = require('./src/services/FastLudoService');
-const ClassicLudoService = require('./src/services/ClassicLudoService');
-const SnakesLaddersService = require('./src/services/SnakesLaddersService');
 const { authenticateSocket } = require('./src/middleware/auth');
 const { gameSchemas } = require('./src/validation/schemas');
 
-// Initialize game services
+// Initialize game services - Only Memory Game is implemented
 const memoryGameService = new MemoryGameService(io);
-const fastLudoService = new FastLudoService(io);
-const classicLudoService = new ClassicLudoService(io);
-const snakesLaddersService = new SnakesLaddersService(io);
 
 // Socket authentication
 io.use(authenticateSocket);
@@ -55,11 +49,8 @@ io.on('connection', (socket) => {
   
   logger.info(`📤 Sent connection confirmation to user ${userId} with name: ${userName}`);
 
-  // Setup game handlers
+  // Setup game handlers - Only Memory Game
   memoryGameService.setupSocketHandlers(socket);
-  fastLudoService.setupSocketHandlers(socket);
-  classicLudoService.setupSocketHandlers(socket);
-  snakesLaddersService.setupSocketHandlers(socket);
 
   // Matchmaking events
   socket.on('joinMatchmaking', async (data) => {
@@ -74,17 +65,17 @@ io.on('connection', (socket) => {
 
       const { gameType, maxPlayers, entryFee } = value;
       
-      // Validate game type enum
-      const validGameTypes = ['CLASSIC_LUDO', 'FAST_LUDO', 'MEMORY', 'SNAKES_LADDERS'];
+      // Validate game type enum - Only MEMORY is supported
+      const validGameTypes = ['MEMORY'];
       if (!validGameTypes.includes(gameType)) {
         logger.warn(`Invalid game type ${gameType} for user ${userId}`);
-        return socket.emit('matchmakingError', { message: 'Invalid game type' });
+        return socket.emit('matchmakingError', { message: 'Only Memory Game is available' });
       }
 
-      // Validate maxPlayers
-      if (maxPlayers < 2 || maxPlayers > 4) {
+      // Validate maxPlayers - Memory game is 2 players only
+      if (maxPlayers !== 2) {
         logger.warn(`Invalid maxPlayers ${maxPlayers} for user ${userId}`);
-        return socket.emit('matchmakingError', { message: 'Invalid number of players (2-4 allowed)' });
+        return socket.emit('matchmakingError', { message: 'Memory Game supports 2 players only' });
       }
 
       // Validate entryFee
@@ -152,14 +143,10 @@ io.on('connection', (socket) => {
       socketManager.addUserToGame(userId, gameId);
       socket.join(`game:${gameId}`);
 
-      if (game.type === 'CLASSIC_LUDO') {
-        await classicLudoService.joinRoom(socket, { gameId, playerId: userId, playerName: userName });
-      } else if (game.type === 'FAST_LUDO') {
-        await fastLudoService.joinRoom(socket, { gameId, playerId: userId, playerName: userName });
-      } else if (game.type === 'MEMORY') {
+      if (game.type === 'MEMORY') {
         await memoryGameService.joinRoom(socket, { roomId: gameId, playerId: userId, playerName: userName });
-      } else if (game.type === 'SNAKES_LADDERS') {
-        await snakesLaddersService.joinRoom(socket, { gameId, playerId: userId, playerName: userName });
+      } else {
+        return socket.emit('gameError', { message: 'Unsupported game type' });
       }
 
       socket.emit('gameRoomJoined', { gameId });
@@ -169,47 +156,7 @@ io.on('connection', (socket) => {
     }
   });
 
-  // Game action handlers
-  socket.on('rollDice', async (data) => {
-    try {
-      const { error, value } = gameSchemas.rollDice.validate(data);
-      if (error) {
-        return socket.emit('gameError', { message: error.details[0].message });
-      }
-
-      const { gameId } = value;
-      const validation = gameStateManager.validateGameAction(gameId, userId, 'rollDice');
-      if (!validation.valid) {
-        return socket.emit('gameError', { message: validation.reason });
-      }
-
-      await fastLudoService.rollDice(socket, { gameId, playerId: userId });
-    } catch (err) {
-      logger.error(`Roll dice error for user ${userId}:`, err);
-      socket.emit('gameError', { message: 'Failed to roll dice' });
-    }
-  });
-
-  socket.on('movePiece', async (data) => {
-    try {
-      const { error, value } = gameSchemas.movePiece.validate(data);
-      if (error) {
-        return socket.emit('gameError', { message: error.details[0].message });
-      }
-
-      const { gameId, pieceId } = value;
-      const validation = gameStateManager.validateGameAction(gameId, userId, 'movePiece');
-      if (!validation.valid) {
-        return socket.emit('gameError', { message: validation.reason });
-      }
-
-      await fastLudoService.movePiece(socket, { gameId, playerId: userId, pieceId });
-    } catch (err) {
-      logger.error(`Move piece error for user ${userId}:`, err);
-      socket.emit('gameError', { message: 'Failed to move piece' });
-    }
-  });
-
+  // Game action handlers - Only Memory Game
   socket.on('selectCard', async (data) => {
     try {
       const { error, value } = gameSchemas.selectCard.validate(data);
@@ -245,15 +192,10 @@ io.on('connection', (socket) => {
         return socket.emit('gameError', { message: 'Game not found' });
       }
 
-      if (game.type === 'CLASSIC_LUDO') {
-        await classicLudoService.makeMove(socket, { gameId, playerId: userId, moveData });
-      } else if (game.type === 'FAST_LUDO') {
-        await fastLudoService.makeMove(socket, { gameId, playerId: userId, moveData });
-      } else if (game.type === 'MEMORY') {
+      if (game.type === 'MEMORY') {
         await memoryGameService.makeMove(socket, { gameId, playerId: userId, moveData });
-      } else if (game.type === 'SNAKES_LADDERS') {
-        // Snakes & Ladders uses rollDice instead of makeMove
-        socket.emit('gameError', { message: 'Use rollDice for Snakes & Ladders' });
+      } else {
+        return socket.emit('gameError', { message: 'Unsupported game type' });
       }
     } catch (err) {
       logger.error(`Make move error for user ${userId}:`, err);
@@ -281,14 +223,10 @@ io.on('connection', (socket) => {
 
       // Get game state from appropriate service
       let gameState;
-      if (game.type === 'CLASSIC_LUDO') {
-        gameState = await classicLudoService.getGameState(gameId);
-      } else if (game.type === 'FAST_LUDO') {
-        gameState = await fastLudoService.getGameState(gameId);
-      } else if (game.type === 'MEMORY') {
+      if (game.type === 'MEMORY') {
         gameState = await memoryGameService.getGameState(gameId);
-      } else if (game.type === 'SNAKES_LADDERS') {
-        gameState = await snakesLaddersService.getGameState(gameId);
+      } else {
+        return socket.emit('gameError', { message: 'Unsupported game type' });
       }
 
       socket.emit('gameState', { gameId, state: gameState });
@@ -418,7 +356,7 @@ io.on('connection', (socket) => {
   });
 });
 
-// Matchmaking callback - Fixed syntax errors
+// Matchmaking callback - Only Memory Game
 matchmakingService.setGameCreatedCallback(async (game, matchedUsers) => {
   try {
     logger.info(`Game created: ${game.id} (${game.type}) with ${matchedUsers.length} players`);
@@ -452,28 +390,10 @@ matchmakingService.setGameCreatedCallback(async (game, matchedUsers) => {
             
             socket.join(`game:${game.id}`);
             
-            // Auto-join game room
-            if (game.type === 'CLASSIC_LUDO') {
-              await classicLudoService.joinRoom(socket, { 
-                gameId: game.id, 
-                playerId: user.id, 
-                playerName: user.name 
-              });
-            } else if (game.type === 'FAST_LUDO') {
-              await fastLudoService.joinRoom(socket, { 
-                gameId: game.id, 
-                playerId: user.id, 
-                playerName: user.name 
-              });
-            } else if (game.type === 'MEMORY') {
+            // Auto-join game room - Only Memory Game
+            if (game.type === 'MEMORY') {
               await memoryGameService.joinRoom(socket, { 
                 roomId: game.id, 
-                playerId: user.id, 
-                playerName: user.name 
-              });
-            } else if (game.type === 'SNAKES_LADDERS') {
-              await snakesLaddersService.joinRoom(socket, { 
-                gameId: game.id, 
                 playerId: user.id, 
                 playerName: user.name 
               });
@@ -499,16 +419,9 @@ matchmakingService.setGameCreatedCallback(async (game, matchedUsers) => {
           const socketsInRoom = await io.in(`game:${game.id}`).allSockets();
           logger.info(`Game ${game.id}: ${socketsInRoom.size} sockets in room, ${gameFromDb.participants.length} participants expected`);
           
-          if (game.type === 'CLASSIC_LUDO') {
-            await classicLudoService.startGame({ gameId: game.id });
-          } else if (game.type === 'FAST_LUDO') {
-            await fastLudoService.startGame({ gameId: game.id });
-          } else if (game.type === 'MEMORY') {
+          if (game.type === 'MEMORY') {
             logger.info(`Starting Memory game ${game.id} with ${socketsInRoom.size} sockets in room`);
             await memoryGameService.startGame({ roomId: game.id });
-          } else if (game.type === 'SNAKES_LADDERS') {
-            logger.info(`Starting Snakes & Ladders game ${game.id} with ${socketsInRoom.size} sockets in room`);
-            await snakesLaddersService.startGame({ gameId: game.id });
           }
           logger.info(`Successfully auto-started game ${game.id}`);
         } else {
@@ -623,7 +536,6 @@ app.get('/debug/games', (req, res) => {
     });
   }
 });
-
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -749,7 +661,6 @@ setInterval(() => {
   try {
     socketManager.cleanup();
     gameStateManager.cleanup();
-    snakesLaddersService.cleanup();
     logger.debug('Cleanup completed');
   } catch (error) {
     logger.error('Cleanup error:', error);

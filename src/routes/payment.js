@@ -134,9 +134,9 @@ router.post('/create-deposit-order', authenticateToken, async (req, res) => {
     if (razorpay) {
       try {
         order = await razorpay.orders.create({
-          amount: numericAmount * 100, // amount in paise
+          amount: Math.round(numericAmount * 100), 
           currency: 'INR',
-          receipt: `deposit_${userId}_${Date.now()}`,
+           receipt: `dep_${userId.slice(0, 10)}_${Date.now()}`.slice(0, 40),
           notes: {
             userId,
             type: 'DEPOSIT'
@@ -375,10 +375,69 @@ router.get('/balance', authenticateToken, async (req, res) => {
 
 // Get Razorpay key for frontend
 router.get('/razorpay-key', (req, res) => {
+  console.log('🔑 Razorpay key requested');
+  console.log('RAZORPAY_KEY_ID:', process.env.RAZORPAY_KEY_ID ? 'Set' : 'Not set');
+  console.log('RAZORPAY_KEY_SECRET:', process.env.RAZORPAY_KEY_SECRET ? 'Set' : 'Not set');
+  console.log('Razorpay instance:', razorpay ? 'Initialized' : 'Not initialized');
+  
   res.json({
     success: true,
-    key: process.env.RAZORPAY_KEY_ID
+    key: process.env.RAZORPAY_KEY_ID,
+    isConfigured: !!(process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET),
+    isInitialized: !!razorpay
   });
+});
+
+// Test Razorpay connection
+router.get('/test-razorpay', async (req, res) => {
+  try {
+    console.log('🧪 Testing Razorpay connection...');
+    
+    if (!razorpay) {
+      return res.json({
+        success: false,
+        message: 'Razorpay not initialized',
+        details: {
+          keyId: process.env.RAZORPAY_KEY_ID ? 'Set' : 'Not set',
+          keySecret: process.env.RAZORPAY_KEY_SECRET ? 'Set' : 'Not set'
+        }
+      });
+    }
+    
+    // Try to create a test order
+    const testOrder = await razorpay.orders.create({
+      amount: 100, // ₹1 in paise
+      currency: 'INR',
+      receipt: `test_${Date.now()}`,
+      notes: {
+        test: true
+      }
+    });
+    
+    console.log('✅ Test order created:', testOrder.id);
+    
+    res.json({
+      success: true,
+      message: 'Razorpay is working correctly',
+      testOrderId: testOrder.id,
+      details: {
+        keyId: process.env.RAZORPAY_KEY_ID,
+        isInitialized: true
+      }
+    });
+    
+  } catch (error) {
+    console.error('❌ Razorpay test failed:', error);
+    res.json({
+      success: false,
+      message: 'Razorpay test failed',
+      error: error.message,
+      details: {
+        keyId: process.env.RAZORPAY_KEY_ID ? 'Set' : 'Not set',
+        keySecret: process.env.RAZORPAY_KEY_SECRET ? 'Set' : 'Not set'
+      }
+    });
+  }
 });
 
 // Webhook for payment status updates (for future use)

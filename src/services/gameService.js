@@ -4,45 +4,7 @@ const walletService = require('./walletService');
 
 class GameService {
   constructor() {
-    this.BOARD_SIZE = 52;
-    this.HOME_POSITIONS = {
-      red: 0,
-      blue: 13,
-      green: 26,
-      yellow: 39
-    };
-    this.SAFE_ZONES = [0, 13, 26, 39, 8, 21, 34, 47, 51, 12, 25, 38];
-    this.STAR_CELLS = [1, 9, 14, 22, 27, 35, 40, 48];
-    this.COLORS = ['red', 'blue', 'green', 'yellow'];
-    this.POINTS = {
-      MOVE_OUT_HOME: 1,
-      MOVE: 0,
-      KILL: 5,
-      FINISH_TOKEN: 10,
-      KILLED_PENALTY: -3
-    };
-  }
-
-  initializeLudoGameBoard(maxPlayers) {
-    const board = {};
-    const colors = this.COLORS.slice(0, maxPlayers);
-    
-    colors.forEach(color => {
-      board[color] = {
-        pieces: [
-          { id: 0, position: 'home', homeIndex: 0, boardPosition: -1 },
-          { id: 1, position: 'home', homeIndex: 1, boardPosition: -1 },
-          { id: 2, position: 'home', homeIndex: 2, boardPosition: -1 },
-          { id: 3, position: 'home', homeIndex: 3, boardPosition: -1 }
-        ],
-        piecesInHome: 4,
-        piecesFinished: 0,
-        score: 0
-      };
-    });
-    logger.info(`Ludo game board initialized for ${maxPlayers} players.`);
-    return board;
-  }
+    }
 
   /**
    * Fixed Memory Game Board - 15 pairs (30 cards)
@@ -72,51 +34,6 @@ class GameService {
     }));
     
     logger.info(`Memory game board initialized with ${gameBoard.length} cards (${selectedSymbols.length} pairs).`);
-    return gameBoard;
-  }
-
-  /**
-   * Initialize Snakes & Ladders Game Board
-   */
-  initializeSnakesLaddersGameBoard(maxPlayers) {
-    const PLAYER_COLORS = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A'];
-    const PLAYER_AVATARS = ['🐯', '🐶', '🐼', '🐵'];
-    const SNAKES = {
-      99: 21, 95: 75, 87: 24, 62: 19, 
-      54: 34, 49: 11, 46: 25, 17: 7
-    };
-    const LADDERS = {
-      4: 14, 9: 31, 20: 38, 28: 84, 
-      40: 59, 51: 67, 63: 81, 71: 91
-    };
-
-    const gameBoard = {
-      boardSize: 100,
-      snakes: SNAKES,
-      ladders: LADDERS,
-      players: [],
-      currentTurnIndex: 0,
-      gameStarted: false,
-      lastDiceRoll: null,
-      gameHistory: [],
-      createdAt: new Date()
-    };
-
-    // Initialize players
-    for (let i = 0; i < maxPlayers; i++) {
-      gameBoard.players.push({
-        id: null, // Will be set when players join
-        username: `Player ${i + 1}`,
-        position: 1,
-        color: PLAYER_COLORS[i],
-        avatar: PLAYER_AVATARS[i],
-        isReady: false,
-        score: 0,
-        joinedAt: null
-      });
-    }
-
-    logger.info(`Snakes & Ladders game board initialized for ${maxPlayers} players.`);
     return gameBoard;
   }
 
@@ -176,15 +93,6 @@ class GameService {
         updatedAt: new Date()
       }
     });
-  }
-
-  getLudoPlayerColor(board, playerId) {
-    for (const color of this.COLORS) {
-      if (board[color] && board[color].playerId === playerId) {
-        return color;
-      }
-    }
-    return null;
   }
 
   /**
@@ -286,107 +194,6 @@ class GameService {
     } catch (error) {
       logger.error(`Error updating player score for game ${gameId}, player ${playerId}:`, error);
       throw error;
-    }
-  }
-
-  /**
-   * Apply Ludo piece movement logic
-   */
-  applyLudoMove(piece, diceValue, playerColor, board) {
-    try {
-      // Validate inputs
-      if (!piece || !diceValue || !playerColor || !board) {
-        return { success: false, message: 'Invalid move parameters' };
-      }
-
-      if (diceValue < 1 || diceValue > 6) {
-        return { success: false, message: 'Invalid dice value' };
-      }
-
-      // If piece is at home, can only move out with 6
-      if (piece.position === 'home') {
-        if (diceValue === 6) {
-          // Move piece to starting position
-          const startPosition = this.HOME_POSITIONS[playerColor];
-          piece.position = 'board';
-          piece.boardPosition = startPosition;
-          piece.homeIndex = -1;
-          
-          // Update board state
-          if (board[playerColor]) {
-            board[playerColor].piecesInHome--;
-          }
-          
-          return { 
-            success: true, 
-            message: 'Piece moved out of home',
-            newPosition: startPosition,
-            action: 'MOVE_OUT_HOME'
-          };
-        } else {
-          return { success: false, message: 'Need 6 to move out of home' };
-        }
-      }
-
-      // If piece is on board, calculate new position
-      if (piece.position === 'board') {
-        const currentPos = piece.boardPosition;
-        let newPos = (currentPos + diceValue) % this.BOARD_SIZE;
-        
-        // Check if piece reaches home column (simplified logic)
-        const homeStretch = this.HOME_POSITIONS[playerColor] + 51;
-        if (newPos >= homeStretch) {
-          // Piece is finishing
-          piece.position = 'finished';
-          piece.boardPosition = -1;
-          
-          if (board[playerColor]) {
-            board[playerColor].piecesFinished++;
-          }
-          
-          return { 
-            success: true, 
-            message: 'Piece finished!',
-            newPosition: -1,
-            action: 'FINISH_PIECE'
-          };
-        }
-
-        // Normal move
-        piece.boardPosition = newPos;
-        
-        // Check for captures (simplified - would need more complex logic)
-        let capturedPiece = null;
-        for (const color in board) {
-          if (color !== playerColor) {
-            for (const otherPiece of board[color].pieces) {
-              if (otherPiece.position === 'board' && otherPiece.boardPosition === newPos) {
-                // Capture logic - send opponent piece home
-                if (!this.SAFE_ZONES.includes(newPos)) {
-                  otherPiece.position = 'home';
-                  otherPiece.boardPosition = -1;
-                  otherPiece.homeIndex = board[color].piecesInHome;
-                  board[color].piecesInHome++;
-                  capturedPiece = { color, pieceId: otherPiece.id };
-                }
-              }
-            }
-          }
-        }
-        
-        return { 
-          success: true, 
-          message: capturedPiece ? 'Piece moved and captured opponent' : 'Piece moved',
-          newPosition: newPos,
-          action: capturedPiece ? 'CAPTURE' : 'MOVE',
-          capturedPiece
-        };
-      }
-
-      return { success: false, message: 'Invalid piece position' };
-    } catch (error) {
-      logger.error('Error in applyLudoMove:', error);
-      return { success: false, message: 'Move calculation failed' };
     }
   }
 }

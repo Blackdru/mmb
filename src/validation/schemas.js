@@ -33,21 +33,9 @@ const authSchemas = {
 
 const gameSchemas = {
   joinMatchmaking: Joi.object({
-    gameType: Joi.string().valid('CLASSIC_LUDO', 'FAST_LUDO', 'MEMORY', 'SNAKES_LADDERS').required(),
+    gameType: Joi.string().valid('MEMORY').required(),
     maxPlayers: Joi.number().integer().min(2).max(4).required(),
     entryFee: Joi.number().min(0).max(10000).required() // entryFee can be 0 for free games, max 10k
-  }),
-
-  rollDice: Joi.object({
-    gameId: Joi.string().required()
-  }),
-
-  movePiece: Joi.object({
-    gameId: Joi.string().required(),
-    pieceId: Joi.number().integer().min(0).max(3).required(),
-    // Added explicit diceValue, although gameService should manage this
-    // It's good for validation, but the server should rely on its own state
-    diceValue: Joi.number().integer().min(1).max(6).optional()
   }),
 
   selectCard: Joi.object({ // Schema for Memory Game

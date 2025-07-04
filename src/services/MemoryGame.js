@@ -179,6 +179,16 @@ class MemoryGameService {
       card.position = index;
     });
 
+    // Validation: Ensure each symbol appears exactly twice
+    const symbolCount = {};
+    cards.forEach(card => {
+      symbolCount[card.symbol] = (symbolCount[card.symbol] || 0) + 1;
+    });
+    const invalidSymbols = Object.entries(symbolCount).filter(([sym, count]) => count !== 2);
+    if (invalidSymbols.length > 0) {
+      throw new Error('MemoryGame: Invalid card distribution! Each symbol must appear exactly twice. Distribution: ' + JSON.stringify(symbolCount));
+    }
+
     console.log(`Memory Game: Shuffled cards, first few symbols:`, cards.slice(0, 6).map(c => c.symbol));
 
     return { cards };
@@ -191,9 +201,22 @@ class MemoryGameService {
       const playerId = data.playerId || socket.user?.id;
       const position = parseInt(data.position);
 
-      if (!gameId || !playerId || position === undefined || position < 0) {
+      // Enhanced validation with better error messages
+      if (!gameId || typeof gameId !== 'string') {
         return socket.emit('MEMORY_GAME_ERROR', { 
-          message: 'Invalid card selection parameters.' 
+          message: 'Valid game ID required.' 
+        });
+      }
+
+      if (!playerId || typeof playerId !== 'string') {
+        return socket.emit('MEMORY_GAME_ERROR', { 
+          message: 'Valid player ID required.' 
+        });
+      }
+
+      if (position === undefined || position < 0 || !Number.isInteger(position)) {
+        return socket.emit('MEMORY_GAME_ERROR', { 
+          message: 'Valid card position required.' 
         });
       }
 
@@ -204,6 +227,13 @@ class MemoryGameService {
         });
       }
 
+      // Check game status
+      if (gameState.status !== 'playing') {
+        return socket.emit('MEMORY_GAME_ERROR', { 
+          message: 'Game is not active.' 
+        });
+      }
+
       // Check if it's player's turn
       if (gameState.currentTurnPlayerId !== playerId) {
         return socket.emit('MEMORY_GAME_ERROR', { 
@@ -211,14 +241,14 @@ class MemoryGameService {
         });
       }
 
-      // Check if processing cards
+      // Check if processing cards (prevent rapid clicks)
       if (gameState.processingCards) {
         return socket.emit('MEMORY_GAME_ERROR', { 
           message: 'Please wait, cards are being processed.' 
         });
       }
 
-      // Validate position
+      // Validate position bounds
       if (position >= gameState.board.length) {
         return socket.emit('MEMORY_GAME_ERROR', { 
           message: 'Invalid card position.' 
@@ -248,10 +278,10 @@ class MemoryGameService {
         });
       }
 
-      // Don't clear timer on first card - let it continue running
-      // Timer will be cleared when second card is selected or turn times out
+      // Set processing flag to prevent race conditions
+      gameState.processingCards = true;
 
-      // Flip card
+      // Flip card immediately
       card.isFlipped = true;
       gameState.selectedCards.push({
         position: position,
@@ -259,26 +289,33 @@ class MemoryGameService {
         cardId: card.id
       });
 
-      // Emit card opened
+      // Emit card opened with optimized data
       this.io.to(`game:${gameId}`).emit('MEMORY_CARD_OPENED', {
         position: position,
         symbol: card.symbol,
         playerId: playerId,
-        selectedCount: gameState.selectedCards.length
+        selectedCount: gameState.selectedCards.length,
+        timestamp: Date.now()
       });
 
-      // If 2 cards selected, check for match
+      // If 2 cards selected, process match immediately
       if (gameState.selectedCards.length === 2) {
         // Clear timer now that turn is complete
         this.clearTurnTimer(gameId);
-        gameState.processingCards = true;
-        // Process match immediately for better responsiveness
-        setTimeout(() => this.processMatch(gameId), 500);
+        // Process match with minimal delay for better UX
+        setTimeout(() => this.processMatch(gameId), 100);
+      } else {
+        // Reset processing flag for first card
+        gameState.processingCards = false;
       }
-      // Don't restart timer for second card - let the original timer continue
 
     } catch (error) {
       logger.error(`Memory Game: Select card error:`, error);
+      // Reset processing flag on error
+      const gameState = this.games.get(data.gameId || data.roomId);
+      if (gameState) {
+        gameState.processingCards = false;
+      }
       socket.emit('MEMORY_GAME_ERROR', { message: 'Failed to select card.' });
     }
   }
@@ -530,28 +567,51 @@ class MemoryGameService {
       // Find winner and create leaderboard
       let winnerId = null;
       let highestScore = -1;
-      
-      // Create sorted leaderboard
-      const leaderboard = gameState.players.map(player => ({
-        id: player.id,
-        name: player.name,
-        score: gameState.scores[player.id] || 0
-      })).sort((a, b) => b.score - a.score);
+      let leaderboard = [];
+      // Fetch prizePool only once here
+      const prizePool = (await gameService.getGameById(gameId))?.prizePool || 0;
 
-      // Determine winner
-      if (leaderboard.length > 0) {
-        winnerId = leaderboard[0].id;
-        highestScore = leaderboard[0].score;
+      // If only one player remains, they are the winner
+      if (gameState.players.length === 1) {
+        winnerId = gameState.players[0].id;
+        highestScore = gameState.scores[winnerId] || 0;
+        leaderboard = [
+          {
+            id: winnerId,
+            name: gameState.players[0].name,
+            score: highestScore,
+            winAmount: prizePool
+          }
+        ];
+      } else {
+        // Create sorted leaderboard
+        leaderboard = gameState.players.map(player => ({
+          id: player.id,
+          name: player.name,
+          score: gameState.scores[player.id] || 0
+        })).sort((a, b) => b.score - a.score);
+
+        // Determine winner
+        if (leaderboard.length > 0) {
+          winnerId = leaderboard[0].id;
+          highestScore = leaderboard[0].score;
+        }
+        // Add winAmount field
+        leaderboard = leaderboard.map((player, idx) => ({
+          ...player,
+          winAmount: player.id === winnerId ? prizePool : 0
+        }));
       }
 
       const winner = gameState.players.find(p => p.id === winnerId);
 
       // Get game info for prize pool
-      const game = await gameService.getGameById(gameId);
-      const prizePool = game?.prizePool || 0;
+      // (already fetched above as prizePool)
+      // const game = await gameService.getGameById(gameId);
+      // const prizePool = game?.prizePool || 0;
 
       console.log(`Memory Game: Ending game ${gameId} with prize pool: ${prizePool}`);
-      console.log(`Memory Game: Game object:`, JSON.stringify(game, null, 2));
+      // console.log(`Memory Game: Game object:`, JSON.stringify(game, null, 2));
       console.log(`Memory Game: Leaderboard:`, leaderboard);
       console.log(`Memory Game: Final scores:`, gameState.scores);
 
@@ -716,60 +776,14 @@ class MemoryGameService {
 
       // If it's a 2-player game, automatically declare the other player as winner
       if (gameState.players.length === 2) {
-        const remainingPlayer = gameState.players.find(p => p.id !== playerId);
-        
-        if (remainingPlayer) {
-          // Get game info for prize pool
-          const game = await gameService.getGameById(roomId);
-          const prizePool = game?.prizePool || 0;
-
-          // Update database with winner
-          await gameService.updateGameState(roomId, gameState.board, gameState.currentTurnIndex, 'FINISHED', remainingPlayer.id);
-
-          // Create leaderboard with remaining player as winner
-          const leaderboard = [
-            {
-              id: remainingPlayer.id,
-              name: remainingPlayer.name,
-              score: gameState.scores[remainingPlayer.id] || 0
-            },
-            {
-              id: playerId,
-              name: leavingPlayer.name,
-              score: gameState.scores[playerId] || 0
-            }
-          ];
-
-          // Emit game end with winner
-          this.io.to(`game:${roomId}`).emit('MEMORY_GAME_ENDED', {
-            winner: remainingPlayer,
-            winnerId: remainingPlayer.id,
-            finalScores: gameState.scores,
-            players: gameState.players,
-            prizePool: prizePool,
-            leaderboard: leaderboard,
-            totalPlayers: gameState.players.length,
-            gameStats: {
-              totalPairs: gameState.totalPairs,
-              matchedPairs: gameState.matchedPairs,
-              winnerScore: gameState.scores[remainingPlayer.id] || 0
-            },
-            reason: `${leavingPlayer.name} ${reason} the game`
-          });
-
-          // Process winnings only if there's a valid winner
-          if (remainingPlayer && remainingPlayer.id) {
-            this.safeProcessWinnings(roomId, remainingPlayer.id).catch(err => {
-              logger.error('Failed to process game winnings:', err);
-            });
-          }
-
-          // Clean up
-          this.games.delete(roomId);
-          this.processedWinnings.delete(roomId); // Clean up processed winnings tracking
-
-          logger.info(`Memory Game: Game ${roomId} ended due to player ${reason}. Winner: ${remainingPlayer.id}`);
-        }
+        // Remove the leaving player BEFORE calling endGame
+        gameState.players = gameState.players.filter(p => p.id !== playerId);
+        delete gameState.scores[playerId];
+        delete gameState.lifelines[playerId];
+        delete gameState.missedTurns[playerId];
+        // Now only the remaining player is in the array
+        await this.endGame(roomId);
+        logger.info(`Memory Game: Game ${roomId} ended due to player ${reason}. Winner: ${gameState.players[0]?.id}`);
       } else {
         // For games with more than 2 players, just remove the player and continue
         gameState.players = gameState.players.filter(p => p.id !== playerId);
