@@ -22,7 +22,7 @@ class MemoryGameService {
     socket.on('disconnect', () => this.handlePlayerDisconnect(socket));
   }
 
-  async safeProcessWinnings(gameId, winnerId) {
+  async safeProcessWinnings(gameId, winnerId, reason = 'game_completed') {
     // Check if winnings have already been processed for this game
     if (this.processedWinnings.has(gameId)) {
       logger.warn(`Winnings already processed for game ${gameId}, skipping duplicate processing`);
@@ -33,8 +33,38 @@ class MemoryGameService {
     this.processedWinnings.add(gameId);
 
     try {
-      await gameService.processGameWinnings(gameId);
-      logger.info(`Successfully processed winnings for game ${gameId}, winner: ${winnerId}`);
+      const game = await gameService.getGameById(gameId);
+      if (!game) {
+        logger.error(`Game ${gameId} not found for winnings processing`);
+        this.processedWinnings.delete(gameId);
+        return;
+      }
+
+      // Handle different end game scenarios
+      if (reason === 'network_issue' || reason === 'server_error') {
+        // Refund all players for network/server issues
+        logger.info(`Refunding all players for game ${gameId} due to ${reason}`);
+        const walletService = require('./walletService');
+        for (const participant of game.participants) {
+          await walletService.creditWallet(
+            participant.userId, 
+            game.entryFee, 
+            'REFUND', 
+            gameId,
+            `Game refund due to ${reason}`
+          );
+        }
+      } else if (winnerId && reason === 'game_completed') {
+        // Only credit winner for legitimate game completion
+        logger.info(`Processing winnings for legitimate game completion: ${gameId}, winner: ${winnerId}`);
+        await gameService.processGameWinnings(gameId);
+      } else if (winnerId && (reason === 'opponent_quit' || reason === 'opponent_eliminated')) {
+        // Credit winner when opponent quits or is eliminated
+        logger.info(`Processing winnings for ${reason}: ${gameId}, winner: ${winnerId}`);
+        await gameService.processGameWinnings(gameId);
+      } else {
+        logger.warn(`No valid winner or reason for game ${gameId}, no winnings processed. Winner: ${winnerId}, Reason: ${reason}`);
+      }
     } catch (error) {
       logger.error(`Failed to process game winnings for game ${gameId}:`, error);
       // Remove from processed set if it failed, so it can be retried
@@ -96,32 +126,33 @@ class MemoryGameService {
 
       console.log(`Memory Game: Starting game ${roomId} with prize pool: ${game.prizePool}`);
       
-      // Emit game started
-      this.io.to(`game:${roomId}`).emit('MEMORY_GAME_STARTED', {
-        gameBoard: initialBoard.map(card => ({
-          id: card.id,
-          position: card.position,
-          isFlipped: false,
-          isMatched: false,
-          symbol: null
-        })),
-        players: players,
-        currentPlayer: players[0],
-        scores: gameState.scores,
-        lifelines: gameState.lifelines,
-        totalPairs: 15,
-        prizePool: game.prizePool || 0
-      });
+      // Emit game started with delay to ensure all clients are ready
+      setTimeout(() => {
+        this.io.to(`game:${roomId}`).emit('MEMORY_GAME_STARTED', {
+          players: players,
+          totalPairs: 15,
+          prizePool: game.prizePool || 0,
+          currentTurn: players[0].id,
+          currentPlayerId: players[0].id,
+          currentPlayerName: players[0].name,
+          gameBoard: initialBoard
+        });
 
-      // Emit initial turn state
-      this.io.to(`game:${roomId}`).emit('MEMORY_GAME_CURRENT_TURN', {
-        currentPlayer: players[0].id,
-        currentPlayerName: players[0].name,
-        players: players
-      });
+        // Emit initial turn state with delay
+        setTimeout(() => {
+          this.io.to(`game:${roomId}`).emit('MEMORY_GAME_CURRENT_TURN', {
+            currentPlayer: players[0].id,
+            currentPlayerId: players[0].id,
+            currentPlayerName: players[0].name,
+            players: players
+          });
 
-      // Start turn timer
-      this.startTurnTimer(roomId);
+          // Start turn timer after ensuring all data is sent
+          setTimeout(() => {
+            this.startTurnTimer(roomId);
+          }, 500);
+        }, 300);
+      }, 200);
 
       logger.info(`Memory Game: Game ${roomId} started successfully with ${players.length} players`);
     } catch (error) {
@@ -289,13 +320,19 @@ class MemoryGameService {
         cardId: card.id
       });
 
-      // Emit card opened with optimized data
+      // Emit card opened with optimized data and game state sync
       this.io.to(`game:${gameId}`).emit('MEMORY_CARD_OPENED', {
         position: position,
         symbol: card.symbol,
         playerId: playerId,
         selectedCount: gameState.selectedCards.length,
-        timestamp: Date.now()
+        timestamp: Date.now(),
+        gameState: {
+          scores: gameState.scores,
+          lifelines: gameState.lifelines,
+          currentTurnPlayerId: gameState.currentTurnPlayerId,
+          matchedPairs: gameState.matchedPairs
+        }
       });
 
       // If 2 cards selected, process match immediately
@@ -565,43 +602,21 @@ class MemoryGameService {
       this.clearTurnTimer(gameId);
 
       // Find winner and create leaderboard
-      let winnerId = null;
-      let highestScore = -1;
-      let leaderboard = [];
-      // Fetch prizePool only once here
       const prizePool = (await gameService.getGameById(gameId))?.prizePool || 0;
-
-      // If only one player remains, they are the winner
-      if (gameState.players.length === 1) {
-        winnerId = gameState.players[0].id;
-        highestScore = gameState.scores[winnerId] || 0;
-        leaderboard = [
-          {
-            id: winnerId,
-            name: gameState.players[0].name,
-            score: highestScore,
-            winAmount: prizePool
-          }
-        ];
-      } else {
-        // Create sorted leaderboard
-        leaderboard = gameState.players.map(player => ({
+      const leaderboard = gameState.players
+        .map(player => ({
           id: player.id,
           name: player.name,
-          score: gameState.scores[player.id] || 0
-        })).sort((a, b) => b.score - a.score);
+          score: gameState.scores[player.id] || 0,
+        }))
+        .sort((a, b) => b.score - a.score);
 
-        // Determine winner
-        if (leaderboard.length > 0) {
-          winnerId = leaderboard[0].id;
-          highestScore = leaderboard[0].score;
-        }
-        // Add winAmount field
-        leaderboard = leaderboard.map((player, idx) => ({
-          ...player,
-          winAmount: player.id === winnerId ? prizePool : 0
-        }));
-      }
+      const winnerId = leaderboard.length > 0 ? leaderboard[0].id : null;
+      const highestScore = leaderboard.length > 0 ? leaderboard[0].score : 0;
+
+      leaderboard.forEach(player => {
+        player.winAmount = player.id === winnerId ? prizePool : 0;
+      });
 
       const winner = gameState.players.find(p => p.id === winnerId);
 
@@ -634,9 +649,15 @@ class MemoryGameService {
         }
       });
 
-      // Process winnings only once (non-blocking)
-      if (winnerId) {
-        this.safeProcessWinnings(gameId, winnerId).catch(err => {
+      // Process winnings only for legitimate game completion
+      if (winnerId && gameState.matchedPairs >= gameState.totalPairs) {
+        // Only credit winner if game was completed normally (all pairs matched)
+        this.safeProcessWinnings(gameId, winnerId, 'game_completed').catch(err => {
+          logger.error('Failed to process game winnings:', err);
+        });
+      } else if (winnerId && gameState.players.length === 1) {
+        // Credit winner if only one player remains (others eliminated/quit)
+        this.safeProcessWinnings(gameId, winnerId, 'opponent_eliminated').catch(err => {
           logger.error('Failed to process game winnings:', err);
         });
       }
@@ -701,23 +722,18 @@ class MemoryGameService {
       
       // Send current state to joining player
       socket.emit('MEMORY_CURRENT_STATE', {
-        gameBoard: gameState.board.map(card => ({
+        board: gameState.board.map(card => ({
           id: card.id,
-          position: card.position,
           isFlipped: card.isFlipped,
           isMatched: card.isMatched,
-          symbol: card.isFlipped || card.isMatched ? card.symbol : null
+          symbol: card.isFlipped || card.isMatched ? card.symbol : null,
         })),
         players: gameState.players,
-        currentPlayer: gameState.players.find(p => p.id === gameState.currentTurnPlayerId),
+        currentPlayerId: gameState.currentTurnPlayerId,
         scores: gameState.scores,
         lifelines: gameState.lifelines,
         matchedPairs: gameState.matchedPairs,
-        totalPairs: gameState.totalPairs,
         status: gameState.status,
-        prizePool: gameFromDb?.prizePool || 0,
-        selectedCards: gameState.selectedCards || [],
-        processingCards: gameState.processingCards || false
       });
 
       // If player is reconnecting and it's their turn, restart timer
@@ -774,20 +790,55 @@ class MemoryGameService {
       // Clear timers
       this.clearTurnTimer(roomId);
 
-      // If it's a 2-player game, automatically declare the other player as winner
+      // If it's a 2-player game, handle based on reason
       if (gameState.players.length === 2) {
-        // Remove the leaving player BEFORE calling endGame
-        gameState.players = gameState.players.filter(p => p.id !== playerId);
-        delete gameState.scores[playerId];
-        delete gameState.lifelines[playerId];
-        delete gameState.missedTurns[playerId];
-        // Now only the remaining player is in the array
-        await this.endGame(roomId);
-        logger.info(`Memory Game: Game ${roomId} ended due to player ${reason}. Winner: ${gameState.players[0]?.id}`);
+        if (reason === 'disconnected' || reason === 'network_issue') {
+          // For network issues, refund both players
+          logger.info(`Memory Game: Game ${roomId} ended due to network issue, refunding both players`);
+          await this.safeProcessWinnings(roomId, null, 'network_issue');
+          
+          // Notify players about refund
+          this.io.to(`game:${roomId}`).emit('MEMORY_GAME_ENDED', {
+            reason: 'Network issue - both players refunded',
+            leaderboard: gameState.players.map(player => ({
+              id: player.id,
+              name: player.name,
+              score: gameState.scores[player.id] || 0,
+              isWinner: false,
+              winAmount: 0
+            })),
+            prizePool: 0,
+            totalPlayers: 2,
+            gameStats: {
+              totalPairs: gameState.totalPairs,
+              matchedPairs: gameState.matchedPairs,
+              endReason: 'network_issue'
+            }
+          });
+        } else {
+          // Player intentionally left, other player wins
+          const remainingPlayer = gameState.players.find(p => p.id !== playerId);
+          gameState.players = [remainingPlayer];
+          delete gameState.scores[playerId];
+          delete gameState.lifelines[playerId];
+          delete gameState.missedTurns[playerId];
+          
+          // Process winnings for remaining player since opponent quit
+          if (remainingPlayer) {
+            this.safeProcessWinnings(roomId, remainingPlayer.id, 'opponent_quit').catch(err => {
+              logger.error('Failed to process winnings for opponent quit:', err);
+            });
+          }
+          
+          await this.endGame(roomId);
+          logger.info(`Memory Game: Game ${roomId} ended due to player ${reason}. Winner: ${remainingPlayer?.id}`);
+        }
       } else {
         // For games with more than 2 players, just remove the player and continue
         gameState.players = gameState.players.filter(p => p.id !== playerId);
         delete gameState.scores[playerId];
+        delete gameState.lifelines[playerId];
+        delete gameState.missedTurns[playerId];
 
         // If it was the leaving player's turn, move to next player
         if (gameState.currentTurnPlayerId === playerId) {
@@ -801,6 +852,12 @@ class MemoryGameService {
           reason: reason,
           remainingPlayers: gameState.players
         });
+      }
+
+      // Clean up game if no players left
+      if (gameState.players.length === 0) {
+        this.games.delete(roomId);
+        this.processedWinnings.delete(roomId);
       }
     } catch (error) {
       logger.error(`Memory Game: Handle player exit error:`, error);

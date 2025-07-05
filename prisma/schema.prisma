@@ -29,6 +29,7 @@ model User {
   wallet      Wallet?
   transactions Transaction[]
   walletTransactions WalletTransaction[]
+  withdrawalRequests WithdrawalRequest[]
 
   // Gaming
   gameParticipations GameParticipation[]
@@ -89,6 +90,43 @@ model WalletTransaction {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("wallet_transactions")
+}
+
+model WithdrawalRequest {
+  id              String            @id @default(cuid())
+  userId          String            @map("user_id")
+  amount          Decimal           @db.Decimal(10, 2)
+  method          WithdrawalMethod
+  status          WithdrawalStatus  @default(PENDING)
+  
+  // Bank details
+  bankAccountNumber   String?       @map("bank_account_number")
+  bankIfscCode        String?       @map("bank_ifsc_code")
+  bankAccountHolder   String?       @map("bank_account_holder")
+  
+  // UPI details
+  upiId               String?       @map("upi_id")
+  
+  // Crypto details
+  cryptoWalletAddress String?       @map("crypto_wallet_address")
+  cryptoType          String?       @map("crypto_type")
+  
+  // Processing details
+  processedAt         DateTime?     @map("processed_at")
+  processedBy         String?       @map("processed_by")
+  rejectionReason     String?       @map("rejection_reason")
+  transactionId       String?       @map("transaction_id") // Bank/UPI transaction ID
+  
+  // Metadata
+  notes               String?
+  adminNotes          String?       @map("admin_notes")
+  
+  createdAt           DateTime      @default(now()) @map("created_at")
+  updatedAt           DateTime      @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("withdrawal_requests")
 }
 
 model Game {
@@ -187,5 +225,20 @@ enum GameStatus {
   WAITING
   PLAYING
   FINISHED
+  CANCELLED
+}
+
+enum WithdrawalMethod {
+  BANK
+  UPI
+  CRYPTO
+}
+
+enum WithdrawalStatus {
+  PENDING
+  APPROVED
+  PROCESSING
+  COMPLETED
+  REJECTED
   CANCELLED
 }

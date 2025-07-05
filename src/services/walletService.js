@@ -78,6 +78,45 @@ class WalletService {
     }
   }
 
+  async createDepositOrder(userId, amount) {
+    try {
+      const numericAmount = parseFloat(amount);
+      if (isNaN(numericAmount) || numericAmount < 10) {
+        throw new Error('Minimum deposit amount is ₹10');
+      }
+
+      if (!this.razorpay) {
+        throw new Error('Payment gateway not configured');
+      }
+
+      const options = {
+        amount: numericAmount * 100, // Convert to paise
+        currency: 'INR',
+        receipt: `deposit_${userId}_${Date.now()}`,
+      };
+
+      const order = await this.razorpay.orders.create(options);
+      
+      // Create pending transaction
+      await this.createTransaction(
+        userId,
+        'DEPOSIT',
+        numericAmount,
+        'PENDING',
+        `Deposit of ₹${numericAmount}`,
+        order.id
+      );
+
+      return {
+        success: true,
+        order: order
+      };
+    } catch (error) {
+      logger.error(`Create deposit order error for user ${userId}:`, error);
+      throw error;
+    }
+  }
+
   async processDeposit(userId, amount, razorpayOrderId, razorpayPaymentId, razorpaySignature) {
     try {
       // Find pending transaction
@@ -159,19 +198,13 @@ class WalletService {
     }
   }
 
-  async createWithdrawalRequest(userId, amount, bankDetails) {
+  async createWithdrawalRequest(userId, amount, method, details) {
     try {
       const numericAmount = parseFloat(amount);
       if (isNaN(numericAmount) || numericAmount <= 0) {
         throw new Error('Invalid withdrawal amount');
       }
 
-      // Validate bank details
-      if (!bankDetails || !bankDetails.accountNumber || !bankDetails.ifscCode || !bankDetails.accountHolderName) {
-        throw new Error('Complete bank details are required');
-      }
-
-      // Minimum withdrawal amount check
       if (numericAmount < 100) {
         throw new Error('Minimum withdrawal amount is ₹100');
       }
@@ -183,29 +216,59 @@ class WalletService {
         return { success: false, message: 'Insufficient balance' };
       }
 
-      // Create withdrawal transaction and update wallet
+      let withdrawalData = {
+        userId,
+        amount: numericAmount,
+        method: method.toUpperCase(),
+        status: 'PENDING'
+      };
+
+      switch (method.toLowerCase()) {
+        case 'bank':
+          if (!details.accountNumber || !details.ifscCode || !details.accountHolder) {
+            throw new Error('Complete bank details are required');
+          }
+          withdrawalData.bankAccountNumber = details.accountNumber;
+          withdrawalData.bankIfscCode = details.ifscCode;
+          withdrawalData.bankAccountHolder = details.accountHolder;
+          break;
+        case 'upi':
+          if (!details.upiId) {
+            throw new Error('UPI ID is required');
+          }
+          withdrawalData.upiId = details.upiId;
+          break;
+        case 'crypto':
+          if (!details.walletAddress || !details.cryptoType) {
+            throw new Error('Crypto wallet address and type are required');
+          }
+          withdrawalData.cryptoWalletAddress = details.walletAddress;
+          withdrawalData.cryptoType = details.cryptoType;
+          break;
+        default:
+          throw new Error('Invalid withdrawal method');
+      }
+
       const result = await prisma.$transaction(async (tx) => {
-        // Create withdrawal transaction
+        const withdrawalRequest = await tx.withdrawalRequest.create({
+          data: withdrawalData
+        });
+
         const transaction = await tx.transaction.create({
           data: {
             userId,
             type: 'WITHDRAWAL',
             amount: numericAmount,
             status: 'PENDING',
-            description: `Wallet withdrawal of ₹${numericAmount} to A/C: ${bankDetails.accountNumber.slice(-4)}, IFSC: ${bankDetails.ifscCode}`,
+            description: `Withdrawal request of ₹${numericAmount} via ${method.toUpperCase()}`,
             metadata: {
-              bankDetails: {
-                accountNumber: bankDetails.accountNumber,
-                ifscCode: bankDetails.ifscCode,
-                accountHolderName: bankDetails.accountHolderName,
-                bankName: bankDetails.bankName || 'Not specified'
-              },
+              withdrawalRequestId: withdrawalRequest.id,
+              method: method,
               requestedAt: new Date().toISOString()
             }
           }
         });
 
-        // Deduct from wallet (hold the amount)
         const updatedWallet = await tx.wallet.update({
           where: { userId },
           data: {
@@ -215,80 +278,122 @@ class WalletService {
           }
         });
 
-        return { transaction, wallet: updatedWallet };
+        return { withdrawalRequest, transaction, wallet: updatedWallet };
       });
 
-      // In production, integrate with payout service here
-      // For demo, we'll auto-approve after 30 seconds with proper error handling
-      logger.info(`Withdrawal request created: User ${userId}, Amount: ${numericAmount}, Transaction ID: ${result.transaction.id}. Auto-approving in 30s.`);
-      
-      setTimeout(async () => {
-        try {
-          // Check if transaction still exists and is pending
-          const existingTransaction = await prisma.transaction.findUnique({
-            where: { id: result.transaction.id }
-          });
-
-          if (!existingTransaction || existingTransaction.status !== 'PENDING') {
-            logger.info(`Transaction ${result.transaction.id} no longer pending, skipping auto-approval`);
-            return;
-          }
-
-          const approvedTransaction = await prisma.transaction.update({
-            where: { id: result.transaction.id },
-            data: { 
-              status: 'COMPLETED', 
-              description: 'Withdrawal auto-approved (Demo)',
-              updatedAt: new Date()
-            }
-          });
-          logger.info(`Withdrawal auto-approved: ${approvedTransaction.id} for user ${userId}`);
-          
-          // PRODUCTION: Emit socket event to notify user of approval (implement in production environment)
-          // io.to(`user:${userId}`).emit('withdrawalApproved', { transactionId: result.transaction.id });
-          
-        } catch (err) {
-          logger.error(`Auto-approval error for transaction ${result.transaction.id}:`, err);
-          
-          // Mark transaction as failed and refund the amount
-          try {
-            await prisma.$transaction(async (tx) => {
-              await tx.transaction.update({
-                where: { id: result.transaction.id },
-                data: { 
-                  status: 'FAILED', 
-                  description: 'Withdrawal failed during processing - amount refunded',
-                  updatedAt: new Date()
-                }
-              });
-
-              // Refund the amount back to wallet
-              await tx.wallet.update({
-                where: { userId },
-                data: {
-                  balance: {
-                    increment: numericAmount
-                  }
-                }
-              });
-            });
-            logger.info(`Withdrawal ${result.transaction.id} failed, amount refunded to user ${userId}`);
-          } catch (refundErr) {
-            logger.error(`Critical error: Failed to refund withdrawal ${result.transaction.id}:`, refundErr);
-            // This requires manual intervention
-          }
-        }
-      }, 30000); // 30 seconds delay
+      logger.info(`Withdrawal request created: User ${userId}, Amount: ${numericAmount}, Method: ${method}, Request ID: ${result.withdrawalRequest.id}`);
 
       return {
         success: true,
-        message: 'Withdrawal request created successfully, pending approval',
+        message: 'Withdrawal request submitted successfully',
+        withdrawalRequestId: result.withdrawalRequest.id,
         transactionId: result.transaction.id,
-        estimatedProcessingTime: '30 seconds (Demo mode)'
+        estimatedProcessingTime: '1-3 business days'
       };
     } catch (error) {
       logger.error(`Create withdrawal request error for user ${userId}:`, error);
       return { success: false, message: error.message || 'Failed to create withdrawal request' };
+    }
+  }
+
+  async getWithdrawalRequests(userId, page = 1, limit = 20) {
+    try {
+      const withdrawalRequests = await prisma.withdrawalRequest.findMany({
+        where: { userId },
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit
+      });
+
+      const total = await prisma.withdrawalRequest.count({
+        where: { userId }
+      });
+
+      return {
+        withdrawalRequests: withdrawalRequests.map(req => ({
+          ...req,
+          amount: parseFloat(req.amount)
+        })),
+        pagination: {
+          page,
+          limit,
+          total,
+          pages: Math.ceil(total / limit)
+        }
+      };
+    } catch (error) {
+      logger.error(`Get withdrawal requests error for user ${userId}:`, error);
+      throw new Error('Failed to get withdrawal requests');
+    }
+  }
+
+  async updateWithdrawalStatus(withdrawalRequestId, status, adminNotes = null, transactionId = null) {
+    try {
+      const withdrawalRequest = await prisma.withdrawalRequest.findUnique({
+        where: { id: withdrawalRequestId }
+      });
+
+      if (!withdrawalRequest) {
+        throw new Error('Withdrawal request not found');
+      }
+
+      const updateData = {
+        status: status.toUpperCase(),
+        updatedAt: new Date()
+      };
+
+      if (status.toUpperCase() === 'COMPLETED') {
+        updateData.processedAt = new Date();
+        updateData.transactionId = transactionId;
+      }
+
+      if (adminNotes) {
+        updateData.adminNotes = adminNotes;
+      }
+
+      // Update withdrawal request
+      const updatedRequest = await prisma.$transaction(async (tx) => {
+        const updated = await tx.withdrawalRequest.update({
+          where: { id: withdrawalRequestId },
+          data: updateData
+        });
+
+        // Update corresponding transaction
+        await tx.transaction.updateMany({
+          where: {
+            userId: withdrawalRequest.userId,
+            type: 'WITHDRAWAL',
+            metadata: {
+              path: ['withdrawalRequestId'],
+              equals: withdrawalRequestId
+            }
+          },
+          data: {
+            status: status.toUpperCase(),
+            description: `Withdrawal ${status.toLowerCase()} - ${adminNotes || 'Admin action'}`
+          }
+        });
+
+        // If rejected or cancelled, refund the amount
+        if (['REJECTED', 'CANCELLED'].includes(status.toUpperCase())) {
+          await tx.wallet.update({
+            where: { userId: withdrawalRequest.userId },
+            data: {
+              balance: {
+                increment: parseFloat(withdrawalRequest.amount)
+              }
+            }
+          });
+        }
+
+        return updated;
+      });
+
+      logger.info(`Withdrawal request ${withdrawalRequestId} status updated to ${status}`);
+      return { success: true, withdrawalRequest: updatedRequest };
+    } catch (error) {
+      logger.error(`Update withdrawal status error for request ${withdrawalRequestId}:`, error);
+      throw error;
     }
   }
 

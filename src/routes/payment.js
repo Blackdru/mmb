@@ -277,7 +277,7 @@ router.post('/verify-deposit', authenticateToken, async (req, res) => {
 // Create withdrawal request
 router.post('/create-withdrawal', authenticateToken, async (req, res) => {
   try {
-    const { amount, bankDetails } = req.body;
+    const { amount, method, details } = req.body;
     const userId = req.user.id;
 
     if (!amount || amount < 100) {
@@ -287,10 +287,10 @@ router.post('/create-withdrawal', authenticateToken, async (req, res) => {
       });
     }
 
-    if (!bankDetails || !bankDetails.accountNumber || !bankDetails.ifscCode || !bankDetails.accountHolderName) {
+    if (!method || !details) {
       return res.status(400).json({
         success: false,
-        message: 'Bank details are required for withdrawal'
+        message: 'Withdrawal method and details are required'
       });
     }
 
@@ -304,7 +304,7 @@ router.post('/create-withdrawal', authenticateToken, async (req, res) => {
     }
 
     // Create withdrawal request
-    const result = await walletService.createWithdrawalRequest(userId, amount, bankDetails);
+    const result = await walletService.createWithdrawalRequest(userId, amount, method, details);
 
     if (result.success) {
       res.json({
@@ -369,6 +369,141 @@ router.get('/balance', authenticateToken, async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Failed to fetch balance'
+    });
+  }
+});
+
+// Create order for game entry fees (SECURE - includes Razorpay key)
+router.post('/create-order', authenticateToken, async (req, res) => {
+  try {
+    console.log('🎮 Creating game entry order...');
+    const { amount, playerCount } = req.body;
+    const userId = req.user.id;
+
+    // Validation
+    if (!amount || !playerCount) {
+      return res.status(400).json({
+        success: false,
+        message: 'Amount and player count are required'
+      });
+    }
+
+    const numericAmount = parseFloat(amount);
+    if (isNaN(numericAmount) || numericAmount < 1) {
+      return res.status(400).json({
+        success: false,
+        message: 'Valid amount is required'
+      });
+    }
+
+    // Create Razorpay order
+    let order;
+    if (razorpay) {
+      try {
+        order = await razorpay.orders.create({
+          amount: Math.round(numericAmount * 100), // Convert to paise
+          currency: 'INR',
+          receipt: `game_${userId.slice(0, 10)}_${Date.now()}`.slice(0, 40),
+          notes: {
+            userId,
+            type: 'GAME_ENTRY',
+            playerCount: playerCount.toString()
+          }
+        });
+        console.log('✅ Game entry order created:', order.id);
+      } catch (razorpayError) {
+        console.error('❌ Razorpay order creation failed:', razorpayError);
+        return res.status(500).json({
+          success: false,
+          message: 'Payment gateway error. Please try again.'
+        });
+      }
+    } else {
+      // Test mode
+      order = {
+        id: `order_test_${Date.now()}`,
+        amount: numericAmount * 100,
+        currency: 'INR',
+        receipt: `game_${userId}_${Date.now()}`,
+        status: 'created'
+      };
+    }
+
+    // Return order details with Razorpay key (SECURE)
+    res.json({
+      success: true,
+      order,
+      razorpayKeyId: process.env.RAZORPAY_KEY_ID, // Securely provided from backend
+      message: 'Order created successfully'
+    });
+
+  } catch (error) {
+    console.error('💥 Create game order error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to create order'
+    });
+  }
+});
+
+// Verify game entry payment
+router.post('/verify-payment', authenticateToken, async (req, res) => {
+  try {
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+    const userId = req.user.id;
+
+    if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+      return res.status(400).json({
+        success: false,
+        message: 'Missing payment details'
+      });
+    }
+
+    // Verify signature
+    const expectedSignature = crypto
+      .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
+      .update(razorpay_order_id + '|' + razorpay_payment_id)
+      .digest('hex');
+
+    if (expectedSignature !== razorpay_signature) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid payment signature'
+      });
+    }
+
+    // Get payment details from Razorpay (if not in test mode)
+    if (razorpay) {
+      try {
+        const payment = await razorpay.payments.fetch(razorpay_payment_id);
+        
+        if (payment.status !== 'captured') {
+          return res.status(400).json({
+            success: false,
+            message: 'Payment not captured'
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching payment details:', error);
+        // Continue with verification in test mode
+      }
+    }
+
+    // Payment verified successfully
+    console.log('✅ Game entry payment verified for user:', userId);
+    
+    res.json({
+      success: true,
+      message: 'Payment verified successfully',
+      paymentId: razorpay_payment_id,
+      orderId: razorpay_order_id
+    });
+
+  } catch (error) {
+    console.error('Payment verification error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to verify payment'
     });
   }
 });

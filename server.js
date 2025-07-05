@@ -9,8 +9,8 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: { origin: "*", methods: ["GET", "POST"] },
-  pingTimeout: 30000,
-  pingInterval: 25000,
+  pingTimeout: process.env.SOCKET_PING_TIMEOUT || 60000,
+  pingInterval: process.env.SOCKET_PING_INTERVAL || 25000,
 });
 
 // Services
@@ -450,7 +450,7 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Routes
 app.use('/api/auth', require('./src/routes/auth'));
-app.use('/api/wallet', require('./src/routes/payment')); // Use payment routes for wallet
+app.use('/api/wallet', require('./src/routes/wallet')); // Use dedicated wallet routes
 app.use('/api/matchmaking', require('./src/routes/matchmaking'));
 app.use('/api/game', require('./src/routes/game'));
 app.use('/api/profile', require('./src/routes/profile'));
@@ -505,12 +505,23 @@ app.get('/debug/queue', async (req, res) => {
 
 app.get('/debug/sockets', (req, res) => {
   try {
-    const stats = socketManager.getStats();
+    const connectedSockets = io.sockets.sockets;
+    const socketIds = Array.from(connectedSockets.keys());
+    const sockets = socketIds.map(id => {
+      const socket = connectedSockets.get(id);
+      return {
+        id: socket.id,
+        userId: socket.user?.id,
+        userName: socket.user?.name,
+        connectedAt: socket.handshake.time,
+        address: socket.handshake.address,
+      };
+    });
+
     res.json({
       success: true,
-      socketStats: stats,
-      totalConnections: io.engine.clientsCount,
-      rooms: Array.from(io.sockets.adapter.rooms.keys()).filter(room => room.startsWith('game:') || room.startsWith('user:'))
+      totalConnections: connectedSockets.size,
+      sockets: sockets,
     });
   } catch (error) {
     logger.error('Debug sockets endpoint error:', error);
