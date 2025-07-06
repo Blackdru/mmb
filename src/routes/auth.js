@@ -26,6 +26,13 @@ const verifyOTPSchema = Joi.object({
     .messages({
       'string.length': 'OTP must be 6 digits',
       'string.pattern.base': 'OTP must contain only numbers'
+    }),
+  referralCode: Joi.string()
+    .pattern(/^BZ[A-Z0-9]{4,10}$/)
+    .optional()
+    .allow('')
+    .messages({
+      'string.pattern.base': 'Invalid referral code format. Must start with BZ followed by 4-10 alphanumeric characters.'
     })
 });
 
@@ -87,8 +94,13 @@ router.post('/verify-otp', async (req, res) => {
       });
     }
 
-    const { phoneNumber, otp } = value;
+    const { phoneNumber, otp, referralCode } = value;
     const result = await authService.verifyOTP(phoneNumber, otp);
+    
+    // Process referral if provided and user is new
+    if (referralCode && result.success) {
+      await authService.processReferral(result.user.id, referralCode);
+    }
     
     res.json(result);
   } catch (err) {

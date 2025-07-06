@@ -189,8 +189,8 @@ router.post('/apply-referral', authenticateToken, async (req, res) => {
 // Helper function to generate referral code
 function generateReferralCode() {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  let result = '';
-  for (let i = 0; i < 8; i++) {
+  let result = 'BZ';
+  for (let i = 0; i < 6; i++) {
     result += chars.charAt(Math.floor(Math.random() * chars.length));
   }
   return result;

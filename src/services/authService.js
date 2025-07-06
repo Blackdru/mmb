@@ -16,6 +16,47 @@ class AuthService {
     return Math.floor(100000 + Math.random() * 900000).toString();
   }
 
+  generateReferralCode() {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let result = 'BZ';
+    for (let i = 0; i < 6; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
+  }
+
+  async processReferral(userId, referralCode) {
+    try {
+      if (!referralCode) return;
+      
+      const referrer = await prisma.user.findUnique({
+        where: { referralCode },
+        include: { wallet: true }
+      });
+      
+      if (!referrer || referrer.id === userId) return;
+      
+      const walletService = require('./walletService');
+      
+      // Give bonus to both users (25 rupees each, game-only balance)
+      await walletService.creditWallet(referrer.id, 25, 'REFERRAL_BONUS', null, 'Referral bonus - friend joined');
+      await walletService.creditWallet(userId, 25, 'REFERRAL_SIGNUP_BONUS', null, 'Signup bonus - used referral code');
+      
+      // Update user with referrer info
+      await prisma.user.update({
+        where: { id: userId },
+        data: { 
+          referredBy: referrer.id,
+          referralBonusGiven: true
+        }
+      });
+      
+      logger.info(`Referral processed: ${referrer.id} referred ${userId}`);
+    } catch (error) {
+      logger.error('Process referral error:', error);
+    }
+  }
+
   async sendOTP(phoneNumber) {
     try {
       // Validate phone number format
@@ -159,13 +200,17 @@ class AuthService {
 
       if (!user) {
         logger.info(`Creating new user for ${phoneNumber}`);
+        
+        // Generate unique referral code
+        const referralCode = this.generateReferralCode();
+        
         // Create new user with wallet
         user = await prisma.user.create({
           data: {
             phoneNumber,
             isVerified: true,
-            // Default name/email can be set here or updated later
-            name: `User_${phoneNumber.substring(phoneNumber.length - 4)}`, // Example default name
+            referralCode,
+            name: `User_${phoneNumber.substring(phoneNumber.length - 4)}`,
             wallet: {
               create: {
                 balance: 0
@@ -174,7 +219,7 @@ class AuthService {
           },
           include: { wallet: true }
         });
-        logger.info(`New user created: ${user.id}`);
+        logger.info(`New user created: ${user.id} with referral code: ${referralCode}`);
       } else {
         logger.info(`Updating existing user: ${user.id}`);
         // Update verification status if not already verified

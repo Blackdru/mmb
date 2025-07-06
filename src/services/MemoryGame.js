@@ -2,6 +2,7 @@
 const logger = require('../config/logger');
 const gameService = require('./gameService');
 const prisma = require('../config/database');
+const botService = require('./BotService');
 
 class MemoryGameService {
   constructor(io) {
@@ -121,6 +122,19 @@ class MemoryGameService {
       // Store game instance
       this.games.set(roomId, gameState);
 
+      // Initialize bots for any bot players
+      for (const player of players) {
+        const user = await prisma.user.findUnique({ where: { id: player.id } });
+        if (user && user.isBot) {
+          // Get bot profile from botService
+          const botProfile = botService.botProfiles.find(p => p.id === user.id);
+          if (botProfile) {
+            botService.initializeBotForGame(roomId, player.id, botProfile, initialBoard);
+            logger.info(`🤖 Initialized bot ${botProfile.name} for game ${roomId}`);
+          }
+        }
+      }
+
       // Update database
       await gameService.updateGameState(roomId, initialBoard, 0, 'PLAYING', null);
 
@@ -150,6 +164,11 @@ class MemoryGameService {
           // Start turn timer after ensuring all data is sent
           setTimeout(() => {
             this.startTurnTimer(roomId);
+            
+            // If first player is a bot, handle bot turn
+            if (players[0]) {
+              this.checkAndHandleBotTurn(roomId, players[0].id);
+            }
           }, 500);
         }, 300);
       }, 200);
@@ -320,6 +339,9 @@ class MemoryGameService {
         cardId: card.id
       });
 
+      // Update bot memory if this is a card reveal
+      botService.onCardRevealed(gameId, position, card.symbol);
+
       // Emit card opened with optimized data and game state sync
       this.io.to(`game:${gameId}`).emit('MEMORY_CARD_OPENED', {
         position: position,
@@ -382,6 +404,9 @@ class MemoryGameService {
           logger.error('Failed to update player score:', err);
         });
 
+        // Update bot memory for matched cards
+        botService.onCardsMatched(gameId, [card1.position, card2.position], card1.symbol);
+
         // Emit match event immediately
         this.io.to(`game:${gameId}`).emit('MEMORY_CARDS_MATCHED', {
           positions: [card1.position, card2.position],
@@ -401,11 +426,17 @@ class MemoryGameService {
         gameState.selectedCards = [];
         gameState.processingCards = false;
         this.startTurnTimer(gameId);
+        
+        // Check if current player is a bot for next turn
+        this.checkAndHandleBotTurn(gameId, gameState.currentTurnPlayerId);
 
       } else {
         // No match - flip back immediately and change turn
         gameState.board[card1.position].isFlipped = false;
         gameState.board[card2.position].isFlipped = false;
+        
+        // Update bot memory for mismatched cards
+        botService.onCardsMismatched(gameId, [card1.position, card2.position]);
         
         // Emit mismatch event with immediate flip back
         this.io.to(`game:${gameId}`).emit('MEMORY_CARDS_MISMATCHED', {
@@ -462,6 +493,9 @@ class MemoryGameService {
 
     // Start timer for new player
     this.startTurnTimer(gameId);
+    
+    // Check if new current player is a bot
+    this.checkAndHandleBotTurn(gameId, currentPlayer.id);
   }
 
   startTurnTimer(gameId) {
@@ -665,6 +699,7 @@ class MemoryGameService {
       // Clean up
       this.games.delete(gameId);
       this.processedWinnings.delete(gameId); // Clean up processed winnings tracking
+      this.cleanupGameBots(gameId); // Clean up any bots
 
       logger.info(`Memory Game: Game ${gameId} ended. Winner: ${winnerId} with score: ${highestScore}`);
     } catch (error) {
@@ -862,6 +897,27 @@ class MemoryGameService {
     } catch (error) {
       logger.error(`Memory Game: Handle player exit error:`, error);
     }
+  }
+
+  // Check if current player is a bot and handle bot turn
+  async checkAndHandleBotTurn(gameId, playerId) {
+    try {
+      const user = await prisma.user.findUnique({ where: { id: playerId } });
+      if (user && user.isBot) {
+        logger.info(`🤖 Bot turn detected for ${user.name} in game ${gameId}`);
+        // Handle bot turn with a slight delay to make it feel natural
+        setTimeout(() => {
+          botService.handleBotTurn(gameId, this);
+        }, 1000);
+      }
+    } catch (error) {
+      logger.error(`Error checking bot turn for player ${playerId}:`, error);
+    }
+  }
+
+  // Clean up bots when game ends
+  cleanupGameBots(gameId) {
+    botService.cleanupBot(gameId);
   }
 }
 

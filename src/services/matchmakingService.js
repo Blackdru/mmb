@@ -2,12 +2,14 @@ const prisma = require('../config/database');
 const logger = require('../config/logger');
 const walletService = require('./walletService');
 const gameService = require('./gameService'); // For initializing game board based on game type
+const botService = require('./BotService'); // For bot players
 
 class MatchmakingService {
   constructor() {
     this.matchmakingInterval = null;
     this.onGameCreatedCallback = null; // Callback to notify server.js
     this.initialized = false;
+    this.botDeploymentTimers = new Map(); // Track bot deployment timers for each queue
   }
 
   async initialize() {
@@ -43,6 +45,13 @@ class MatchmakingService {
       this.matchmakingInterval = null;
       logger.info('Matchmaking interval stopped.');
     }
+    
+    // Clear all bot deployment timers
+    for (const [queueKey, timer] of this.botDeploymentTimers.entries()) {
+      clearTimeout(timer);
+      logger.info(`Cleared bot deployment timer for queue: ${queueKey}`);
+    }
+    this.botDeploymentTimers.clear();
   }
 
   setGameCreatedCallback(callback) {
@@ -88,6 +97,9 @@ class MatchmakingService {
       });
 
       logger.info(`✅ User ${userId} successfully joined matchmaking queue (ID: ${queueEntry.id}) for ${gameType} ${maxPlayers}P game.`);
+
+      // Start bot deployment timer for this queue configuration
+      this.startBotDeploymentTimer(gameType, maxPlayers, entryFee);
 
       return {
         success: true,
@@ -290,6 +302,9 @@ class MatchmakingService {
 
       logger.info(`🎉 Game ${result.game.id} successfully created and players matched. Notifying via callback.`);
 
+      // Clear bot deployment timer since game was created
+      this.clearBotDeploymentTimer(gameType, playersToMatch, entryFee);
+
       // Notify server.js about the created game and matched players
       // The callback is responsible for emitting socket events to clients
       if (this.onGameCreatedCallback) {
@@ -339,6 +354,92 @@ class MatchmakingService {
     } catch (error) {
       logger.error(`Get queue status error for user ${userId}:`, error);
       throw new Error('Failed to get queue status');
+    }
+  }
+
+  // Start bot deployment timer for a specific queue configuration
+  startBotDeploymentTimer(gameType, maxPlayers, entryFee) {
+    const queueKey = `${gameType}_${maxPlayers}_${entryFee}`;
+    
+    // Don't start a new timer if one already exists for this queue
+    if (this.botDeploymentTimers.has(queueKey)) {
+      return;
+    }
+
+    logger.info(`🤖 Starting bot deployment timer for queue: ${queueKey} (30 seconds)`);
+
+    const timer = setTimeout(async () => {
+      try {
+        await this.deployBotIfNeeded(gameType, maxPlayers, entryFee);
+        this.botDeploymentTimers.delete(queueKey);
+      } catch (error) {
+        logger.error(`Error deploying bot for queue ${queueKey}:`, error);
+        this.botDeploymentTimers.delete(queueKey);
+      }
+    }, 30000); // 30 seconds
+
+    this.botDeploymentTimers.set(queueKey, timer);
+  }
+
+  // Deploy a bot if there are waiting players but not enough for a full game
+  async deployBotIfNeeded(gameType, maxPlayers, entryFee) {
+    try {
+      logger.info(`🤖 Checking if bot deployment needed for: ${gameType} ${maxPlayers}P ₹${entryFee}`);
+
+      // Check current queue status
+      const queueCount = await prisma.matchmakingQueue.count({
+        where: {
+          gameType,
+          maxPlayers,
+          entryFee
+        }
+      });
+
+      logger.info(`📊 Current queue count: ${queueCount}/${maxPlayers} for ${gameType}`);
+
+      // Only deploy bot if we have exactly 1 human player waiting (for 2-player games)
+      if (queueCount === 1 && maxPlayers === 2) {
+        logger.info(`🤖 Deploying bot for ${gameType} game - 1 human player waiting`);
+        
+        // Create bot user
+        const { user: botUser, profile: botProfile } = await botService.createBotUser();
+        
+        // Add bot to queue
+        await prisma.matchmakingQueue.create({
+          data: {
+            userId: botUser.id,
+            gameType,
+            maxPlayers,
+            entryFee
+          }
+        });
+
+        logger.info(`🤖 Bot ${botProfile.name} (${botUser.id}) added to queue for ${gameType} ${maxPlayers}P ₹${entryFee}`);
+        
+        // Trigger immediate matchmaking check
+        setTimeout(() => this.processMatchmaking(), 1000);
+        
+      } else if (queueCount === 0) {
+        logger.info(`📭 No players in queue for ${gameType} ${maxPlayers}P ₹${entryFee} - bot deployment not needed`);
+      } else if (queueCount >= maxPlayers) {
+        logger.info(`✅ Enough players (${queueCount}) for ${gameType} ${maxPlayers}P ₹${entryFee} - bot deployment not needed`);
+      } else {
+        logger.info(`⏳ ${queueCount} players waiting for ${gameType} ${maxPlayers}P ₹${entryFee} - not deploying bot yet`);
+      }
+
+    } catch (error) {
+      logger.error(`Error in bot deployment for ${gameType} ${maxPlayers}P ₹${entryFee}:`, error);
+    }
+  }
+
+  // Clear bot deployment timer when a queue gets enough players
+  clearBotDeploymentTimer(gameType, maxPlayers, entryFee) {
+    const queueKey = `${gameType}_${maxPlayers}_${entryFee}`;
+    
+    if (this.botDeploymentTimers.has(queueKey)) {
+      clearTimeout(this.botDeploymentTimers.get(queueKey));
+      this.botDeploymentTimers.delete(queueKey);
+      logger.info(`🤖 Cleared bot deployment timer for queue: ${queueKey}`);
     }
   }
 }

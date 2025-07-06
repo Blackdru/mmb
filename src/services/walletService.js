@@ -30,7 +30,9 @@ class WalletService {
         wallet = await prisma.wallet.create({
           data: {
             userId,
-            balance: 0 // Initialize balance to 0
+            balance: 0,
+            gameBalance: 0,
+            withdrawableBalance: 0
           }
         });
       }
@@ -45,7 +47,11 @@ class WalletService {
   async getWalletBalance(userId) {
     try {
       const wallet = await this.getWallet(userId);
-      return parseFloat(wallet.balance); // Ensure balance is returned as a float
+      return {
+        totalBalance: parseFloat(wallet.balance),
+        gameBalance: parseFloat(wallet.gameBalance),
+        withdrawableBalance: parseFloat(wallet.withdrawableBalance)
+      };
     } catch (error) {
       logger.error(`Get wallet balance error for user ${userId}:`, error);
       throw new Error('Failed to get wallet balance');
@@ -167,17 +173,21 @@ class WalletService {
         // Ensure wallet exists before updating balance
         await tx.wallet.upsert({
           where: { userId },
-          create: { userId, balance: 0 }, // Create with 0 if not exists
-          update: {} // No update needed if it exists
+          create: { 
+            userId, 
+            balance: 0,
+            gameBalance: 0,
+            withdrawableBalance: 0
+          },
+          update: {}
         });
 
-        // Update wallet balance (ensure amount is number)
+        // Update wallet balances - deposits go to gameBalance (can be used for playing)
         const updatedWallet = await tx.wallet.update({
           where: { userId },
           data: {
-            balance: {
-              increment: parseFloat(amount)
-            }
+            balance: { increment: parseFloat(amount) },
+            gameBalance: { increment: parseFloat(amount) } // Deposits can be used for games
           }
         });
 
@@ -190,6 +200,8 @@ class WalletService {
         success: true,
         message: 'Deposit completed successfully',
         balance: parseFloat(result.wallet.balance),
+        gameBalance: parseFloat(result.wallet.gameBalance),
+        withdrawableBalance: parseFloat(result.wallet.withdrawableBalance),
         transactionId: result.transaction.id
       };
     } catch (error) {
@@ -211,9 +223,13 @@ class WalletService {
 
       const wallet = await this.getWallet(userId);
 
-      if (parseFloat(wallet.balance) < numericAmount) {
-        logger.warn(`Insufficient balance for withdrawal: User ${userId}, Has: ${wallet.balance}, Wants: ${numericAmount}`);
-        return { success: false, message: 'Insufficient balance' };
+      // Check if user has enough withdrawable balance (only winnings can be withdrawn)
+      if (parseFloat(wallet.withdrawableBalance) < numericAmount) {
+        logger.warn(`Insufficient withdrawable balance: User ${userId}, Has: ${wallet.withdrawableBalance}, Wants: ${numericAmount}`);
+        return { 
+          success: false, 
+          message: `Insufficient withdrawable balance. You can only withdraw winnings (₹${wallet.withdrawableBalance} available). Referral bonuses and deposits can only be used for playing games.` 
+        };
       }
 
       let withdrawalData = {
@@ -223,30 +239,35 @@ class WalletService {
         status: 'PENDING'
       };
 
-      switch (method.toLowerCase()) {
-        case 'bank':
+      const methodUpper = method.toUpperCase();
+      if (!['BANK', 'UPI', 'CRYPTO'].includes(methodUpper)) {
+        throw new Error('Invalid withdrawal method. Supported: BANK, UPI, CRYPTO');
+      }
+      
+      withdrawalData.method = methodUpper;
+      
+      switch (methodUpper) {
+        case 'BANK':
           if (!details.accountNumber || !details.ifscCode || !details.accountHolder) {
-            throw new Error('Complete bank details are required');
+            throw new Error('Complete bank details are required: Account Number, IFSC Code, Account Holder Name');
           }
           withdrawalData.bankAccountNumber = details.accountNumber;
           withdrawalData.bankIfscCode = details.ifscCode;
           withdrawalData.bankAccountHolder = details.accountHolder;
           break;
-        case 'upi':
+        case 'UPI':
           if (!details.upiId) {
             throw new Error('UPI ID is required');
           }
           withdrawalData.upiId = details.upiId;
           break;
-        case 'crypto':
+        case 'CRYPTO':
           if (!details.walletAddress || !details.cryptoType) {
             throw new Error('Crypto wallet address and type are required');
           }
           withdrawalData.cryptoWalletAddress = details.walletAddress;
           withdrawalData.cryptoType = details.cryptoType;
           break;
-        default:
-          throw new Error('Invalid withdrawal method');
       }
 
       const result = await prisma.$transaction(async (tx) => {
@@ -269,12 +290,12 @@ class WalletService {
           }
         });
 
+        // Deduct from withdrawable balance only
         const updatedWallet = await tx.wallet.update({
           where: { userId },
           data: {
-            balance: {
-              decrement: numericAmount
-            }
+            balance: { decrement: numericAmount },
+            withdrawableBalance: { decrement: numericAmount }
           }
         });
 
@@ -374,14 +395,13 @@ class WalletService {
           }
         });
 
-        // If rejected or cancelled, refund the amount
+        // If rejected or cancelled, refund the amount to withdrawable balance
         if (['REJECTED', 'CANCELLED'].includes(status.toUpperCase())) {
           await tx.wallet.update({
             where: { userId: withdrawalRequest.userId },
             data: {
-              balance: {
-                increment: parseFloat(withdrawalRequest.amount)
-              }
+              balance: { increment: parseFloat(withdrawalRequest.amount) },
+              withdrawableBalance: { increment: parseFloat(withdrawalRequest.amount) }
             }
           });
         }
@@ -397,18 +417,19 @@ class WalletService {
     }
   }
 
-  async deductWallet(userId, amount, type, description, gameId = null) {
+  async deductGameEntry(userId, amount, gameId) {
     try {
       const numericAmount = parseFloat(amount);
       if (isNaN(numericAmount) || numericAmount <= 0) {
-        throw new Error('Invalid amount for deduction');
+        throw new Error('Invalid amount for game entry');
       }
 
       const wallet = await this.getWallet(userId);
 
-      if (parseFloat(wallet.balance) < numericAmount) {
-        logger.warn(`Insufficient balance for deduction: User ${userId}, Type: ${type}, Has: ${wallet.balance}, Wants: ${numericAmount}`);
-        return { success: false, message: 'Insufficient balance' };
+      // Check if user has enough game balance (deposits + referral bonuses)
+      if (parseFloat(wallet.gameBalance) < numericAmount) {
+        logger.warn(`Insufficient game balance: User ${userId}, Has: ${wallet.gameBalance}, Wants: ${numericAmount}`);
+        return { success: false, message: 'Insufficient game balance' };
       }
 
       const result = await prisma.$transaction(async (tx) => {
@@ -416,53 +437,38 @@ class WalletService {
         const transaction = await tx.transaction.create({
           data: {
             userId,
-            type,
+            type: 'GAME_ENTRY',
             amount: numericAmount,
-            status: 'COMPLETED', // Deductions are typically completed immediately
-            description,
+            status: 'COMPLETED',
+            description: `Game entry fee for game ${gameId}`,
             gameId
           }
         });
 
-        // Deduct from wallet
+        // Deduct from game balance
         const updatedWallet = await tx.wallet.update({
           where: { userId },
           data: {
-            balance: {
-              decrement: numericAmount
-            }
+            balance: { decrement: numericAmount },
+            gameBalance: { decrement: numericAmount }
           }
         });
 
         return { transaction, wallet: updatedWallet };
       });
 
-      logger.info(`Wallet deducted: User ${userId}, Amount: ${numericAmount}, Type: ${type}, TransId: ${result.transaction.id}`);
+      logger.info(`Game entry deducted: User ${userId}, Amount: ${numericAmount}, Game: ${gameId}, TransId: ${result.transaction.id}`);
 
       return {
         success: true,
         balance: parseFloat(result.wallet.balance),
+        gameBalance: parseFloat(result.wallet.gameBalance),
+        withdrawableBalance: parseFloat(result.wallet.withdrawableBalance),
         transactionId: result.transaction.id
       };
     } catch (error) {
-      logger.error(`Deduct wallet error for user ${userId}, type ${type}:`, error);
-      return { success: false, message: error.message || 'Failed to deduct from wallet' };
-    }
-  }
-
-  async deductGameEntry(userId, amount, gameId) {
-    try {
-      return await this.deductWallet(
-        userId, 
-        amount, 
-        'GAME_ENTRY', 
-        `Game entry fee for game ${gameId}`, 
-        gameId
-      );
-    } catch (error) {
       logger.error(`Deduct game entry error for user ${userId}, game ${gameId}:`, error);
-      // Re-throw for matchmaking service to handle, e.g., if insufficient balance.
-      throw error; 
+      throw error;
     }
   }
 
@@ -473,7 +479,7 @@ class WalletService {
         throw new Error('Invalid amount for credit');
       }
 
-      // Ensure wallet exists (upsert can handle this)
+      // Ensure wallet exists
       await this.getWallet(userId);
 
       const result = await prisma.$transaction(async (tx) => {
@@ -483,20 +489,34 @@ class WalletService {
             userId,
             type,
             amount: numericAmount,
-            status: 'COMPLETED', // Credits are typically completed immediately
+            status: 'COMPLETED',
             description: description || `${type} of ₹${numericAmount}`,
             gameId
           }
         });
 
-        // Add to wallet
+        let walletUpdate = {
+          balance: { increment: numericAmount }
+        };
+
+        // Determine which balance to credit based on transaction type
+        if (type === 'GAME_WINNING') {
+          // Game winnings go to withdrawable balance (can be withdrawn)
+          walletUpdate.withdrawableBalance = { increment: numericAmount };
+        } else if (type === 'REFERRAL_BONUS' || type === 'REFERRAL_SIGNUP_BONUS') {
+          // Referral bonuses go to game balance (can only be used for games)
+          walletUpdate.gameBalance = { increment: numericAmount };
+        } else if (type === 'DEPOSIT') {
+          // Deposits go to game balance (can be used for games)
+          walletUpdate.gameBalance = { increment: numericAmount };
+        } else if (type === 'REFUND') {
+          // Refunds go to game balance (can be used for games)
+          walletUpdate.gameBalance = { increment: numericAmount };
+        }
+
         const updatedWallet = await tx.wallet.update({
           where: { userId },
-          data: {
-            balance: {
-              increment: numericAmount
-            }
-          }
+          data: walletUpdate
         });
 
         return { transaction, wallet: updatedWallet };
@@ -507,11 +527,13 @@ class WalletService {
       return {
         success: true,
         balance: parseFloat(result.wallet.balance),
+        gameBalance: parseFloat(result.wallet.gameBalance),
+        withdrawableBalance: parseFloat(result.wallet.withdrawableBalance),
         transactionId: result.transaction.id
       };
     } catch (error) {
       logger.error(`Credit wallet error for user ${userId}, type ${type}:`, error);
-      throw error; // Re-throw for higher-level error handling
+      throw error;
     }
   }
 
@@ -563,11 +585,14 @@ class WalletService {
       const wallet = await this.getWallet(userId);
 
       const formattedStats = {
-        currentBalance: parseFloat(wallet.balance),
+        totalBalance: parseFloat(wallet.balance),
+        gameBalance: parseFloat(wallet.gameBalance),
+        withdrawableBalance: parseFloat(wallet.withdrawableBalance),
         totalDeposits: 0,
         totalWithdrawals: 0,
         totalGameEntries: 0,
         totalWinnings: 0,
+        totalReferralBonuses: 0,
         transactionCounts: {}
       };
 
@@ -589,6 +614,10 @@ class WalletService {
             break;
           case 'GAME_WINNING':
             formattedStats.totalWinnings = amount;
+            break;
+          case 'REFERRAL_BONUS':
+          case 'REFERRAL_SIGNUP_BONUS':
+            formattedStats.totalReferralBonuses += amount;
             break;
         }
       });
