@@ -66,11 +66,11 @@ class MatchmakingService {
       // Check if user has sufficient balance (skip for free games)
       if (entryFee > 0) {
         const walletBalance = await walletService.getWalletBalance(userId);
-        const gameBalance = walletBalance.gameBalance || 0;
-        logger.info(`💰 User ${userId} game balance: ₹${gameBalance}, required: ₹${entryFee}`);
-        if (gameBalance < entryFee) {
-          logger.warn(`❌ Insufficient game balance for user ${userId} to join queue. Has: ₹${gameBalance}, Needs: ₹${entryFee}`);
-          throw new Error('Insufficient game balance');
+        const totalBalance = (walletBalance.gameBalance || 0) + (walletBalance.withdrawableBalance || 0);
+        logger.info(`💰 User ${userId} total balance: ₹${totalBalance} (Game: ₹${walletBalance.gameBalance}, Withdrawable: ₹${walletBalance.withdrawableBalance}), required: ₹${entryFee}`);
+        if (totalBalance < entryFee) {
+          logger.warn(`❌ Insufficient balance for user ${userId} to join queue. Has: ₹${totalBalance}, Needs: ₹${entryFee}`);
+          throw new Error('Insufficient balance');
         }
       } else {
         logger.info(`🆓 Free game - skipping balance check for user ${userId}`);

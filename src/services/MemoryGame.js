@@ -731,8 +731,23 @@ class MemoryGameService {
         }))
         .sort((a, b) => b.score - a.score);
 
-      const winnerId = leaderboard.length > 0 ? leaderboard[0].id : null;
-      const highestScore = leaderboard.length > 0 ? leaderboard[0].score : 0;
+      // Determine winner based on end reason
+      let winnerId = null;
+      let highestScore = 0;
+      
+      if (endReason === 'opponent_eliminated' || endReason === 'opponent_quit') {
+        // If opponent was eliminated/quit, the remaining player wins
+        winnerId = gameState.players.length > 0 ? gameState.players[0].id : null;
+        highestScore = winnerId ? (gameState.scores[winnerId] || 0) : 0;
+      } else if (endReason === 'game_completed') {
+        // Normal completion - highest score wins
+        winnerId = leaderboard.length > 0 ? leaderboard[0].id : null;
+        highestScore = leaderboard.length > 0 ? leaderboard[0].score : 0;
+      } else if (endReason === 'network_issue') {
+        // Network issue - no winner, refund all
+        winnerId = null;
+        highestScore = 0;
+      }
 
       // Set win amounts in leaderboard
       leaderboard.forEach(player => {
@@ -789,21 +804,16 @@ class MemoryGameService {
 
       // Process winnings based on end reason
       let winningsResult = null;
-      if (winnerId) {
-        if (endReason === 'game_completed' && gameState.matchedPairs >= gameState.totalPairs) {
-          // Normal game completion - all pairs matched
-          winningsResult = await this.safeProcessWinnings(gameId, winnerId, 'game_completed');
-        } else if (endReason === 'opponent_quit' || endReason === 'opponent_eliminated') {
-          // Opponent left or was eliminated
-          winningsResult = await this.safeProcessWinnings(gameId, winnerId, endReason);
-        } else if (endReason === 'network_issue') {
-          // Network issues - refund all players
-          winningsResult = await this.safeProcessWinnings(gameId, null, 'network_issue');
-        }
-        
-        if (winningsResult) {
-          logger.info(`Winnings processing result for game ${gameId}:`, winningsResult);
-        }
+      if (endReason === 'network_issue') {
+        // Network issues - refund all players
+        winningsResult = await this.safeProcessWinnings(gameId, null, 'network_issue');
+      } else if (winnerId) {
+        // Process winnings for the winner
+        winningsResult = await this.safeProcessWinnings(gameId, winnerId, endReason);
+      }
+      
+      if (winningsResult) {
+        logger.info(`Winnings processing result for game ${gameId}:`, winningsResult);
       }
 
       // Clean up

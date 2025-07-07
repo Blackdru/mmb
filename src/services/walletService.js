@@ -445,10 +445,11 @@ class WalletService {
 
       const wallet = await this.getWallet(userId);
 
-      // Check if user has enough game balance (deposits + referral bonuses)
-      if (parseFloat(wallet.gameBalance) < numericAmount) {
-        logger.warn(`Insufficient game balance: User ${userId}, Has: ${wallet.gameBalance}, Wants: ${numericAmount}`);
-        return { success: false, message: 'Insufficient game balance' };
+      // Check if user has enough total balance (gameBalance + withdrawableBalance)
+      const totalAvailable = parseFloat(wallet.gameBalance) + parseFloat(wallet.withdrawableBalance);
+      if (totalAvailable < numericAmount) {
+        logger.warn(`Insufficient balance: User ${userId}, Has: ₹${totalAvailable} (Game: ₹${wallet.gameBalance} + Withdrawable: ₹${wallet.withdrawableBalance}), Wants: ₹${numericAmount}`);
+        return { success: false, message: 'Insufficient balance' };
       }
 
       const result = await prisma.$transaction(async (tx) => {
@@ -478,12 +479,29 @@ class WalletService {
           }
         });
 
-        // Deduct from game balance
+        // Deduct from available balances (prioritize gameBalance first, then withdrawableBalance)
+        const currentWallet = await tx.wallet.findUnique({ where: { userId } });
+        const gameBalanceAvailable = parseFloat(currentWallet.gameBalance);
+        const withdrawableBalanceAvailable = parseFloat(currentWallet.withdrawableBalance);
+        
+        let gameBalanceDeduction = 0;
+        let withdrawableBalanceDeduction = 0;
+        
+        if (gameBalanceAvailable >= numericAmount) {
+          // Deduct entirely from game balance
+          gameBalanceDeduction = numericAmount;
+        } else {
+          // Deduct what we can from game balance, rest from withdrawable balance
+          gameBalanceDeduction = gameBalanceAvailable;
+          withdrawableBalanceDeduction = numericAmount - gameBalanceAvailable;
+        }
+        
         const updatedWallet = await tx.wallet.update({
           where: { userId },
           data: {
             balance: { decrement: numericAmount },
-            gameBalance: { decrement: numericAmount }
+            gameBalance: { decrement: gameBalanceDeduction },
+            withdrawableBalance: { decrement: withdrawableBalanceDeduction }
           }
         });
 
