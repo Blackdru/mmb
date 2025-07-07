@@ -66,20 +66,32 @@ router.get('/referral', authenticateToken, async (req, res) => {
       }
     });
 
-    // Calculate earnings from referrals
-    const referralEarnings = await prisma.walletTransaction.findMany({
+    // Calculate earnings from referrals (both REFERRAL_BONUS and REFERRAL_SIGNUP_BONUS)
+    const referralEarnings = await prisma.transaction.findMany({
       where: {
         userId: req.user.id,
-        type: 'REFERRAL_BONUS'
+        type: {
+          in: ['REFERRAL_BONUS', 'REFERRAL_SIGNUP_BONUS']
+        },
+        status: 'COMPLETED'
+      },
+      select: {
+        amount: true,
+        type: true,
+        createdAt: true
       }
     });
 
-    const totalEarnings = referralEarnings.reduce((sum, transaction) => sum + transaction.amount, 0);
+    // Convert Decimal to number and sum
+    const totalEarnings = referralEarnings.reduce((sum, transaction) => {
+      return sum + parseFloat(transaction.amount);
+    }, 0);
+
     const pendingEarnings = 0; // Calculate pending earnings if needed
 
     const stats = {
       totalReferrals: referredUsers.length,
-      totalEarnings,
+      totalEarnings: Math.round(totalEarnings), // Round to avoid decimal issues
       pendingEarnings,
       referredUsers: referredUsers.map(user => ({
         name: user.name,

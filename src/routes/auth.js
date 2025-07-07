@@ -28,11 +28,11 @@ const verifyOTPSchema = Joi.object({
       'string.pattern.base': 'OTP must contain only numbers'
     }),
   referralCode: Joi.string()
-    .pattern(/^BZ[A-Z0-9]{4,10}$/)
+    .pattern(/^BZ[A-Z0-9]{4,8}$/)
     .optional()
-    .allow('')
+    .allow('', null)
     .messages({
-      'string.pattern.base': 'Invalid referral code format. Must start with BZ followed by 4-10 alphanumeric characters.'
+      'string.pattern.base': 'Invalid referral code format. Must start with BZ followed by 4-8 alphanumeric characters.'
     })
 });
 
@@ -95,12 +95,7 @@ router.post('/verify-otp', async (req, res) => {
     }
 
     const { phoneNumber, otp, referralCode } = value;
-    const result = await authService.verifyOTP(phoneNumber, otp);
-    
-    // Process referral if provided and user is new
-    if (referralCode && result.success) {
-      await authService.processReferral(result.user.id, referralCode);
-    }
+    const result = await authService.verifyOTP(phoneNumber, otp, referralCode);
     
     res.json(result);
   } catch (err) {
@@ -223,6 +218,36 @@ router.post('/refresh-token', authenticateToken, async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Failed to refresh token'
+    });
+  }
+});
+
+// Check if user exists
+router.post('/check-user', async (req, res) => {
+  try {
+    const { phoneNumber } = req.body;
+    
+    if (!phoneNumber) {
+      return res.status(400).json({
+        success: false,
+        message: 'Phone number is required'
+      });
+    }
+    
+    const user = await require('../config/database').user.findUnique({
+      where: { phoneNumber }
+    });
+    
+    res.json({
+      success: true,
+      isNewUser: !user,
+      userExists: !!user
+    });
+  } catch (err) {
+    logger.error('Check user error:', err);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to check user'
     });
   }
 });

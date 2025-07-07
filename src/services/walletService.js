@@ -48,7 +48,7 @@ class WalletService {
     try {
       const wallet = await this.getWallet(userId);
       return {
-        totalBalance: parseFloat(wallet.balance),
+        balance: parseFloat(wallet.balance),
         gameBalance: parseFloat(wallet.gameBalance),
         withdrawableBalance: parseFloat(wallet.withdrawableBalance)
       };
@@ -424,6 +424,25 @@ class WalletService {
         throw new Error('Invalid amount for game entry');
       }
 
+      // Check if there's already a transaction for this user and game (prevent double deduction)
+      const existingTransaction = await prisma.transaction.findFirst({
+        where: {
+          userId,
+          gameId,
+          type: 'GAME_ENTRY',
+          status: 'COMPLETED'
+        }
+      });
+
+      if (existingTransaction) {
+        logger.warn(`❌ Duplicate game entry attempt: User ${userId} already has entry fee deducted for game ${gameId} (Transaction: ${existingTransaction.id})`);
+        return { 
+          success: false, 
+          message: 'Entry fee already deducted for this game',
+          transactionId: existingTransaction.id
+        };
+      }
+
       const wallet = await this.getWallet(userId);
 
       // Check if user has enough game balance (deposits + referral bonuses)
@@ -433,6 +452,20 @@ class WalletService {
       }
 
       const result = await prisma.$transaction(async (tx) => {
+        // Double-check for existing transaction within the transaction (race condition protection)
+        const existingTxInTransaction = await tx.transaction.findFirst({
+          where: {
+            userId,
+            gameId,
+            type: 'GAME_ENTRY',
+            status: 'COMPLETED'
+          }
+        });
+
+        if (existingTxInTransaction) {
+          throw new Error(`Entry fee already deducted for game ${gameId}`);
+        }
+
         // Create transaction
         const transaction = await tx.transaction.create({
           data: {
@@ -457,7 +490,7 @@ class WalletService {
         return { transaction, wallet: updatedWallet };
       });
 
-      logger.info(`Game entry deducted: User ${userId}, Amount: ${numericAmount}, Game: ${gameId}, TransId: ${result.transaction.id}`);
+      logger.info(`✅ Game entry deducted: User ${userId}, Amount: ${numericAmount}, Game: ${gameId}, TransId: ${result.transaction.id}`);
 
       return {
         success: true,
@@ -467,7 +500,15 @@ class WalletService {
         transactionId: result.transaction.id
       };
     } catch (error) {
-      logger.error(`Deduct game entry error for user ${userId}, game ${gameId}:`, error);
+      logger.error(`❌ Deduct game entry error for user ${userId}, game ${gameId}:`, error);
+      
+      if (error.message.includes('Entry fee already deducted')) {
+        return { 
+          success: false, 
+          message: error.message
+        };
+      }
+      
       throw error;
     }
   }

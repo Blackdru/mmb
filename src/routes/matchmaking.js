@@ -43,4 +43,43 @@ router.get('/status', authenticateToken, async (req, res) => {
   }
 });
 
+// Manual bot deployment for testing (development only)
+router.post('/deploy-bot', authenticateToken, async (req, res) => {
+  try {
+    if (process.env.NODE_ENV === 'production') {
+      return res.status(403).json({ success: false, message: 'Not available in production' });
+    }
+
+    const { gameType = 'MEMORY', maxPlayers = 2, entryFee = 5, force = false } = req.body;
+    
+    if (force) {
+      // Force deploy a bot regardless of queue status
+      const botService = require('../services/botService');
+      const botUser = await botService.getBotForMatchmaking(gameType, entryFee);
+      logger.info(`🤖 Force deployed bot ${botUser.name} (${botUser.id}) for testing`);
+      
+      // Trigger immediate matchmaking
+      setTimeout(() => matchmakingService.processMatchmaking(), 500);
+      
+      res.json({ 
+        success: true, 
+        message: `Bot ${botUser.name} force deployed for ${gameType} ${maxPlayers}P ₹${entryFee}`,
+        botId: botUser.id,
+        botName: botUser.name
+      });
+    } else {
+      // Normal bot deployment logic
+      await matchmakingService.deployBotIfNeeded(gameType, maxPlayers, entryFee);
+      
+      res.json({ 
+        success: true, 
+        message: `Bot deployment triggered for ${gameType} ${maxPlayers}P ₹${entryFee}` 
+      });
+    }
+  } catch (err) {
+    logger.error('Manual bot deployment error:', err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 module.exports = router;

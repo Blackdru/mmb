@@ -2,7 +2,7 @@
 const logger = require('../config/logger');
 const gameService = require('./gameService');
 const prisma = require('../config/database');
-const botService = require('./BotService');
+const botService = require('./botService');
 
 class MemoryGameService {
   constructor(io) {
@@ -12,22 +12,64 @@ class MemoryGameService {
     this.turnTimers = new Map();
     this.countdownIntervals = new Map();
     this.processedWinnings = new Set(); // Track games where winnings have been processed
+    
+    // Global error handler for this service
+    this.handleError = this.handleError.bind(this);
+  }
+
+  // Global error handler
+  handleError(error, context = 'Unknown') {
+    logger.error(`MemoryGame Service Error in ${context}:`, error);
+    // Don't re-throw to prevent unhandled rejections
   }
 
   setupSocketHandlers(socket) {
-    socket.on('START_MEMORY_GAME', (data) => this.startGame(data));
-    socket.on('SELECT_MEMORY_CARD', (data) => this.selectCard(socket, data));
-    socket.on('selectCard', (data) => this.selectCard(socket, data));
-    socket.on('JOIN_MEMORY_ROOM', (data) => this.joinRoom(socket, data));
-    socket.on('LEAVE_MEMORY_GAME', (data) => this.handlePlayerLeave(socket, data));
-    socket.on('disconnect', () => this.handlePlayerDisconnect(socket));
+    socket.on('START_MEMORY_GAME', (data) => {
+      this.startGame(data).catch(err => {
+        logger.error('Error in START_MEMORY_GAME handler:', err);
+        socket.emit('MEMORY_GAME_ERROR', { message: 'Failed to start game' });
+      });
+    });
+    
+    socket.on('SELECT_MEMORY_CARD', (data) => {
+      this.selectCard(socket, data).catch(err => {
+        logger.error('Error in SELECT_MEMORY_CARD handler:', err);
+        socket.emit('MEMORY_GAME_ERROR', { message: 'Failed to select card' });
+      });
+    });
+    
+    socket.on('selectCard', (data) => {
+      this.selectCard(socket, data).catch(err => {
+        logger.error('Error in selectCard handler:', err);
+        socket.emit('MEMORY_GAME_ERROR', { message: 'Failed to select card' });
+      });
+    });
+    
+    socket.on('JOIN_MEMORY_ROOM', (data) => {
+      this.joinRoom(socket, data).catch(err => {
+        logger.error('Error in JOIN_MEMORY_ROOM handler:', err);
+        socket.emit('MEMORY_GAME_ERROR', { message: 'Failed to join room' });
+      });
+    });
+    
+    socket.on('LEAVE_MEMORY_GAME', (data) => {
+      this.handlePlayerLeave(socket, data).catch(err => {
+        logger.error('Error in LEAVE_MEMORY_GAME handler:', err);
+      });
+    });
+    
+    socket.on('disconnect', () => {
+      this.handlePlayerDisconnect(socket).catch(err => {
+        logger.error('Error in disconnect handler:', err);
+      });
+    });
   }
 
   async safeProcessWinnings(gameId, winnerId, reason = 'game_completed') {
     // Check if winnings have already been processed for this game
     if (this.processedWinnings.has(gameId)) {
       logger.warn(`Winnings already processed for game ${gameId}, skipping duplicate processing`);
-      return;
+      return { success: false, reason: 'already_processed' };
     }
 
     // Mark as processed immediately to prevent race conditions
@@ -38,14 +80,29 @@ class MemoryGameService {
       if (!game) {
         logger.error(`Game ${gameId} not found for winnings processing`);
         this.processedWinnings.delete(gameId);
-        return;
+        return { success: false, reason: 'game_not_found' };
       }
+
+      // Check if game already has winnings processed in database
+      const existingWinningTransaction = await prisma.transaction.findFirst({
+        where: {
+          gameId: gameId,
+          type: 'GAME_WINNING',
+          status: 'COMPLETED'
+        }
+      });
+
+      if (existingWinningTransaction) {
+        logger.warn(`Game ${gameId} already has winning transaction ${existingWinningTransaction.id}, skipping duplicate processing`);
+        return { success: false, reason: 'already_processed_in_db' };
+      }
+
+      const walletService = require('./walletService');
 
       // Handle different end game scenarios
       if (reason === 'network_issue' || reason === 'server_error') {
         // Refund all players for network/server issues
         logger.info(`Refunding all players for game ${gameId} due to ${reason}`);
-        const walletService = require('./walletService');
         for (const participant of game.participants) {
           await walletService.creditWallet(
             participant.userId, 
@@ -55,21 +112,32 @@ class MemoryGameService {
             `Game refund due to ${reason}`
           );
         }
-      } else if (winnerId && reason === 'game_completed') {
-        // Only credit winner for legitimate game completion
-        logger.info(`Processing winnings for legitimate game completion: ${gameId}, winner: ${winnerId}`);
-        await gameService.processGameWinnings(gameId);
-      } else if (winnerId && (reason === 'opponent_quit' || reason === 'opponent_eliminated')) {
-        // Credit winner when opponent quits or is eliminated
+        return { success: true, reason: 'refunded_all_players' };
+      } else if (winnerId && (reason === 'game_completed' || reason === 'opponent_quit' || reason === 'opponent_eliminated')) {
+        // Only credit winner for legitimate scenarios
         logger.info(`Processing winnings for ${reason}: ${gameId}, winner: ${winnerId}`);
-        await gameService.processGameWinnings(gameId);
+        
+        // Use direct wallet credit instead of gameService to avoid double processing
+        await walletService.creditWallet(
+          winnerId, 
+          game.prizePool, 
+          'GAME_WINNING', 
+          gameId,
+          `Game winning for ${reason}`
+        );
+        
+        logger.info(`Successfully credited ₹${game.prizePool} to winner ${winnerId} for game ${gameId}`);
+        return { success: true, reason: 'winner_credited', amount: game.prizePool };
       } else {
         logger.warn(`No valid winner or reason for game ${gameId}, no winnings processed. Winner: ${winnerId}, Reason: ${reason}`);
+        this.processedWinnings.delete(gameId); // Remove from processed since nothing was done
+        return { success: false, reason: 'invalid_winner_or_reason' };
       }
     } catch (error) {
       logger.error(`Failed to process game winnings for game ${gameId}:`, error);
       // Remove from processed set if it failed, so it can be retried
       this.processedWinnings.delete(gameId);
+      return { success: false, reason: 'processing_error', error: error.message };
     }
   }
 
@@ -126,12 +194,8 @@ class MemoryGameService {
       for (const player of players) {
         const user = await prisma.user.findUnique({ where: { id: player.id } });
         if (user && user.isBot) {
-          // Get bot profile from botService
-          const botProfile = botService.botProfiles.find(p => p.id === user.id);
-          if (botProfile) {
-            botService.initializeBotForGame(roomId, player.id, botProfile, initialBoard);
-            logger.info(`🤖 Initialized bot ${botProfile.name} for game ${roomId}`);
-          }
+          logger.info(`🤖 Bot player ${user.name} (${user.id}) detected in game ${roomId}`);
+          // Bot initialization will be handled when it's their turn
         }
       }
 
@@ -167,7 +231,9 @@ class MemoryGameService {
             
             // If first player is a bot, handle bot turn
             if (players[0]) {
-              this.checkAndHandleBotTurn(roomId, players[0].id);
+              this.checkAndHandleBotTurn(roomId, players[0].id).catch(err => {
+                logger.error('Error checking bot turn in startGame:', err);
+              });
             }
           }, 500);
         }, 300);
@@ -339,22 +405,14 @@ class MemoryGameService {
         cardId: card.id
       });
 
-      // Update bot memory if this is a card reveal
-      botService.onCardRevealed(gameId, position, card.symbol);
+      // Bot memory update would go here if implemented
 
-      // Emit card opened with optimized data and game state sync
+      // Emit card opened with minimal data to reduce lag
       this.io.to(`game:${gameId}`).emit('MEMORY_CARD_OPENED', {
         position: position,
         symbol: card.symbol,
         playerId: playerId,
-        selectedCount: gameState.selectedCards.length,
-        timestamp: Date.now(),
-        gameState: {
-          scores: gameState.scores,
-          lifelines: gameState.lifelines,
-          currentTurnPlayerId: gameState.currentTurnPlayerId,
-          matchedPairs: gameState.matchedPairs
-        }
+        selectedCount: gameState.selectedCards.length
       });
 
       // If 2 cards selected, process match immediately
@@ -369,13 +427,36 @@ class MemoryGameService {
       }
 
     } catch (error) {
-      logger.error(`Memory Game: Select card error:`, error);
+      logger.error(`Memory Game: Select card error for game ${gameId}, player ${playerId}, position ${position}:`, error);
       // Reset processing flag on error
-      const gameState = this.games.get(data.gameId || data.roomId);
+      const gameState = this.games.get(gameId);
       if (gameState) {
         gameState.processingCards = false;
+        // Revert optimistic card flip if it was set
+        if (gameState.board[position]) {
+          gameState.board[position].isFlipped = false;
+        }
+        // Remove from selected cards if it was added
+        gameState.selectedCards = gameState.selectedCards.filter(card => card.position !== position);
       }
-      socket.emit('MEMORY_GAME_ERROR', { message: 'Failed to select card.' });
+      
+      // Provide more specific error message
+      let errorMessage = 'Failed to select card.';
+      if (error.message.includes('turn')) {
+        errorMessage = 'Not your turn to play.';
+      } else if (error.message.includes('already')) {
+        errorMessage = 'Card already selected or revealed.';
+      } else if (error.message.includes('processing')) {
+        errorMessage = 'Please wait, processing previous selection.';
+      } else if (error.message.includes('position')) {
+        errorMessage = 'Invalid card position.';
+      }
+      
+      socket.emit('MEMORY_GAME_ERROR', { 
+        message: errorMessage,
+        code: 'CARD_SELECTION_FAILED',
+        position: position
+      });
     }
   }
 
@@ -401,24 +482,22 @@ class MemoryGameService {
 
         // Update player score in database (non-blocking)
         gameService.updatePlayerScore(gameId, gameState.currentTurnPlayerId, currentPlayer.score).catch(err => {
-          logger.error('Failed to update player score:', err);
+          logger.error('Failed to update player score in processMatch:', err);
         });
 
-        // Update bot memory for matched cards
-        botService.onCardsMatched(gameId, [card1.position, card2.position], card1.symbol);
+        // Bot memory update for matched cards would go here if implemented
 
-        // Emit match event immediately
+        // Emit match event with minimal data
         this.io.to(`game:${gameId}`).emit('MEMORY_CARDS_MATCHED', {
           positions: [card1.position, card2.position],
           playerId: gameState.currentTurnPlayerId,
-          playerName: currentPlayer.name,
-          scores: gameState.scores,
+          newScore: gameState.scores[gameState.currentTurnPlayerId],
           matchedPairs: gameState.matchedPairs
         });
 
         // Check if game finished
         if (gameState.matchedPairs >= gameState.totalPairs) {
-          await this.endGame(gameId);
+          await this.endGame(gameId, 'game_completed');
           return;
         }
 
@@ -428,15 +507,16 @@ class MemoryGameService {
         this.startTurnTimer(gameId);
         
         // Check if current player is a bot for next turn
-        this.checkAndHandleBotTurn(gameId, gameState.currentTurnPlayerId);
+        this.checkAndHandleBotTurn(gameId, gameState.currentTurnPlayerId).catch(err => {
+          logger.error('Error checking bot turn in processMatch:', err);
+        });
 
       } else {
         // No match - flip back immediately and change turn
         gameState.board[card1.position].isFlipped = false;
         gameState.board[card2.position].isFlipped = false;
         
-        // Update bot memory for mismatched cards
-        botService.onCardsMismatched(gameId, [card1.position, card2.position]);
+        // Bot memory update for mismatched cards would go here if implemented
         
         // Emit mismatch event with immediate flip back
         this.io.to(`game:${gameId}`).emit('MEMORY_CARDS_MISMATCHED', {
@@ -451,7 +531,7 @@ class MemoryGameService {
 
       // Update database (non-blocking)
       gameService.updateGameState(gameId, gameState.board, gameState.currentTurnIndex, 'PLAYING', null).catch(err => {
-        logger.error('Failed to update game state:', err);
+        logger.error('Failed to update game state in processMatch:', err);
       });
 
     } catch (error) {
@@ -476,26 +556,25 @@ class MemoryGameService {
 
     const currentPlayer = gameState.players[gameState.currentTurnIndex];
 
-    // Emit turn change
+    // Emit turn change with minimal data
     this.io.to(`game:${gameId}`).emit('MEMORY_TURN_CHANGED', {
-      currentPlayer: currentPlayer,
       currentPlayerId: currentPlayer.id,
-      currentPlayerName: currentPlayer.name,
-      scores: gameState.scores
+      currentPlayerName: currentPlayer.name
     });
 
     // Also emit the old event name for compatibility
     this.io.to(`game:${gameId}`).emit('MEMORY_GAME_CURRENT_TURN', {
       currentPlayer: currentPlayer.id,
-      currentPlayerName: currentPlayer.name,
-      players: gameState.players
+      currentPlayerName: currentPlayer.name
     });
 
     // Start timer for new player
     this.startTurnTimer(gameId);
     
     // Check if new current player is a bot
-    this.checkAndHandleBotTurn(gameId, currentPlayer.id);
+    this.checkAndHandleBotTurn(gameId, currentPlayer.id).catch(err => {
+      logger.error('Error checking bot turn in nextTurn:', err);
+    });
   }
 
   startTurnTimer(gameId) {
@@ -584,7 +663,7 @@ class MemoryGameService {
 
         // Check if only one player remains
         if (gameState.players.length === 1) {
-          await this.endGame(gameId);
+          await this.endGame(gameId, 'opponent_eliminated');
           return;
         }
 
@@ -628,46 +707,68 @@ class MemoryGameService {
     }
   }
 
-  async endGame(gameId) {
+  async endGame(gameId, endReason = 'game_completed') {
     try {
       const gameState = this.games.get(gameId);
-      if (!gameState) return;
+      if (!gameState) {
+        logger.warn(`Cannot end game ${gameId}: game state not found`);
+        return;
+      }
 
       this.clearTurnTimer(gameId);
 
+      // Get game info for prize pool
+      const game = await gameService.getGameById(gameId);
+      const prizePool = game?.prizePool || 0;
+      
       // Find winner and create leaderboard
-      const prizePool = (await gameService.getGameById(gameId))?.prizePool || 0;
       const leaderboard = gameState.players
         .map(player => ({
           id: player.id,
           name: player.name,
           score: gameState.scores[player.id] || 0,
+          lifelines: gameState.lifelines[player.id] || 0
         }))
         .sort((a, b) => b.score - a.score);
 
       const winnerId = leaderboard.length > 0 ? leaderboard[0].id : null;
       const highestScore = leaderboard.length > 0 ? leaderboard[0].score : 0;
 
+      // Set win amounts in leaderboard
       leaderboard.forEach(player => {
         player.winAmount = player.id === winnerId ? prizePool : 0;
+        player.isWinner = player.id === winnerId;
       });
 
       const winner = gameState.players.find(p => p.id === winnerId);
 
-      // Get game info for prize pool
-      // (already fetched above as prizePool)
-      // const game = await gameService.getGameById(gameId);
-      // const prizePool = game?.prizePool || 0;
-
-      console.log(`Memory Game: Ending game ${gameId} with prize pool: ${prizePool}`);
-      // console.log(`Memory Game: Game object:`, JSON.stringify(game, null, 2));
+      console.log(`Memory Game: Ending game ${gameId} with reason: ${endReason}, prize pool: ${prizePool}`);
       console.log(`Memory Game: Leaderboard:`, leaderboard);
       console.log(`Memory Game: Final scores:`, gameState.scores);
 
       // Update database
       await gameService.updateGameState(gameId, gameState.board, gameState.currentTurnIndex, 'FINISHED', winnerId);
 
-      // Emit game end with complete information
+      // Determine end reason message for display
+      let reasonMessage = null;
+      switch (endReason) {
+        case 'opponent_quit':
+          reasonMessage = 'Opponent left the game';
+          break;
+        case 'opponent_eliminated':
+          reasonMessage = 'Opponent eliminated (no lifelines remaining)';
+          break;
+        case 'network_issue':
+          reasonMessage = 'Game ended due to network issues - all players refunded';
+          break;
+        case 'game_completed':
+          reasonMessage = null; // Normal completion, no special message needed
+          break;
+        default:
+          reasonMessage = `Game ended: ${endReason}`;
+      }
+
+      // Emit game end with complete information including reason
       this.io.to(`game:${gameId}`).emit('MEMORY_GAME_ENDED', {
         winner: winner,
         winnerId: winnerId,
@@ -676,34 +777,44 @@ class MemoryGameService {
         prizePool: prizePool,
         leaderboard: leaderboard,
         totalPlayers: gameState.players.length,
+        reason: reasonMessage,
+        endReason: endReason,
         gameStats: {
           totalPairs: gameState.totalPairs,
           matchedPairs: gameState.matchedPairs,
-          winnerScore: highestScore
+          winnerScore: highestScore,
+          endReason: endReason
         }
       });
 
-      // Process winnings only for legitimate game completion
-      if (winnerId && gameState.matchedPairs >= gameState.totalPairs) {
-        // Only credit winner if game was completed normally (all pairs matched)
-        this.safeProcessWinnings(gameId, winnerId, 'game_completed').catch(err => {
-          logger.error('Failed to process game winnings:', err);
-        });
-      } else if (winnerId && gameState.players.length === 1) {
-        // Credit winner if only one player remains (others eliminated/quit)
-        this.safeProcessWinnings(gameId, winnerId, 'opponent_eliminated').catch(err => {
-          logger.error('Failed to process game winnings:', err);
-        });
+      // Process winnings based on end reason
+      let winningsResult = null;
+      if (winnerId) {
+        if (endReason === 'game_completed' && gameState.matchedPairs >= gameState.totalPairs) {
+          // Normal game completion - all pairs matched
+          winningsResult = await this.safeProcessWinnings(gameId, winnerId, 'game_completed');
+        } else if (endReason === 'opponent_quit' || endReason === 'opponent_eliminated') {
+          // Opponent left or was eliminated
+          winningsResult = await this.safeProcessWinnings(gameId, winnerId, endReason);
+        } else if (endReason === 'network_issue') {
+          // Network issues - refund all players
+          winningsResult = await this.safeProcessWinnings(gameId, null, 'network_issue');
+        }
+        
+        if (winningsResult) {
+          logger.info(`Winnings processing result for game ${gameId}:`, winningsResult);
+        }
       }
 
       // Clean up
       this.games.delete(gameId);
-      this.processedWinnings.delete(gameId); // Clean up processed winnings tracking
       this.cleanupGameBots(gameId); // Clean up any bots
+      
+      // Don't delete from processedWinnings here - let it be cleaned up naturally to prevent race conditions
 
-      logger.info(`Memory Game: Game ${gameId} ended. Winner: ${winnerId} with score: ${highestScore}`);
+      logger.info(`Memory Game: Game ${gameId} ended with reason: ${endReason}. Winner: ${winnerId} with score: ${highestScore}`);
     } catch (error) {
-      logger.error(`Memory Game: End game error:`, error);
+      logger.error(`Memory Game: End game error for ${gameId}:`, error);
     }
   }
 
@@ -828,44 +939,21 @@ class MemoryGameService {
       // If it's a 2-player game, handle based on reason
       if (gameState.players.length === 2) {
         if (reason === 'disconnected' || reason === 'network_issue') {
-          // For network issues, refund both players
-          logger.info(`Memory Game: Game ${roomId} ended due to network issue, refunding both players`);
-          await this.safeProcessWinnings(roomId, null, 'network_issue');
-          
-          // Notify players about refund
-          this.io.to(`game:${roomId}`).emit('MEMORY_GAME_ENDED', {
-            reason: 'Network issue - both players refunded',
-            leaderboard: gameState.players.map(player => ({
-              id: player.id,
-              name: player.name,
-              score: gameState.scores[player.id] || 0,
-              isWinner: false,
-              winAmount: 0
-            })),
-            prizePool: 0,
-            totalPlayers: 2,
-            gameStats: {
-              totalPairs: gameState.totalPairs,
-              matchedPairs: gameState.matchedPairs,
-              endReason: 'network_issue'
-            }
-          });
+          // For network issues, end game with network_issue reason
+          logger.info(`Memory Game: Game ${roomId} ended due to network issue, will refund both players`);
+          await this.endGame(roomId, 'network_issue');
         } else {
           // Player intentionally left, other player wins
           const remainingPlayer = gameState.players.find(p => p.id !== playerId);
-          gameState.players = [remainingPlayer];
+          
+          // Remove leaving player from game state
+          gameState.players = gameState.players.filter(p => p.id !== playerId);
           delete gameState.scores[playerId];
           delete gameState.lifelines[playerId];
           delete gameState.missedTurns[playerId];
           
-          // Process winnings for remaining player since opponent quit
-          if (remainingPlayer) {
-            this.safeProcessWinnings(roomId, remainingPlayer.id, 'opponent_quit').catch(err => {
-              logger.error('Failed to process winnings for opponent quit:', err);
-            });
-          }
-          
-          await this.endGame(roomId);
+          // End game with opponent_quit reason
+          await this.endGame(roomId, 'opponent_quit');
           logger.info(`Memory Game: Game ${roomId} ended due to player ${reason}. Winner: ${remainingPlayer?.id}`);
         }
       } else {
@@ -877,22 +965,31 @@ class MemoryGameService {
 
         // If it was the leaving player's turn, move to next player
         if (gameState.currentTurnPlayerId === playerId) {
+          // Adjust current turn index if needed
+          const leavingPlayerIndex = gameState.players.findIndex(p => p.id === playerId);
+          if (leavingPlayerIndex !== -1 && gameState.currentTurnIndex >= leavingPlayerIndex) {
+            gameState.currentTurnIndex = Math.max(0, gameState.currentTurnIndex - 1);
+          }
           this.nextTurn(roomId);
         }
 
-        // Notify remaining players
-        this.io.to(`game:${roomId}`).emit('MEMORY_PLAYER_LEFT', {
-          playerId: playerId,
-          playerName: leavingPlayer.name,
-          reason: reason,
-          remainingPlayers: gameState.players
-        });
+        // Check if only one player remains
+        if (gameState.players.length === 1) {
+          await this.endGame(roomId, 'opponent_quit');
+        } else {
+          // Notify remaining players
+          this.io.to(`game:${roomId}`).emit('MEMORY_PLAYER_LEFT', {
+            playerId: playerId,
+            playerName: leavingPlayer.name,
+            reason: reason,
+            remainingPlayers: gameState.players
+          });
+        }
       }
 
       // Clean up game if no players left
       if (gameState.players.length === 0) {
         this.games.delete(roomId);
-        this.processedWinnings.delete(roomId);
       }
     } catch (error) {
       logger.error(`Memory Game: Handle player exit error:`, error);
@@ -907,17 +1004,75 @@ class MemoryGameService {
         logger.info(`🤖 Bot turn detected for ${user.name} in game ${gameId}`);
         // Handle bot turn with a slight delay to make it feel natural
         setTimeout(() => {
-          botService.handleBotTurn(gameId, this);
-        }, 1000);
+          this.handleBotTurn(gameId, playerId);
+        }, 1000 + Math.random() * 2000); // 1-3 second delay for natural feel
       }
     } catch (error) {
       logger.error(`Error checking bot turn for player ${playerId}:`, error);
     }
   }
 
+  // Simple bot AI for making moves
+  async handleBotTurn(gameId, botPlayerId) {
+    try {
+      const gameState = this.games.get(gameId);
+      if (!gameState || gameState.status !== 'playing' || gameState.currentTurnPlayerId !== botPlayerId) {
+        return;
+      }
+
+      // Simple bot strategy: pick random available cards
+      const availableCards = gameState.board
+        .map((card, index) => ({ card, index }))
+        .filter(({ card }) => !card.isFlipped && !card.isMatched);
+
+      if (availableCards.length === 0) {
+        return;
+      }
+
+      // First card selection
+      const firstCardIndex = Math.floor(Math.random() * availableCards.length);
+      const firstCard = availableCards[firstCardIndex];
+      
+      // Simulate card selection
+      await this.selectCard({ user: { id: botPlayerId }, emit: () => {} }, {
+        gameId: gameId,
+        playerId: botPlayerId,
+        position: firstCard.index
+      });
+
+      // Wait a bit before second card
+      setTimeout(async () => {
+        const updatedGameState = this.games.get(gameId);
+        if (!updatedGameState || updatedGameState.currentTurnPlayerId !== botPlayerId || updatedGameState.selectedCards.length !== 1) {
+          return;
+        }
+
+        // Second card selection (exclude already selected card)
+        const remainingCards = updatedGameState.board
+          .map((card, index) => ({ card, index }))
+          .filter(({ card, index }) => !card.isFlipped && !card.isMatched && index !== firstCard.index);
+
+        if (remainingCards.length > 0) {
+          const secondCardIndex = Math.floor(Math.random() * remainingCards.length);
+          const secondCard = remainingCards[secondCardIndex];
+          
+          await this.selectCard({ user: { id: botPlayerId }, emit: () => {} }, {
+            gameId: gameId,
+            playerId: botPlayerId,
+            position: secondCard.index
+          });
+        }
+      }, 1000 + Math.random() * 1000); // 1-2 second delay
+
+    } catch (error) {
+      logger.error(`Error in bot turn for ${botPlayerId} in game ${gameId}:`, error);
+    }
+  }
+
   // Clean up bots when game ends
   cleanupGameBots(gameId) {
-    botService.cleanupBot(gameId);
+    // Bot cleanup would go here if needed
+    logger.debug(`Cleaning up bots for game ${gameId}`);
   }
 }
 

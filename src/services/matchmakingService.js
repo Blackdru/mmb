@@ -2,7 +2,7 @@ const prisma = require('../config/database');
 const logger = require('../config/logger');
 const walletService = require('./walletService');
 const gameService = require('./gameService'); // For initializing game board based on game type
-const botService = require('./BotService'); // For bot players
+const botService = require('./botService'); // For bot players
 
 class MatchmakingService {
   constructor() {
@@ -10,6 +10,7 @@ class MatchmakingService {
     this.onGameCreatedCallback = null; // Callback to notify server.js
     this.initialized = false;
     this.botDeploymentTimers = new Map(); // Track bot deployment timers for each queue
+    this.isProcessingMatchmaking = false; // Prevent concurrent matchmaking cycles
   }
 
   async initialize() {
@@ -64,25 +65,45 @@ class MatchmakingService {
       
       // Check if user has sufficient balance (skip for free games)
       if (entryFee > 0) {
-        const balance = await walletService.getWalletBalance(userId);
-        logger.info(`💰 User ${userId} balance: ₹${balance}, required: ₹${entryFee}`);
-        if (balance < entryFee) {
-          logger.warn(`❌ Insufficient balance for user ${userId} to join queue. Has: ${balance}, Needs: ${entryFee}`);
-          throw new Error('Insufficient balance');
+        const walletBalance = await walletService.getWalletBalance(userId);
+        const gameBalance = walletBalance.gameBalance || 0;
+        logger.info(`💰 User ${userId} game balance: ₹${gameBalance}, required: ₹${entryFee}`);
+        if (gameBalance < entryFee) {
+          logger.warn(`❌ Insufficient game balance for user ${userId} to join queue. Has: ₹${gameBalance}, Needs: ₹${entryFee}`);
+          throw new Error('Insufficient game balance');
         }
       } else {
         logger.info(`🆓 Free game - skipping balance check for user ${userId}`);
       }
 
-      // Check if user is already in queue
+      // Check if user is already in queue for the same game configuration
       const existingQueue = await prisma.matchmakingQueue.findFirst({
-        where: { userId }
+        where: { 
+          userId,
+          gameType,
+          maxPlayers,
+          entryFee
+        }
       });
 
       if (existingQueue) {
-        logger.info(`⚠️ User ${userId} already in queue (ID: ${existingQueue.id}) - removing old entry before adding new.`);
-        await prisma.matchmakingQueue.delete({
-          where: { id: existingQueue.id }
+        logger.info(`⚠️ User ${userId} already in queue for ${gameType} ${maxPlayers}P ₹${entryFee} (ID: ${existingQueue.id}) - skipping duplicate join`);
+        return {
+          success: true,
+          message: 'Already in matchmaking queue for this game',
+          queueId: existingQueue.id
+        };
+      }
+
+      // Check if user is in any other queue and remove them
+      const otherQueues = await prisma.matchmakingQueue.findMany({
+        where: { userId }
+      });
+
+      if (otherQueues.length > 0) {
+        logger.info(`⚠️ User ${userId} found in ${otherQueues.length} other queue(s) - removing before adding to new queue`);
+        await prisma.matchmakingQueue.deleteMany({
+          where: { userId }
         });
       }
 
@@ -134,6 +155,14 @@ class MatchmakingService {
   }
 
   async processMatchmaking() {
+    // Prevent concurrent matchmaking cycles
+    if (this.isProcessingMatchmaking) {
+      logger.info('🔄 Matchmaking cycle already in progress, skipping...');
+      return;
+    }
+
+    this.isProcessingMatchmaking = true;
+    
     try {
       logger.info('🔍 Processing matchmaking cycle...');
       
@@ -175,9 +204,14 @@ class MatchmakingService {
           
           for (let i = 0; i < possibleGames; i++) {
             try {
-              await this.createGame(gameType, maxPlayers, entryFee);
-              gamesCreated++;
-              logger.info(`🎉 Created game ${i + 1}/${possibleGames} for ${gameType} ${maxPlayers}P ₹${entryFee}`);
+              const game = await this.createGame(gameType, maxPlayers, entryFee);
+              if (game) {
+                gamesCreated++;
+                logger.info(`🎉 Created game ${i + 1}/${possibleGames} for ${gameType} ${maxPlayers}P ₹${entryFee}`);
+              } else {
+                logger.info(`⚠️ Game creation ${i + 1}/${possibleGames} failed due to insufficient players, stopping batch`);
+                break; // Stop if we can't create more games
+              }
             } catch (error) {
               logger.error(`Failed to create game ${i + 1}/${possibleGames}:`, error);
               break; // Stop creating more games if one fails
@@ -197,6 +231,8 @@ class MatchmakingService {
       }
     } catch (error) {
       logger.error('Process matchmaking error:', error);
+    } finally {
+      this.isProcessingMatchmaking = false;
     }
   }
 
@@ -204,34 +240,35 @@ class MatchmakingService {
     try {
       logger.info(`Attempting to create game: Type: ${gameType}, Players: ${playersToMatch}, EntryFee: ₹${entryFee}`);
       
-      // Get exact number of players from queue (oldest entries first)
-      const queueEntries = await prisma.matchmakingQueue.findMany({
-        where: {
-          gameType,
-          maxPlayers: playersToMatch, // Important: Match on maxPlayers
-          entryFee
-        },
-        take: playersToMatch, // Take exactly the number of players needed
-        include: {
-          user: true
-        },
-        orderBy: {
-          createdAt: 'asc'
-        }
-      });
-
-      if (queueEntries.length < playersToMatch) {
-        logger.warn(`❌ Failed to create game: Not enough players found after re-query. Needed: ${playersToMatch}, Found: ${queueEntries.length}. This might be a race condition, retrying next cycle.`);
-        return null; // Not enough players (might have been removed by another process)
-      }
-
-      // Calculate prize pool (80% of total entry fees, 20% platform fee)
-      const totalEntryFees = entryFee * playersToMatch;
-      const prizePool = totalEntryFees * 0.8;
-      logger.info(`Calculated prize pool: ₹${prizePool.toFixed(2)} from total entry fees ₹${totalEntryFees.toFixed(2)}.`);
-
-      // Create game and process payments in transaction
+      // Create game and process everything in a single transaction to prevent race conditions
       const result = await prisma.$transaction(async (tx) => {
+        // Get exact number of players from queue within the transaction
+        const queueEntries = await tx.matchmakingQueue.findMany({
+          where: {
+            gameType,
+            maxPlayers: playersToMatch,
+            entryFee
+          },
+          take: playersToMatch,
+          include: {
+            user: true
+          },
+          orderBy: {
+            createdAt: 'asc'
+          },
+          distinct: ['userId']
+        });
+
+        if (queueEntries.length < playersToMatch) {
+          logger.warn(`❌ Failed to create game: Not enough players found in transaction. Needed: ${playersToMatch}, Found: ${queueEntries.length}.`);
+          throw new Error(`Insufficient players: needed ${playersToMatch}, found ${queueEntries.length}`);
+        }
+
+        // Calculate prize pool (80% of total entry fees, 20% platform fee)
+        const totalEntryFees = entryFee * playersToMatch;
+        const prizePool = totalEntryFees * 0.8;
+        logger.info(`Calculated prize pool: ₹${prizePool.toFixed(2)} from total entry fees ₹${totalEntryFees.toFixed(2)}.`);
+
         // Initialize gameData for MemoryGame only
         let initialGameData = {};
         if (gameType === 'MEMORY') {
@@ -245,25 +282,51 @@ class MatchmakingService {
             maxPlayers: playersToMatch,
             entryFee,
             prizePool,
-            status: 'WAITING', // Game is created but waiting for players to join socket room
-            gameData: initialGameData, // Store initial game board state
-            // currentTurn will be set when the game actually starts
+            status: 'WAITING',
+            gameData: initialGameData,
           }
         });
         logger.info(`Game ${game.id} created in database with initial status 'WAITING'.`);
 
+        // Remove players from queue first to prevent them being picked up by other processes
+        const queueIds = queueEntries.map(entry => entry.id);
+        const deletedCount = await tx.matchmakingQueue.deleteMany({
+          where: {
+            id: { in: queueIds }
+          }
+        });
+        logger.info(`Removed ${deletedCount.count} players from queue for game ${game.id}`);
+
         // Process entry fees and create participations
         const participations = [];
-        const colors = ['red', 'blue', 'green', 'yellow']; // Standard Ludo colors
+        const colors = ['red', 'blue', 'green', 'yellow'];
+        const processedUsers = new Set();
 
         for (let i = 0; i < queueEntries.length; i++) {
           const queueEntry = queueEntries[i];
-          const playerColor = colors[i % colors.length]; // Assign colors cyclically
+          const playerColor = colors[i % colors.length];
 
-          // Deduct entry fee only if not free game
+          // Check if we've already processed this user (prevent double deduction)
+          if (processedUsers.has(queueEntry.userId)) {
+            logger.warn(`User ${queueEntry.userId} already processed for game ${game.id}, skipping duplicate entry`);
+            continue;
+          }
+          processedUsers.add(queueEntry.userId);
+
+          // Deduct entry fee only if not free game and user hasn't been processed
           if (entryFee > 0) {
-            await walletService.deductGameEntry(queueEntry.userId, entryFee, game.id);
-            logger.info(`Deducted ₹${entryFee} from user ${queueEntry.userId} for game entry.`);
+            try {
+              const deductionResult = await walletService.deductGameEntry(queueEntry.userId, entryFee, game.id);
+              if (deductionResult.success) {
+                logger.info(`✅ Deducted ₹${entryFee} from user ${queueEntry.userId} for game entry. New balance: ₹${deductionResult.gameBalance}`);
+              } else {
+                logger.error(`❌ Failed to deduct ₹${entryFee} from user ${queueEntry.userId}: ${deductionResult.message}`);
+                throw new Error(`Failed to deduct entry fee from user ${queueEntry.userId}: ${deductionResult.message}`);
+              }
+            } catch (deductionError) {
+              logger.error(`❌ Wallet deduction error for user ${queueEntry.userId}:`, deductionError);
+              throw new Error(`Wallet deduction failed for user ${queueEntry.userId}: ${deductionError.message}`);
+            }
           }
 
           // Create participation record
@@ -271,33 +334,25 @@ class MatchmakingService {
             data: {
               userId: queueEntry.userId,
               gameId: game.id,
-              position: i, // Store turn order
-              color: playerColor, // Assign color to participant
-              score: 0 // Initialize score to 0
+              position: i,
+              color: playerColor,
+              score: 0
             }
           });
           participations.push(participation);
           logger.info(`User ${queueEntry.userId} added as participant for game ${game.id} with color ${playerColor}.`);
-
-          // Remove from queue (use deleteMany to avoid errors if already deleted)
-          const deletedQueue = await tx.matchmakingQueue.deleteMany({
-            where: { id: queueEntry.id }
-          });
-          if (deletedQueue.count > 0) {
-            logger.info(`Queue entry ${queueEntry.id} removed for user ${queueEntry.userId}.`);
-          } else {
-            logger.warn(`Queue entry ${queueEntry.id} was already removed for user ${queueEntry.userId}.`);
-          }
         }
 
-        // Fetch the game again with its participants to ensure the `participants` relation is loaded
+        // Fetch the game again with its participants
         const gameWithParticipants = await tx.game.findUnique({
-            where: { id: game.id },
-            include: { participants: true } // Include the participants
+          where: { id: game.id },
+          include: { participants: true }
         });
 
-
         return { game: gameWithParticipants, participations, players: queueEntries.map(q => q.user) };
+      }, {
+        maxWait: 10000, // Maximum time to wait for a transaction slot (10 seconds)
+        timeout: 20000, // Maximum time for the transaction to run (20 seconds)
       });
 
       logger.info(`🎉 Game ${result.game.id} successfully created and players matched. Notifying via callback.`);
@@ -306,7 +361,6 @@ class MatchmakingService {
       this.clearBotDeploymentTimer(gameType, playersToMatch, entryFee);
 
       // Notify server.js about the created game and matched players
-      // The callback is responsible for emitting socket events to clients
       if (this.onGameCreatedCallback) {
         this.onGameCreatedCallback(result.game, result.players);
       } else {
@@ -316,7 +370,14 @@ class MatchmakingService {
       return result.game;
     } catch (error) {
       logger.error('Create game error:', error);
-      // Re-throw the error so the caller can decide how to handle it
+      
+      // If it's an insufficient players error, don't treat it as a critical error
+      if (error.message.includes('Insufficient players')) {
+        logger.info('Not enough players available for game creation, will retry in next cycle');
+        return null;
+      }
+      
+      // Re-throw other errors
       throw error; 
     }
   }
@@ -361,24 +422,23 @@ class MatchmakingService {
   startBotDeploymentTimer(gameType, maxPlayers, entryFee) {
     const queueKey = `${gameType}_${maxPlayers}_${entryFee}`;
     
-    // Don't start a new timer if one already exists for this queue
-    if (this.botDeploymentTimers.has(queueKey)) {
-      return;
-    }
-
-    logger.info(`🤖 Starting bot deployment timer for queue: ${queueKey} (30 seconds)`);
+    // Allow multiple timers for the same configuration to support concurrent games
+    // Generate unique timer key with timestamp
+    const uniqueTimerKey = `${queueKey}_${Date.now()}`;
+    
+    logger.info(`🤖 Starting bot deployment timer for queue: ${queueKey} (30 seconds) - Timer ID: ${uniqueTimerKey}`);
 
     const timer = setTimeout(async () => {
       try {
         await this.deployBotIfNeeded(gameType, maxPlayers, entryFee);
-        this.botDeploymentTimers.delete(queueKey);
+        this.botDeploymentTimers.delete(uniqueTimerKey);
       } catch (error) {
         logger.error(`Error deploying bot for queue ${queueKey}:`, error);
-        this.botDeploymentTimers.delete(queueKey);
+        this.botDeploymentTimers.delete(uniqueTimerKey);
       }
     }, 30000); // 30 seconds
 
-    this.botDeploymentTimers.set(queueKey, timer);
+    this.botDeploymentTimers.set(uniqueTimerKey, timer);
   }
 
   // Deploy a bot if there are waiting players but not enough for a full game
@@ -397,34 +457,42 @@ class MatchmakingService {
 
       logger.info(`📊 Current queue count: ${queueCount}/${maxPlayers} for ${gameType}`);
 
-      // Only deploy bot if we have exactly 1 human player waiting (for 2-player games)
-      if (queueCount === 1 && maxPlayers === 2) {
-        logger.info(`🤖 Deploying bot for ${gameType} game - 1 human player waiting`);
-        
-        // Create bot user
-        const { user: botUser, profile: botProfile } = await botService.createBotUser();
-        
-        // Add bot to queue
-        await prisma.matchmakingQueue.create({
-          data: {
-            userId: botUser.id,
+      // Deploy bot if we have human players waiting but not enough for a full game
+      if (queueCount > 0 && queueCount < maxPlayers) {
+        // Check if there are any human players (non-bots) in the queue
+        const humanPlayersCount = await prisma.matchmakingQueue.count({
+          where: {
             gameType,
             maxPlayers,
-            entryFee
+            entryFee,
+            user: {
+              isBot: false
+            }
           }
         });
 
-        logger.info(`🤖 Bot ${botProfile.name} (${botUser.id}) added to queue for ${gameType} ${maxPlayers}P ₹${entryFee}`);
-        
-        // Trigger immediate matchmaking check
-        setTimeout(() => this.processMatchmaking(), 1000);
+        if (humanPlayersCount > 0) {
+          logger.info(`🤖 Deploying bot for ${gameType} game - ${humanPlayersCount} human player(s) waiting`);
+          
+          try {
+            // Get bot for matchmaking
+            const botUser = await botService.getBotForMatchmaking(gameType, entryFee);
+            
+            logger.info(`🤖 Bot ${botUser.name} (${botUser.id}) added to queue for ${gameType} ${maxPlayers}P ₹${entryFee}`);
+            
+            // Trigger immediate matchmaking check
+            setTimeout(() => this.processMatchmaking(), 1000);
+          } catch (botError) {
+            logger.error(`Failed to deploy bot: ${botError.message}`);
+          }
+        } else {
+          logger.info(`🤖 Only bots in queue for ${gameType} ${maxPlayers}P ₹${entryFee} - not deploying additional bot`);
+        }
         
       } else if (queueCount === 0) {
         logger.info(`📭 No players in queue for ${gameType} ${maxPlayers}P ₹${entryFee} - bot deployment not needed`);
       } else if (queueCount >= maxPlayers) {
         logger.info(`✅ Enough players (${queueCount}) for ${gameType} ${maxPlayers}P ₹${entryFee} - bot deployment not needed`);
-      } else {
-        logger.info(`⏳ ${queueCount} players waiting for ${gameType} ${maxPlayers}P ₹${entryFee} - not deploying bot yet`);
       }
 
     } catch (error) {
@@ -436,11 +504,19 @@ class MatchmakingService {
   clearBotDeploymentTimer(gameType, maxPlayers, entryFee) {
     const queueKey = `${gameType}_${maxPlayers}_${entryFee}`;
     
-    if (this.botDeploymentTimers.has(queueKey)) {
-      clearTimeout(this.botDeploymentTimers.get(queueKey));
-      this.botDeploymentTimers.delete(queueKey);
-      logger.info(`🤖 Cleared bot deployment timer for queue: ${queueKey}`);
+    // Clear all timers for this queue configuration
+    const timersToDelete = [];
+    for (const [timerKey, timer] of this.botDeploymentTimers.entries()) {
+      if (timerKey.startsWith(queueKey)) {
+        clearTimeout(timer);
+        timersToDelete.push(timerKey);
+      }
     }
+    
+    timersToDelete.forEach(timerKey => {
+      this.botDeploymentTimers.delete(timerKey);
+      logger.info(`🤖 Cleared bot deployment timer: ${timerKey}`);
+    });
   }
 }
 

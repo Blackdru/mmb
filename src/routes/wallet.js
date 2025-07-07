@@ -8,8 +8,8 @@ const logger = require('../config/logger');
 // Get wallet balance
 router.get('/balance', authenticateToken, async (req, res) => {
   try {
-    const balance = await walletService.getWalletBalance(req.user.id);
-    res.json({ success: true, balance });
+    const wallet = await walletService.getWalletBalance(req.user.id);
+    res.json({ success: true, wallet });
   } catch (err) {
     logger.error('Get wallet balance error:', err);
     res.status(500).json({ success: false, message: 'Failed to get wallet balance' });

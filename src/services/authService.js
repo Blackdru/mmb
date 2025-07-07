@@ -27,20 +27,36 @@ class AuthService {
 
   async processReferral(userId, referralCode) {
     try {
-      if (!referralCode) return;
+      if (!referralCode) return { success: true };
+      
+      // Check if user already has a referrer
+      const currentUser = await prisma.user.findUnique({
+        where: { id: userId }
+      });
+      
+      if (currentUser.referredBy) {
+        logger.info(`User ${userId} already has a referrer`);
+        return { success: true, message: 'User already has a referrer' };
+      }
       
       const referrer = await prisma.user.findUnique({
         where: { referralCode },
         include: { wallet: true }
       });
       
-      if (!referrer || referrer.id === userId) return;
+      if (!referrer) {
+        logger.warn(`Invalid referral code: ${referralCode}`);
+        return { success: false, message: 'Invalid referral code' };
+      }
       
-      const walletService = require('./walletService');
+      if (referrer.id === userId) {
+        logger.warn(`User ${userId} tried to use own referral code`);
+        return { success: false, message: 'Cannot use your own referral code' };
+      }
       
       // Give bonus to both users (25 rupees each, game-only balance)
-      await walletService.creditWallet(referrer.id, 25, 'REFERRAL_BONUS', null, 'Referral bonus - friend joined');
-      await walletService.creditWallet(userId, 25, 'REFERRAL_SIGNUP_BONUS', null, 'Signup bonus - used referral code');
+      await this.creditGameBalance(referrer.id, 25, 'REFERRAL_BONUS', 'Referral bonus - friend joined');
+      await this.creditGameBalance(userId, 25, 'REFERRAL_SIGNUP_BONUS', 'Signup bonus - used referral code');
       
       // Update user with referrer info
       await prisma.user.update({
@@ -52,8 +68,43 @@ class AuthService {
       });
       
       logger.info(`Referral processed: ${referrer.id} referred ${userId}`);
+      return { success: true, message: 'Referral bonus applied successfully' };
     } catch (error) {
       logger.error('Process referral error:', error);
+      return { success: false, message: 'Failed to process referral' };
+    }
+  }
+  
+  async creditGameBalance(userId, amount, type, description) {
+    try {
+      // Update wallet game balance
+      await prisma.wallet.update({
+        where: { userId },
+        data: {
+          gameBalance: {
+            increment: amount
+          },
+          balance: {
+            increment: amount
+          }
+        }
+      });
+      
+      // Create transaction record
+      await prisma.transaction.create({
+        data: {
+          userId,
+          type,
+          amount,
+          status: 'COMPLETED',
+          description
+        }
+      });
+      
+      logger.info(`Credited ${amount} to user ${userId} game balance`);
+    } catch (error) {
+      logger.error(`Credit game balance error for user ${userId}:`, error);
+      throw error;
     }
   }
 
@@ -76,7 +127,18 @@ class AuthService {
 
       // Generate new OTP
       const otp = this.generateOTP();
-      const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+      const currentTime = new Date();
+      const expiresAt = new Date(currentTime.getTime() + 15 * 60 * 1000); // 15 minutes from now
+      
+      logger.info(`Generated OTP for ${phoneNumber}, expires at: ${expiresAt.toISOString()}`);
+      logger.info(`Current time: ${currentTime.toISOString()}`);
+      logger.info(`Time difference: ${(expiresAt.getTime() - currentTime.getTime()) / 1000} seconds`);
+      
+      // Validate expiration time is in the future
+      if (expiresAt <= currentTime) {
+        logger.error('OTP expiration time is not in the future!');
+        throw new Error('Failed to generate OTP with valid expiration');
+      }
 
       // Save OTP to database first
       const otpRecord = await prisma.oTPVerification.create({
@@ -132,7 +194,7 @@ class AuthService {
     }
   }
 
-  async verifyOTP(phoneNumber, otp) {
+  async verifyOTP(phoneNumber, otp, referralCode = null) {
     try {
       // Validate inputs
       if (!phoneNumber || !otp) {
@@ -148,6 +210,14 @@ class AuthService {
       if (!otp.match(/^\d{6}$/)) {
         logger.warn(`Invalid OTP format for ${phoneNumber}: ${otp}`);
         throw new Error('OTP must be 6 digits');
+      }
+
+      // Validate referral code format if provided
+      if (referralCode && referralCode.trim() !== '') {
+        if (!referralCode.match(/^BZ[A-Z0-9]{4,8}$/)) {
+          logger.warn(`Invalid referral code format: ${referralCode}`);
+          throw new Error('Invalid referral code format. Must start with BZ followed by 4-8 alphanumeric characters.');
+        }
       }
 
       logger.info(`Verifying OTP for ${phoneNumber}`); // Removed OTP from log for security
@@ -198,28 +268,49 @@ class AuthService {
         include: { wallet: true }
       });
 
+      let isNewUser = false;
       if (!user) {
+        isNewUser = true;
         logger.info(`Creating new user for ${phoneNumber}`);
         
         // Generate unique referral code
-        const referralCode = this.generateReferralCode();
+        let userReferralCode;
+        let isUnique = false;
+        let attempts = 0;
+        
+        while (!isUnique && attempts < 10) {
+          userReferralCode = this.generateReferralCode();
+          const existingUser = await prisma.user.findUnique({
+            where: { referralCode: userReferralCode }
+          });
+          if (!existingUser) {
+            isUnique = true;
+          }
+          attempts++;
+        }
+        
+        if (!isUnique) {
+          throw new Error('Failed to generate unique referral code');
+        }
         
         // Create new user with wallet
         user = await prisma.user.create({
           data: {
             phoneNumber,
             isVerified: true,
-            referralCode,
+            referralCode: userReferralCode,
             name: `User_${phoneNumber.substring(phoneNumber.length - 4)}`,
             wallet: {
               create: {
-                balance: 0
+                balance: 0,
+                gameBalance: 0,
+                withdrawableBalance: 0
               }
             }
           },
           include: { wallet: true }
         });
-        logger.info(`New user created: ${user.id} with referral code: ${referralCode}`);
+        logger.info(`New user created: ${user.id} with referral code: ${userReferralCode}`);
       } else {
         logger.info(`Updating existing user: ${user.id}`);
         // Update verification status if not already verified
@@ -229,6 +320,22 @@ class AuthService {
             data: { isVerified: true },
             include: { wallet: true }
           });
+        }
+      }
+
+      // Process referral code only for new users
+      if (isNewUser && referralCode) {
+        try {
+          const referralResult = await this.processReferral(user.id, referralCode);
+          if (!referralResult.success) {
+            logger.warn(`Referral processing failed for new user ${user.id}: ${referralResult.message}`);
+            // Don't fail the entire signup process, just log the warning
+          } else {
+            logger.info(`Referral processed successfully for new user ${user.id}`);
+          }
+        } catch (referralError) {
+          logger.error(`Error processing referral for new user ${user.id}:`, referralError);
+          // Don't fail the entire signup process
         }
       }
 
@@ -250,6 +357,7 @@ class AuthService {
       return {
         success: true,
         token,
+        isNewUser,
         user: {
           id: user.id,
           phoneNumber: user.phoneNumber,
@@ -257,6 +365,7 @@ class AuthService {
           email: user.email,
           avatar: user.avatar,
           isVerified: user.isVerified,
+          referralCode: user.referralCode,
           wallet: user.wallet
         }
       };

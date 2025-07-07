@@ -20,6 +20,7 @@ const socketManager = require('./src/services/socketManager');
 const gameStateManager = require('./src/services/gameStateManager');
 const matchmakingService = require('./src/services/matchmakingService');
 const gameService = require('./src/services/gameService');
+const botService = require('./src/services/botService');
 const MemoryGameService = require('./src/services/MemoryGame');
 const { authenticateSocket } = require('./src/middleware/auth');
 const { gameSchemas } = require('./src/validation/schemas');
@@ -144,7 +145,12 @@ io.on('connection', (socket) => {
       socket.join(`game:${gameId}`);
 
       if (game.type === 'MEMORY') {
-        await memoryGameService.joinRoom(socket, { roomId: gameId, playerId: userId, playerName: userName });
+        try {
+          await memoryGameService.joinRoom(socket, { roomId: gameId, playerId: userId, playerName: userName });
+        } catch (error) {
+          logger.error(`Error joining memory game room for user ${userId}:`, error);
+          return socket.emit('gameError', { message: 'Failed to join memory game room' });
+        }
       } else {
         return socket.emit('gameError', { message: 'Unsupported game type' });
       }
@@ -165,7 +171,12 @@ io.on('connection', (socket) => {
       }
 
       const { gameId, position } = value;
-      await memoryGameService.selectCard(socket, { gameId, playerId: userId, position });
+      try {
+        await memoryGameService.selectCard(socket, { gameId, playerId: userId, position });
+      } catch (error) {
+        logger.error(`Error selecting card for user ${userId}:`, error);
+        socket.emit('gameError', { message: 'Failed to select card' });
+      }
     } catch (err) {
       logger.error(`Select card error for user ${userId}:`, err);
       socket.emit('gameError', { message: 'Failed to select card' });
@@ -392,11 +403,15 @@ matchmakingService.setGameCreatedCallback(async (game, matchedUsers) => {
             
             // Auto-join game room - Only Memory Game
             if (game.type === 'MEMORY') {
-              await memoryGameService.joinRoom(socket, { 
-                roomId: game.id, 
-                playerId: user.id, 
-                playerName: user.name 
-              });
+              try {
+                await memoryGameService.joinRoom(socket, { 
+                  roomId: game.id, 
+                  playerId: user.id, 
+                  playerName: user.name 
+                });
+              } catch (error) {
+                logger.error(`Error auto-joining memory game room for user ${user.id}:`, error);
+              }
             }
           }
         }
@@ -421,7 +436,11 @@ matchmakingService.setGameCreatedCallback(async (game, matchedUsers) => {
           
           if (game.type === 'MEMORY') {
             logger.info(`Starting Memory game ${game.id} with ${socketsInRoom.size} sockets in room`);
-            await memoryGameService.startGame({ roomId: game.id });
+            try {
+              await memoryGameService.startGame({ roomId: game.id });
+            } catch (error) {
+              logger.error(`Error starting memory game ${game.id}:`, error);
+            }
           }
           logger.info(`Successfully auto-started game ${game.id}`);
         } else {
@@ -549,6 +568,52 @@ app.get('/debug/games', (req, res) => {
   }
 });
 
+app.get('/debug/bots', async (req, res) => {
+  try {
+    const totalBots = await prisma.user.count({
+      where: { isBot: true }
+    });
+    
+    const availableBots = await botService.getAvailableBotsCount();
+    
+    const botsInQueue = await prisma.matchmakingQueue.count({
+      where: {
+        user: { isBot: true }
+      }
+    });
+    
+    const botsInGames = await prisma.gameParticipation.count({
+      where: {
+        user: { isBot: true },
+        game: {
+          status: {
+            in: ['WAITING', 'PLAYING']
+          }
+        }
+      }
+    });
+    
+    const botTimers = matchmakingService.botDeploymentTimers.size;
+    
+    res.json({
+      success: true,
+      botStats: {
+        totalBots,
+        availableBots,
+        botsInQueue,
+        botsInGames,
+        activeTimers: botTimers
+      }
+    });
+  } catch (error) {
+    logger.error('Debug bots endpoint error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to retrieve bot data'
+    });
+  }
+});
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   logger.error('Express error:', err);
@@ -574,6 +639,10 @@ async function startServer() {
     
     await gameStateManager.initialize();
     logger.info('Game state manager initialized');
+    
+    // Ensure minimum bots are available
+    await botService.ensureMinimumBots(10);
+    logger.info('Bot service initialized with minimum bots');
     
     // Start HTTP server
     server.listen(PORT, () => {
@@ -655,7 +724,15 @@ process.on('uncaughtException', (error) => {
 
 process.on('unhandledRejection', (reason, promise) => {
   logger.error('Unhandled Rejection at:', promise, 'reason:', reason);
-  process.exit(1);
+  
+  // Don't exit the process for unhandled rejections in production
+  // Instead, log the error and continue running
+  if (process.env.NODE_ENV === 'production') {
+    logger.error('Continuing execution despite unhandled rejection...');
+  } else {
+    // In development, still exit to catch issues early
+    process.exit(1);
+  }
 });
 
 // Memory monitoring
@@ -678,6 +755,17 @@ setInterval(() => {
     logger.error('Cleanup error:', error);
   }
 }, 5 * 60 * 1000); // Every 5 minutes
+
+// Bot maintenance intervals
+setInterval(() => {
+  try {
+    botService.cleanupInactiveBots();
+    botService.ensureMinimumBots(10);
+    logger.debug('Bot maintenance completed');
+  } catch (error) {
+    logger.error('Bot maintenance error:', error);
+  }
+}, 2 * 60 * 1000); // Every 2 minutes
 
 // Start the server
 startServer();
