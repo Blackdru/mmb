@@ -40,6 +40,13 @@ model User {
   // Feedback
   feedback    Feedback[]
 
+  // Bot statistics (only for bot users)
+  botStatistics      BotStatistics?
+  botGamePerformances BotGamePerformance[] @relation("BotPerformance")
+  opponentGamePerformances BotGamePerformance[] @relation("OpponentPerformance")
+  botAdjustmentHistory BotAdjustmentHistory[]
+  botGameSessions    BotGameSession[]
+
   @@map("users")
 }
 
@@ -155,6 +162,8 @@ model Game {
   finishedAt  DateTime?
 
   participants GameParticipation[]
+  botGamePerformances BotGamePerformance[]
+  botGameSessions    BotGameSession[]
 
   @@map("games")
 }
@@ -278,4 +287,83 @@ enum FeedbackStatus {
   REVIEWED
   RESOLVED
   CLOSED
+}
+
+// Bot statistics and performance tracking models
+model BotStatistics {
+  id                        String   @id @default(cuid())
+  botId                     String   @unique @map("bot_id")
+  gamesPlayed              Int      @default(0) @map("games_played")
+  gamesWon                 Int      @default(0) @map("games_won")
+  gamesLost                Int      @default(0) @map("games_lost")
+  totalEarnings            Decimal  @default(0) @db.Decimal(10, 2) @map("total_earnings")
+  avgReactionTime          Int      @default(0) @map("avg_reaction_time")
+  memoryAccuracy           Decimal  @default(0.50) @db.Decimal(3, 2) @map("memory_accuracy")
+  lastPerformanceAdjustment Decimal @default(1.00) @db.Decimal(3, 2) @map("last_performance_adjustment")
+  lastGameAt               DateTime? @map("last_game_at")
+  createdAt                DateTime @default(now()) @map("created_at")
+  updatedAt                DateTime @updatedAt @map("updated_at")
+
+  bot User @relation(fields: [botId], references: [id], onDelete: Cascade)
+
+  @@map("bot_statistics")
+}
+
+model BotGamePerformance {
+  id                 String   @id @default(cuid())
+  botId              String   @map("bot_id")
+  gameId             String   @map("game_id")
+  opponentId         String   @map("opponent_id")
+  result             BotGameResult
+  movesMade          Int      @default(0) @map("moves_made")
+  successfulMatches  Int      @default(0) @map("successful_matches")
+  avgMoveTime        Int      @default(0) @map("avg_move_time")
+  memoryUtilization  Decimal  @default(0.00) @db.Decimal(3, 2) @map("memory_utilization")
+  performanceFactor  Decimal  @default(1.00) @db.Decimal(3, 2) @map("performance_factor")
+  behaviorProfile    String?  @map("behavior_profile")
+  createdAt          DateTime @default(now()) @map("created_at")
+
+  bot      User @relation("BotPerformance", fields: [botId], references: [id], onDelete: Cascade)
+  game     Game @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  opponent User @relation("OpponentPerformance", fields: [opponentId], references: [id], onDelete: Cascade)
+
+  @@map("bot_game_performance")
+}
+
+model BotAdjustmentHistory {
+  id               String   @id @default(cuid())
+  botId            String   @map("bot_id")
+  adjustmentFactor Decimal  @db.Decimal(3, 2) @map("adjustment_factor")
+  reason           String?
+  winRateBefore    Decimal? @db.Decimal(3, 2) @map("win_rate_before")
+  winRateTarget    Decimal  @default(0.50) @db.Decimal(3, 2) @map("win_rate_target")
+  gamesAnalyzed    Int      @default(0) @map("games_analyzed")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  bot User @relation(fields: [botId], references: [id], onDelete: Cascade)
+
+  @@map("bot_adjustment_history")
+}
+
+model BotGameSession {
+  id                 String   @id @default(cuid())
+  botId              String   @map("bot_id")
+  gameId             String   @map("game_id")
+  sessionData        Json?    @map("session_data")
+  behaviorProfile    String?  @map("behavior_profile")
+  memoryState        Json?    @map("memory_state")
+  performanceMetrics Json?    @map("performance_metrics")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  bot  User @relation(fields: [botId], references: [id], onDelete: Cascade)
+  game Game @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  @@map("bot_game_sessions")
+}
+
+enum BotGameResult {
+  WIN
+  LOSS
+  DRAW
 }

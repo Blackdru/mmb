@@ -3,15 +3,27 @@ const logger = require('../config/logger');
 
 class BotService {
   constructor() {
-    this.botNames = [
-      'GameMaster', 'ProPlayer', 'MemoryKing', 'CardShark', 'BrainBox',
-      'QuickThink', 'MindReader', 'FlashCard', 'MemoryAce', 'ThinkFast'
-    ];
+    this.botProfiles = [
+  { name: 'NareshMj', skillLevel: 0.85 },   
+  { name: 'Rajeev', skillLevel: 0.75 },     
+  { name: 'Siddharth', skillLevel: 0.90 },  
+  { name: 'Swamycharan', skillLevel: 0.80 },    
+  { name: 'Raghav', skillLevel: 0.70 },     
+  { name: 'Varun', skillLevel: 0.65 },      
+  { name: 'Ganesh', skillLevel: 0.95 },     
+  { name: 'Nikhil', skillLevel: 0.60 },      
+  { name: 'Ritesh', skillLevel: 0.85 },      
+  { name: 'Aman', skillLevel: 0.55 }      
+]
+
   }
 
   async createBotUser() {
     try {
-      const botName = this.botNames[Math.floor(Math.random() * this.botNames.length)];
+      // Select a bot profile with skill level
+      const profile = this.botProfiles[Math.floor(Math.random() * this.botProfiles.length)];
+      const uniqueId = Math.floor(Math.random() * 999) + 1;
+      const botName = `${profile.name}${uniqueId}`;
       const botPhone = `+91${Math.floor(Math.random() * 9000000000) + 1000000000}`;
       
       const bot = await prisma.user.create({
@@ -88,7 +100,7 @@ class BotService {
         data: {
           userId: bot.id,
           gameType,
-          maxPlayers: 2,
+          maxPlayers: 2, // Memory game is 2 players
           entryFee
         }
       });

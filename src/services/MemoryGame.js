@@ -3,6 +3,8 @@ const logger = require('../config/logger');
 const gameService = require('./gameService');
 const prisma = require('../config/database');
 const botService = require('./botService');
+const GameplayController = require('../bot-system/services/GameplayController');
+const PerformanceBalancer = require('../bot-system/services/PerformanceBalancer');
 
 class MemoryGameService {
   constructor(io) {
@@ -231,6 +233,7 @@ class MemoryGameService {
             
             // If first player is a bot, handle bot turn
             if (players[0]) {
+              logger.info(`🎮 Checking if first player ${players[0].name} (${players[0].id}) is a bot for game ${roomId}`);
               this.checkAndHandleBotTurn(roomId, players[0].id).catch(err => {
                 logger.error('Error checking bot turn in startGame:', err);
               });
@@ -485,7 +488,8 @@ class MemoryGameService {
           logger.error('Failed to update player score in processMatch:', err);
         });
 
-        // Bot memory update for matched cards would go here if implemented
+        // Bot memory update for matched cards
+        this.updateBotMemories(gameId, [card1, card2], true);
 
         // Emit match event with minimal data
         this.io.to(`game:${gameId}`).emit('MEMORY_CARDS_MATCHED', {
@@ -516,7 +520,8 @@ class MemoryGameService {
         gameState.board[card1.position].isFlipped = false;
         gameState.board[card2.position].isFlipped = false;
         
-        // Bot memory update for mismatched cards would go here if implemented
+        // Bot memory update for mismatched cards
+        this.updateBotMemories(gameId, [card1, card2], false);
         
         // Emit mismatch event with immediate flip back
         this.io.to(`game:${gameId}`).emit('MEMORY_CARDS_MISMATCHED', {
@@ -599,10 +604,10 @@ class MemoryGameService {
       timeLeft: this.TURN_TIMER / 1000
     });
 
-    // Send countdown updates
+    // Send countdown updates less frequently to reduce lag
     let timeLeft = this.TURN_TIMER / 1000;
     const countdownInterval = setInterval(() => {
-      timeLeft--;
+      timeLeft -= 3;
       if (timeLeft > 0) {
         this.io.to(`game:${gameId}`).emit('MEMORY_TIMER_UPDATE', {
           timeLeft: timeLeft
@@ -610,7 +615,7 @@ class MemoryGameService {
       } else {
         clearInterval(countdownInterval);
       }
-    }, 1000);
+    }, 3000); // Update every 3 seconds instead of 1
 
     this.countdownIntervals.set(gameId, countdownInterval);
   }
@@ -822,6 +827,19 @@ class MemoryGameService {
       
       // Don't delete from processedWinnings here - let it be cleaned up naturally to prevent race conditions
 
+      // Integrate with advanced bot performance tracking
+      try {
+        const participants = gameState.players.map(player => ({
+          userId: player.id,
+          user: { isBot: player.isBot || false }
+        }));
+        
+        await GameplayController.handleGameEnd(gameId, winnerId, participants);
+        await PerformanceBalancer.recordGameOutcome(gameId, winnerId, participants);
+      } catch (botError) {
+        logger.error(`Advanced bot system integration error for game ${gameId}:`, botError);
+      }
+
       logger.info(`Memory Game: Game ${gameId} ended with reason: ${endReason}. Winner: ${winnerId} with score: ${highestScore}`);
     } catch (error) {
       logger.error(`Memory Game: End game error for ${gameId}:`, error);
@@ -1011,78 +1029,225 @@ class MemoryGameService {
     try {
       const user = await prisma.user.findUnique({ where: { id: playerId } });
       if (user && user.isBot) {
-        logger.info(`🤖 Bot turn detected for ${user.name} in game ${gameId}`);
-        // Handle bot turn with a slight delay to make it feel natural
+        logger.info(`🤖 Bot turn for ${user.name} in game ${gameId}`);
+        
+        // Use simple bot logic to reduce lag
         setTimeout(() => {
-          this.handleBotTurn(gameId, playerId);
-        }, 1000 + Math.random() * 2000); // 1-3 second delay for natural feel
+          this.handleBasicBotTurn(gameId, playerId);
+        }, 1000 + Math.random() * 2000); // 1-3 second delay
       }
     } catch (error) {
       logger.error(`Error checking bot turn for player ${playerId}:`, error);
+      // Fallback to basic bot logic
+      setTimeout(() => {
+        this.handleBasicBotTurn(gameId, playerId);
+      }, 1500);
     }
   }
 
-  // Simple bot AI for making moves
-  async handleBotTurn(gameId, botPlayerId) {
+  // Human-like bot logic with memory and strategy
+  async handleBasicBotTurn(gameId, botPlayerId) {
     try {
       const gameState = this.games.get(gameId);
       if (!gameState || gameState.status !== 'playing' || gameState.currentTurnPlayerId !== botPlayerId) {
         return;
       }
 
-      // Simple bot strategy: pick random available cards
+      // Get or create bot memory for this game
+      const botMemoryKey = `${gameId}_${botPlayerId}`;
+      if (!this.botMemories) this.botMemories = new Map();
+      if (!this.botMemories.has(botMemoryKey)) {
+        this.botMemories.set(botMemoryKey, {
+          rememberedCards: new Map(), // position -> symbol
+          skillLevel: Math.random() * 0.7 + 0.3, // 30-100% skill
+          patience: Math.random() * 0.5 + 0.5, // 50-100% patience
+          lastMove: null
+        });
+      }
+
+      const botMemory = this.botMemories.get(botMemoryKey);
       const availableCards = gameState.board
         .map((card, index) => ({ card, index }))
         .filter(({ card }) => !card.isFlipped && !card.isMatched);
 
-      if (availableCards.length === 0) {
-        return;
+      if (availableCards.length === 0) return;
+
+      // Human-like thinking delay
+      const thinkingTime = 1000 + Math.random() * 2000; // 1-3 seconds
+      await new Promise(resolve => setTimeout(resolve, thinkingTime));
+
+      // Try to find a match from memory first
+      let firstCard = this.findMemoryMatch(availableCards, botMemory, gameState.board);
+      
+      if (!firstCard) {
+        // If no memory match, use strategy-based selection
+        firstCard = this.selectWithStrategy(availableCards, botMemory);
       }
 
-      // First card selection
-      const firstCardIndex = Math.floor(Math.random() * availableCards.length);
-      const firstCard = availableCards[firstCardIndex];
+      logger.info(`🤖 Bot ${botPlayerId} selecting first card at position ${firstCard.index}`);
       
-      // Simulate card selection
       await this.selectCard({ user: { id: botPlayerId }, emit: () => {} }, {
         gameId: gameId,
         playerId: botPlayerId,
         position: firstCard.index
       });
 
-      // Wait a bit before second card
+      // Wait before second card with human-like timing
+      const secondCardDelay = 800 + Math.random() * 1500; // 0.8-2.3 seconds
       setTimeout(async () => {
-        const updatedGameState = this.games.get(gameId);
-        if (!updatedGameState || updatedGameState.currentTurnPlayerId !== botPlayerId || updatedGameState.selectedCards.length !== 1) {
-          return;
-        }
+        try {
+          const updatedGameState = this.games.get(gameId);
+          if (!updatedGameState || updatedGameState.currentTurnPlayerId !== botPlayerId) {
+            return;
+          }
 
-        // Second card selection (exclude already selected card)
-        const remainingCards = updatedGameState.board
-          .map((card, index) => ({ card, index }))
-          .filter(({ card, index }) => !card.isFlipped && !card.isMatched && index !== firstCard.index);
+          if (updatedGameState.selectedCards.length >= 2) {
+            return;
+          }
 
-        if (remainingCards.length > 0) {
-          const secondCardIndex = Math.floor(Math.random() * remainingCards.length);
-          const secondCard = remainingCards[secondCardIndex];
+          // For second card, try to match with first card
+          const secondCard = this.findMatchingCard(firstCard, availableCards, botMemory, updatedGameState.board);
+          
+          if (secondCard) {
+            logger.info(`🤖 Bot ${botPlayerId} attempting match with card at position ${secondCard.index}`);
+          } else {
+            logger.info(`🤖 Bot ${botPlayerId} selecting exploratory card`);
+          }
           
           await this.selectCard({ user: { id: botPlayerId }, emit: () => {} }, {
             gameId: gameId,
             playerId: botPlayerId,
             position: secondCard.index
           });
+
+        } catch (error) {
+          logger.error(`Error in bot second card selection:`, error);
         }
-      }, 1000 + Math.random() * 1000); // 1-2 second delay
+      }, secondCardDelay);
 
     } catch (error) {
-      logger.error(`Error in bot turn for ${botPlayerId} in game ${gameId}:`, error);
+      logger.error(`Error in bot turn for ${botPlayerId}:`, error);
     }
   }
 
-  // Clean up bots when game ends
+  // Find a card that matches something in memory
+  findMemoryMatch(availableCards, botMemory, board) {
+    for (const [position, symbol] of botMemory.rememberedCards) {
+      // Find matching symbol in available cards
+      const matchingCard = availableCards.find(({ card, index }) => {
+        const rememberedSymbol = botMemory.rememberedCards.get(index);
+        return rememberedSymbol === symbol && index !== position;
+      });
+      
+      if (matchingCard && Math.random() < botMemory.skillLevel) {
+        return availableCards.find(({ index }) => index === position);
+      }
+    }
+    return null;
+  }
+
+  // Find a card that matches the first selected card
+  findMatchingCard(firstCard, availableCards, botMemory, board) {
+    const firstCardSymbol = board[firstCard.index].symbol;
+    
+    // Try to find match in memory
+    for (const [position, symbol] of botMemory.rememberedCards) {
+      if (symbol === firstCardSymbol && position !== firstCard.index) {
+        const matchCard = availableCards.find(({ index }) => index === position);
+        if (matchCard && Math.random() < botMemory.skillLevel) {
+          return matchCard;
+        }
+      }
+    }
+    
+    // If no memory match, select randomly (human-like exploration)
+    const remainingCards = availableCards.filter(({ index }) => index !== firstCard.index);
+    if (remainingCards.length > 0) {
+      return remainingCards[Math.floor(Math.random() * remainingCards.length)];
+    }
+    
+    return null;
+  }
+
+  // Select card with strategy (not purely random)
+  selectWithStrategy(availableCards, botMemory) {
+    // Sometimes pick from memory, sometimes explore new areas
+    if (botMemory.rememberedCards.size > 0 && Math.random() < 0.6) {
+      // Pick a remembered card
+      const rememberedPositions = Array.from(botMemory.rememberedCards.keys());
+      const validPositions = rememberedPositions.filter(pos => 
+        availableCards.some(({ index }) => index === pos)
+      );
+      
+      if (validPositions.length > 0) {
+        const chosenPos = validPositions[Math.floor(Math.random() * validPositions.length)];
+        return availableCards.find(({ index }) => index === chosenPos);
+      }
+    }
+    
+    // Explore new card
+    return availableCards[Math.floor(Math.random() * availableCards.length)];
+  }
+
+  // Efficient bot memory system
+  async updateBotMemories(gameId, revealedCards, wasSuccessful) {
+    try {
+      if (!this.botMemories) this.botMemories = new Map();
+      
+      const gameState = this.games.get(gameId);
+      if (!gameState) return;
+
+      // Update memory for all bot players in this game
+      for (const player of gameState.players) {
+        const botMemoryKey = `${gameId}_${player.id}`;
+        if (this.botMemories.has(botMemoryKey)) {
+          const botMemory = this.botMemories.get(botMemoryKey);
+          
+          // Remember revealed cards based on skill level
+          revealedCards.forEach(card => {
+            if (Math.random() < botMemory.skillLevel) {
+              botMemory.rememberedCards.set(card.position, card.symbol);
+            }
+          });
+          
+          // Occasionally forget cards (human-like)
+          if (Math.random() < 0.1) {
+            const positions = Array.from(botMemory.rememberedCards.keys());
+            if (positions.length > 0) {
+              const forgetPos = positions[Math.floor(Math.random() * positions.length)];
+              botMemory.rememberedCards.delete(forgetPos);
+            }
+          }
+        }
+      }
+    } catch (error) {
+      logger.error(`Error updating bot memories:`, error);
+    }
+  }
+
+  // Clean up bot memories when game ends
   cleanupGameBots(gameId) {
-    // Bot cleanup would go here if needed
-    logger.debug(`Cleaning up bots for game ${gameId}`);
+    try {
+      if (this.botMemories) {
+        // Remove bot memories for this game
+        const keysToDelete = [];
+        for (const [key] of this.botMemories) {
+          if (key.startsWith(`${gameId}_`)) {
+            keysToDelete.push(key);
+          }
+        }
+        
+        keysToDelete.forEach(key => {
+          this.botMemories.delete(key);
+        });
+        
+        if (keysToDelete.length > 0) {
+          logger.info(`Cleaned up ${keysToDelete.length} bot memories for game ${gameId}`);
+        }
+      }
+    } catch (error) {
+      logger.error(`Error cleaning up bot memories for game ${gameId}:`, error);
+    }
   }
 }
 
