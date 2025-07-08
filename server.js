@@ -476,6 +476,7 @@ app.use('/api/game', require('./src/routes/game'));
 app.use('/api/profile', require('./src/routes/profile'));
 app.use('/api/payment', require('./src/routes/payment'));
 app.use('/api/feedback', require('./src/routes/feedback'));
+app.use('/api/website', require('./src/routes/website')); // Website-specific routes
 
 // Health check endpoint
 app.get('/health', (req, res) => {

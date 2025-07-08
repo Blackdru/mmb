@@ -50,12 +50,26 @@ const walletSchemas = {
   }),
 
   withdraw: Joi.object({
-    amount: Joi.number().positive().min(10).required(),
-    bankDetails: Joi.object({
-      bankName: Joi.string().required(),
-      accountNumber: Joi.string().required(),
-      ifscCode: Joi.string().required(),
-      accountHolderName: Joi.string().required()
+    amount: Joi.number().positive().min(100).required(),
+    withdrawalDetails: Joi.object({
+      method: Joi.string().valid('bank', 'upi').required(),
+      details: Joi.when('method', {
+        is: 'bank',
+        then: Joi.object({
+          accountNumber: Joi.string().required(),
+          ifscCode: Joi.string().required(),
+          accountHolder: Joi.string().required(),
+          fullName: Joi.string().min(2).max(100).required()
+        }).required(),
+        otherwise: Joi.when('method', {
+          is: 'upi',
+          then: Joi.object({
+            upiId: Joi.string().required(),
+            fullName: Joi.string().min(2).max(100).required()
+          }).required(),
+          otherwise: Joi.forbidden()
+        })
+      })
     }).required()
   })
 };

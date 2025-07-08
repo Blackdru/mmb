@@ -117,13 +117,11 @@ model WithdrawalRequest {
   bankAccountNumber   String?       @map("bank_account_number")
   bankIfscCode        String?       @map("bank_ifsc_code")
   bankAccountHolder   String?       @map("bank_account_holder")
+  bankFullName        String?       @map("bank_full_name")
   
   // UPI details
   upiId               String?       @map("upi_id")
-  
-  // Crypto details
-  cryptoWalletAddress String?       @map("crypto_wallet_address")
-  cryptoType          String?       @map("crypto_type")
+  upiFullName         String?       @map("upi_full_name")
   
   // Processing details
   processedAt         DateTime?     @map("processed_at")
@@ -247,7 +245,6 @@ enum GameStatus {
 enum WithdrawalMethod {
   BANK
   UPI
-  CRYPTO
 }
 
 enum WithdrawalStatus {
@@ -366,4 +363,62 @@ enum BotGameResult {
   WIN
   LOSS
   DRAW
+}
+
+// Website-specific models
+model ContactSubmission {
+  id          String    @id @default(cuid())
+  name        String
+  email       String
+  issueType   String    @map("issue_type")
+  description String
+  app         String    @default("budzee")
+  status      String    @default("PENDING")
+  source      String    @default("WEBSITE")
+  response    String?
+  respondedAt DateTime? @map("responded_at")
+  respondedBy String?   @map("responded_by")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  @@map("contact_submissions")
+}
+
+model WebsiteFeedback {
+  id          String    @id @default(cuid())
+  message     String
+  rating      Int
+  category    String
+  app         String    @default("budzee")
+  status      String    @default("PENDING")
+  source      String    @default("WEBSITE")
+  response    String?
+  respondedAt DateTime? @map("responded_at")
+  respondedBy String?   @map("responded_by")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  @@map("website_feedback")
+}
+
+model NewsletterSubscription {
+  id             String    @id @default(cuid())
+  email          String    @unique
+  source         String    @default("WEBSITE")
+  status         String    @default("ACTIVE")
+  unsubscribedAt DateTime? @map("unsubscribed_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  @@map("newsletter_subscriptions")
+}
+
+model DownloadTracking {
+  id        String   @id @default(cuid())
+  source    String   @default("website")
+  userAgent String?  @map("user_agent")
+  ipAddress String?  @map("ip_address")
+  timestamp DateTime @default(now())
+
+  @@map("download_tracking")
 }

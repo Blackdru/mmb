@@ -3,7 +3,7 @@
 module.exports = {
   // Bot Pool Configuration
   pool: {
-    minBots: 10,                    // Minimum number of bots to maintain
+    minBots: 20,                    // Minimum number of bots to maintain
     maxBots: 100,                    // Maximum number of bots allowed
     maintenanceInterval: 120000,    // 2 minutes - Bot cleanup interval
   },
@@ -20,16 +20,57 @@ module.exports = {
     minBalance: 100,                // Minimum balance before replenishment
     replenishAmount: 1000,          // Amount to add when replenishing
     names: [
-      'GameMaster',
-      'ProPlayer', 
-      'MemoryKing',
-      'QuickThinker',
-      'CardShark',
-      'MindReader',
-      'MemoryAce',
-      'FastFingers',
-      'BrainStorm',
-      'SharpMind'
+      'NareshMj',
+'Rajeev',
+'Siddharth',
+'Swamycharan',
+'Raghav',
+'Varun',
+'Ganesh',
+'Nikhil',
+'Ritesh',
+'Aman',
+'Mahesh',
+'Vikas',
+'Ankit',
+'Abhishek',
+'Balaji',
+'Vishal',
+'Vivek',
+'Praveen',
+'Kiran',
+'Dinesh',
+'Harshad',
+'Bala',
+'Chandan',
+'Chetan',
+'Pawan',
+'Jagadeesh',
+'Tejaswi',
+'Veerendra',
+'Ramakrishna',
+'Aditya',
+'Srinivas',
+'Vinay',
+'Yashwanth',
+'Jayanthi',
+'Arjun',
+'Krishna',
+'Suresh',
+'Nagaraju',
+'Vijaya',
+'Uday',
+'Sandeep',
+'Karthik',
+'Prasad',
+'Veera',
+'Narayan',
+'Kalyan',
+'Satya',
+'Amarnath',
+'Veerabhadra',
+'Vijay',
+'Gopal'
     ]
   },
 

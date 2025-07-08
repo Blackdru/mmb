@@ -240,33 +240,28 @@ class WalletService {
       };
 
       const methodUpper = method.toUpperCase();
-      if (!['BANK', 'UPI', 'CRYPTO'].includes(methodUpper)) {
-        throw new Error('Invalid withdrawal method. Supported: BANK, UPI, CRYPTO');
+      if (!['BANK', 'UPI'].includes(methodUpper)) {
+        throw new Error('Invalid withdrawal method. Supported: BANK, UPI');
       }
       
       withdrawalData.method = methodUpper;
       
       switch (methodUpper) {
         case 'BANK':
-          if (!details.accountNumber || !details.ifscCode || !details.accountHolder) {
-            throw new Error('Complete bank details are required: Account Number, IFSC Code, Account Holder Name');
+          if (!details.accountNumber || !details.ifscCode || !details.accountHolder || !details.fullName) {
+            throw new Error('Complete bank details are required: Account Number, IFSC Code, Account Holder Name, Full Name');
           }
           withdrawalData.bankAccountNumber = details.accountNumber;
           withdrawalData.bankIfscCode = details.ifscCode;
           withdrawalData.bankAccountHolder = details.accountHolder;
+          withdrawalData.bankFullName = details.fullName;
           break;
         case 'UPI':
-          if (!details.upiId) {
-            throw new Error('UPI ID is required');
+          if (!details.upiId || !details.fullName) {
+            throw new Error('UPI ID and Full Name are required');
           }
           withdrawalData.upiId = details.upiId;
-          break;
-        case 'CRYPTO':
-          if (!details.walletAddress || !details.cryptoType) {
-            throw new Error('Crypto wallet address and type are required');
-          }
-          withdrawalData.cryptoWalletAddress = details.walletAddress;
-          withdrawalData.cryptoType = details.cryptoType;
+          withdrawalData.upiFullName = details.fullName;
           break;
       }
 
