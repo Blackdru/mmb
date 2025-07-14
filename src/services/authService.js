@@ -323,19 +323,30 @@ class AuthService {
         }
       }
 
-      // Process referral code only for new users
-      if (isNewUser && referralCode) {
-        try {
-          const referralResult = await this.processReferral(user.id, referralCode);
-          if (!referralResult.success) {
-            logger.warn(`Referral processing failed for new user ${user.id}: ${referralResult.message}`);
-            // Don't fail the entire signup process, just log the warning
-          } else {
-            logger.info(`Referral processed successfully for new user ${user.id}`);
+      // Process referral code or welcome bonus for new users
+      if (isNewUser) {
+        if (referralCode) {
+          try {
+            const referralResult = await this.processReferral(user.id, referralCode);
+            if (!referralResult.success) {
+              logger.warn(`Referral processing failed for new user ${user.id}: ${referralResult.message}`);
+              // Don't fail the entire signup process, just log the warning
+            } else {
+              logger.info(`Referral processed successfully for new user ${user.id}`);
+            }
+          } catch (referralError) {
+            logger.error(`Error processing referral for new user ${user.id}:`, referralError);
+            // Don't fail the entire signup process
           }
-        } catch (referralError) {
-          logger.error(`Error processing referral for new user ${user.id}:`, referralError);
-          // Don't fail the entire signup process
+        } else {
+          // Give welcome bonus for new users without referral code
+          try {
+            await this.creditGameBalance(user.id, 10, 'REFERRAL_SIGNUP_BONUS', 'Welcome bonus - new user signup');
+            logger.info(`Welcome bonus of ₹10 credited to new user ${user.id}`);
+          } catch (welcomeBonusError) {
+            logger.error(`Error crediting welcome bonus for new user ${user.id}:`, welcomeBonusError);
+            // Don't fail the entire signup process
+          }
         }
       }
 
@@ -358,6 +369,7 @@ class AuthService {
         success: true,
         token,
         isNewUser,
+        hasWelcomeBonus: isNewUser && !referralCode, // Flag to show welcome bonus popup
         user: {
           id: user.id,
           phoneNumber: user.phoneNumber,
