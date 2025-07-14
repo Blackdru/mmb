@@ -6657,3 +6657,21 @@
 {"level":"info","message":"📊 Found 0 potential matchable groups.","service":"budzee-gaming","timestamp":"2025-07-14T12:41:37.181Z"}
 {"level":"info","message":"🔍 Matchmaking cycle completed. No new games created in this cycle.","service":"budzee-gaming","timestamp":"2025-07-14T12:41:37.181Z"}
 {"level":"info","message":"Received SIGINT. Shutting down gracefully...","service":"budzee-gaming","timestamp":"2025-07-14T12:41:38.090Z"}
+{"level":"info","message":"Razorpay instance initialized.","service":"budzee-gaming","timestamp":"2025-07-14T14:06:09.540Z"}
+{"level":"info","message":"Database connected successfully","service":"budzee-gaming","timestamp":"2025-07-14T14:06:12.169Z"}
+{"level":"info","message":"Matchmaking interval started, running every 5 seconds.","service":"budzee-gaming","timestamp":"2025-07-14T14:06:12.169Z"}
+{"level":"info","message":"MatchmakingService initialized successfully","service":"budzee-gaming","timestamp":"2025-07-14T14:06:12.169Z"}
+{"level":"info","message":"Matchmaking service initialized","service":"budzee-gaming","timestamp":"2025-07-14T14:06:12.170Z"}
+{"level":"info","message":"GameStateManager initialized successfully with 0 active games","service":"budzee-gaming","timestamp":"2025-07-14T14:06:12.387Z"}
+{"level":"info","message":"Game state manager initialized","service":"budzee-gaming","timestamp":"2025-07-14T14:06:12.388Z"}
+{"level":"info","message":"🤖 Available bots: 11, minimum required: 10","service":"budzee-gaming","timestamp":"2025-07-14T14:06:12.588Z"}
+{"level":"info","message":"Bot service initialized with minimum bots","service":"budzee-gaming","timestamp":"2025-07-14T14:06:12.588Z"}
+{"level":"info","message":"Advanced bot system initialized with 50% win rate balancing","service":"budzee-gaming","timestamp":"2025-07-14T14:06:12.588Z"}
+{"level":"info","message":"Server running on port 8080","service":"budzee-gaming","timestamp":"2025-07-14T14:06:12.590Z"}
+{"level":"info","message":"Health check: http://localhost:8080/health","service":"budzee-gaming","timestamp":"2025-07-14T14:06:12.590Z"}
+{"level":"info","message":"Environment: production","service":"budzee-gaming","timestamp":"2025-07-14T14:06:12.590Z"}
+{"level":"info","message":"Rate limiting enabled for socket events","service":"budzee-gaming","timestamp":"2025-07-14T14:06:12.590Z"}
+{"level":"info","message":"🔍 Processing matchmaking cycle...","service":"budzee-gaming","timestamp":"2025-07-14T14:06:17.177Z"}
+{"level":"info","message":"📊 Found 0 potential matchable groups.","service":"budzee-gaming","timestamp":"2025-07-14T14:06:17.379Z"}
+{"level":"info","message":"🔍 Matchmaking cycle completed. No new games created in this cycle.","service":"budzee-gaming","timestamp":"2025-07-14T14:06:17.379Z"}
+{"level":"info","message":"Received SIGINT. Shutting down gracefully...","service":"budzee-gaming","timestamp":"2025-07-14T14:06:18.778Z"}

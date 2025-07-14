@@ -491,46 +491,54 @@ class MemoryGameService {
       const currentPlayer = gameState.players.find(p => p.id === gameState.currentTurnPlayerId);
 
       if (card1.symbol === card2.symbol) {
-        // Match found!
-        gameState.board[card1.position].isMatched = true;
-        gameState.board[card2.position].isMatched = true;
-        gameState.matchedPairs++;
+        // Match found! - Show cards for 700ms before processing
         
-        // Update score
-        gameState.scores[gameState.currentTurnPlayerId] += 10;
-        currentPlayer.score += 10;
-
-        // Update player score in database (non-blocking)
-        gameService.updatePlayerScore(gameId, gameState.currentTurnPlayerId, currentPlayer.score).catch(err => {
-          logger.error('Failed to update player score in processMatch:', err);
-        });
-
         // Bot memory update for matched cards
         this.updateBotMemories(gameId, [card1, card2], true);
 
-        // Emit match event with minimal data
+        // Emit match event immediately but keep cards visible
         this.io.to(`game:${gameId}`).emit('MEMORY_CARDS_MATCHED', {
           positions: [card1.position, card2.position],
           playerId: gameState.currentTurnPlayerId,
-          newScore: gameState.scores[gameState.currentTurnPlayerId],
-          matchedPairs: gameState.matchedPairs
+          newScore: gameState.scores[gameState.currentTurnPlayerId] + 10,
+          matchedPairs: gameState.matchedPairs + 1
         });
 
-        // Check if game finished
-        if (gameState.matchedPairs >= gameState.totalPairs) {
-          await this.endGame(gameId, 'game_completed');
-          return;
-        }
+        // Wait 700ms before finalizing match and continuing turn
+        setTimeout(async () => {
+          const currentGameState = this.games.get(gameId);
+          if (!currentGameState) return;
+          
+          // Now finalize the match
+          currentGameState.board[card1.position].isMatched = true;
+          currentGameState.board[card2.position].isMatched = true;
+          currentGameState.matchedPairs++;
+          
+          // Update score
+          currentGameState.scores[currentGameState.currentTurnPlayerId] += 10;
+          currentPlayer.score += 10;
 
-        // Player gets another turn - reset immediately
-        gameState.selectedCards = [];
-        gameState.processingCards = false;
-        this.startTurnTimer(gameId);
-        
-        // Check if current player is a bot for next turn
-        this.checkAndHandleBotTurn(gameId, gameState.currentTurnPlayerId).catch(err => {
-          logger.error('Error checking bot turn in processMatch:', err);
-        });
+          // Update player score in database (non-blocking)
+          gameService.updatePlayerScore(gameId, currentGameState.currentTurnPlayerId, currentPlayer.score).catch(err => {
+            logger.error('Failed to update player score in processMatch:', err);
+          });
+
+          // Check if game finished
+          if (currentGameState.matchedPairs >= currentGameState.totalPairs) {
+            await this.endGame(gameId, 'game_completed');
+            return;
+          }
+
+          // Player gets another turn - reset after delay
+          currentGameState.selectedCards = [];
+          currentGameState.processingCards = false;
+          this.startTurnTimer(gameId);
+          
+          // Check if current player is a bot for next turn
+          this.checkAndHandleBotTurn(gameId, currentGameState.currentTurnPlayerId).catch(err => {
+            logger.error('Error checking bot turn in processMatch:', err);
+          });
+        }, 700);
 
       } else {
         // No match - show cards for 700ms before flipping back and changing turn
@@ -568,10 +576,10 @@ class MemoryGameService {
         }, 700);
       }
 
-      // Update database (non-blocking)
-      gameService.updateGameState(gameId, gameState.board, gameState.currentTurnIndex, 'PLAYING', null).catch(err => {
-        logger.error('Failed to update game state in processMatch:', err);
-      });
+        // Update database (non-blocking)
+        gameService.updateGameState(gameId, gameState.board, gameState.currentTurnIndex, 'PLAYING', null).catch(err => {
+          logger.error('Failed to update game state in processMatch:', err);
+        });
 
     } catch (error) {
       logger.error(`Memory Game: Process match error:`, error);

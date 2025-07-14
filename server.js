@@ -610,7 +610,6 @@ app.use('/api/profile', require('./src/routes/profile'));
 app.use('/api/payment', require('./src/routes/payment'));
 app.use('/api/feedback', require('./src/routes/feedback'));
 app.use('/api/website', require('./src/routes/website')); // Website-specific routes
-app.use('/api/integrity', require('./src/routes/integrity')); // Play Integrity API routes
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -634,34 +633,7 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Debug endpoints
-app.get('/debug/queue', async (req, res) => {
-  try {
-    const queueEntries = await prisma.matchmakingQueue.findMany({
-      include: { user: true }
-    });
-    
-    res.json({
-      success: true,
-      queueCount: queueEntries.length,
-      entries: queueEntries.map(entry => ({
-        id: entry.id,
-        userId: entry.userId,
-        userName: entry.user.name,
-        gameType: entry.gameType,
-        maxPlayers: entry.maxPlayers,
-        entryFee: entry.entryFee,
-        createdAt: entry.createdAt
-      }))
-    });
-  } catch (error) {
-    logger.error('Debug queue endpoint error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to retrieve queue data'
-    });
-  }
-});
+
 
 app.get('/debug/sockets', (req, res) => {
   try {
