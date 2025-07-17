@@ -610,6 +610,13 @@ app.use('/api/profile', require('./src/routes/profile'));
 app.use('/api/payment', require('./src/routes/payment'));
 app.use('/api/feedback', require('./src/routes/feedback'));
 app.use('/api/website', require('./src/routes/website')); // Website-specific routes
+app.use('/api/admin', require('./src/routes/admin')); // Admin routes
+app.use('/api/admin-auth', require('./src/routes/adminAuth')); // Admin auth routes
+app.use('/updates', require('./src/routes/updates')); // App update routes
+
+// Serve static files
+app.use('/apks', express.static('public/apks'));
+app.use('/updates', express.static('public/updates'));
 
 // Health check endpoint
 app.get('/health', (req, res) => {

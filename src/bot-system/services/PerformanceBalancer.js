@@ -12,10 +12,11 @@ class PerformanceBalancer {
       lastReset: Date.now()
     };
     
-    this.windowSize = 10;
-    this.targetWinRate = 0.5;
-    this.tolerance = 0.05;
-    this.maxAdjustment = 0.3;
+    this.windowSize = 15;
+    this.targetWinRate = 0.65; // 65% win rate for bots
+    this.tolerance = 0.08;
+    this.maxAdjustment = 0.4;
+    this.intelligenceBoostFactor = 1.2; // Boost factor for strategic intelligence
   }
 
   async analyzePlayerPerformance(playerId) {

@@ -422,7 +422,16 @@ class MatchmakingService {
   startBotDeploymentTimer(gameType, maxPlayers, entryFee) {
     const queueKey = `${gameType}_${maxPlayers}_${entryFee}`;
     
-    // Allow multiple timers for the same configuration to support concurrent games
+    // Check if there's already a timer for this exact configuration
+    const existingTimer = Array.from(this.botDeploymentTimers.keys()).find(key => 
+      key.startsWith(queueKey)
+    );
+    
+    if (existingTimer) {
+      logger.info(`🤖 Bot deployment timer already exists for queue: ${queueKey}`);
+      return;
+    }
+    
     // Generate unique timer key with timestamp
     const uniqueTimerKey = `${queueKey}_${Date.now()}`;
     
@@ -430,13 +439,14 @@ class MatchmakingService {
 
     const timer = setTimeout(async () => {
       try {
+        logger.info(`🤖 Bot deployment timer triggered for: ${queueKey}`);
         await this.deployBotIfNeeded(gameType, maxPlayers, entryFee);
         this.botDeploymentTimers.delete(uniqueTimerKey);
       } catch (error) {
         logger.error(`Error deploying bot for queue ${queueKey}:`, error);
         this.botDeploymentTimers.delete(uniqueTimerKey);
       }
-    }, 30000); // 30 seconds
+    }, 30000); // 30 seconds as requested
 
     this.botDeploymentTimers.set(uniqueTimerKey, timer);
   }
@@ -472,11 +482,40 @@ class MatchmakingService {
         });
 
         if (humanPlayersCount > 0) {
-          logger.info(`🤖 Deploying bot for ${gameType} game - ${humanPlayersCount} human player(s) waiting`);
+          logger.info(`🤖 Deploying intelligent bot for ${gameType} game - ${humanPlayersCount} human player(s) waiting`);
           
           try {
-            // Get bot for matchmaking
-            const botUser = await botService.getBotForMatchmaking(gameType, entryFee);
+            // Get the human player ID for intelligent bot selection
+            const humanPlayer = await prisma.matchmakingQueue.findFirst({
+              where: {
+                gameType,
+                maxPlayers,
+                entryFee,
+                user: { isBot: false }
+              },
+              include: { user: true }
+            });
+
+            let botUser;
+            if (humanPlayer && botService.selectIntelligentBot) {
+              // Use intelligent bot selection based on human player performance
+              botUser = await botService.selectIntelligentBot(humanPlayer.userId, gameType, entryFee);
+              logger.info(`🧠 Intelligently selected bot ${botUser.name} for human player ${humanPlayer.user.name}`);
+              
+              // Add the selected bot to the queue manually since selectIntelligentBot doesn't add to queue
+              await prisma.matchmakingQueue.create({
+                data: {
+                  userId: botUser.id,
+                  gameType,
+                  maxPlayers,
+                  entryFee
+                }
+              });
+            } else {
+              // Fallback to regular bot selection (this adds bot to queue automatically)
+              botUser = await botService.getBotForMatchmaking(gameType, entryFee, maxPlayers);
+              logger.info(`🤖 Selected bot ${botUser.name} using standard selection`);
+            }
             
             logger.info(`🤖 Bot ${botUser.name} (${botUser.id}) added to queue for ${gameType} ${maxPlayers}P ₹${entryFee}`);
             

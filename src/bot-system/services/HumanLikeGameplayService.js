@@ -10,34 +10,78 @@ class HumanLikeGameplayService {
   }
 
   initializeBehaviorProfiles() {
+    // Enhanced profiles for 65% win rate while maintaining human-like behavior
     this.profiles = {
       casual: {
         reactionTimeRange: [1200, 3800],
-        memoryAccuracy: 0.65,
+        memoryAccuracy: 0.72, // Increased from 0.65
+        patternRecognition: 0.68,
+        strategicThinking: 0.60,
         patternPreference: 'random',
-        mistakeRate: 0.18,
-        focusDuration: 8000
+        mistakeRate: 0.15, // Reduced from 0.18
+        focusDuration: 8000,
+        adaptiveBonus: 0.1
       },
       focused: {
         reactionTimeRange: [800, 2200],
-        memoryAccuracy: 0.85,
+        memoryAccuracy: 0.88, // Increased from 0.85
+        patternRecognition: 0.85,
+        strategicThinking: 0.80,
         patternPreference: 'systematic',
-        mistakeRate: 0.08,
-        focusDuration: 15000
+        mistakeRate: 0.06, // Reduced from 0.08
+        focusDuration: 15000,
+        adaptiveBonus: 0.15
       },
       tired: {
         reactionTimeRange: [2000, 4500],
-        memoryAccuracy: 0.45,
+        memoryAccuracy: 0.52, // Increased from 0.45
+        patternRecognition: 0.45,
+        strategicThinking: 0.35,
         patternPreference: 'erratic',
-        mistakeRate: 0.25,
-        focusDuration: 5000
+        mistakeRate: 0.22, // Reduced from 0.25
+        focusDuration: 5000,
+        adaptiveBonus: 0.05
       },
       competitive: {
         reactionTimeRange: [600, 1800],
-        memoryAccuracy: 0.92,
+        memoryAccuracy: 0.95, // Increased from 0.92
+        patternRecognition: 0.92,
+        strategicThinking: 0.90,
         patternPreference: 'optimal',
+        mistakeRate: 0.03, // Reduced from 0.05
+        focusDuration: 20000,
+        adaptiveBonus: 0.20
+      },
+      // New intelligent profiles
+      strategic: {
+        reactionTimeRange: [700, 2000],
+        memoryAccuracy: 0.90,
+        patternRecognition: 0.88,
+        strategicThinking: 0.95,
+        patternPreference: 'strategic',
+        mistakeRate: 0.04,
+        focusDuration: 18000,
+        adaptiveBonus: 0.25
+      },
+      analytical: {
+        reactionTimeRange: [900, 2400],
+        memoryAccuracy: 0.93,
+        patternRecognition: 0.95,
+        strategicThinking: 0.85,
+        patternPreference: 'analytical',
+        mistakeRate: 0.03,
+        focusDuration: 22000,
+        adaptiveBonus: 0.18
+      },
+      adaptive: {
+        reactionTimeRange: [800, 2200],
+        memoryAccuracy: 0.85,
+        patternRecognition: 0.80,
+        strategicThinking: 0.88,
+        patternPreference: 'adaptive',
         mistakeRate: 0.05,
-        focusDuration: 20000
+        focusDuration: 16000,
+        adaptiveBonus: 0.30
       }
     };
 
