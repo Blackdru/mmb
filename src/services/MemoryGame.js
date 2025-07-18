@@ -853,45 +853,45 @@ class MemoryGameService {
       this.games.delete(gameId);
       this.cleanupGameBots(gameId); // Clean up any bots
 
-      // Integrate with enhanced bot performance tracking for 65% win rate
+      // Integrate with new bot performance tracking system
       try {
-        // Get participant data with bot information
-        const participants = await Promise.all(
-          gameState.players.map(async (player) => {
-            const user = await prisma.user.findUnique({ where: { id: player.id } });
-            return {
-              userId: player.id,
-              user: { 
-                id: player.id,
-                isBot: user?.isBot || false,
-                name: user?.name || player.name
-              }
-            };
-          })
-        );
-        
-        // Track bot performance for intelligent system
-        for (const participant of participants) {
-          if (participant.user.isBot) {
-            await botService.trackBotPerformance(participant.userId, {
-              won: participant.userId === winnerId,
-              opponentId: participants.find(p => p.userId !== participant.userId)?.userId,
-              gameType: 'MEMORY',
-              endReason: endReason,
-              finalScore: gameState.scores[participant.userId] || 0
-            });
-          }
-        }
-        
-        await GameplayController.handleGameEnd(gameId, winnerId, participants);
-        await PerformanceBalancer.recordGameOutcome(gameId, winnerId, participants);
-        
-        // Adjust global bot intelligence if needed
-        await botService.adjustGlobalBotIntelligence();
-        
-        logger.info(`🤖 Bot performance tracking completed for game ${gameId}`);
+      // Get participant data with bot information
+      const participants = await Promise.all(
+      gameState.players.map(async (player) => {
+      const user = await prisma.user.findUnique({ 
+      where: { id: player.id },
+      select: { id: true, isBot: true, botType: true, name: true }
+      });
+      return {
+      userId: player.id,
+      position: player.id === winnerId ? 1 : 2,
+      user: {
+      id: player.id,
+      isBot: user?.isBot || false,
+      botType: user?.botType || null,
+      name: user?.name || player.name
+      }
+      };
+      })
+      );
+      
+      // Track bot performance for new intelligent system
+      for (const participant of participants) {
+      if (participant.user.isBot) {
+      await botService.trackBotPerformance(participant.userId, {
+      won: participant.userId === winnerId,
+      opponentId: participants.find(p => p.userId !== participant.userId)?.userId
+      });
+      }
+      }
+      
+      // Record game outcome in performance balancer
+      const PerformanceBalancer = require('../bot-system/services/PerformanceBalancer');
+      await PerformanceBalancer.recordGameOutcome(gameId, winnerId, participants);
+      
+      logger.info(`🤖 New bot performance tracking completed for game ${gameId}`);
       } catch (botError) {
-        logger.error(`Advanced bot system integration error for game ${gameId}:`, botError);
+      logger.error(`New bot system integration error for game ${gameId}:`, botError);
       }
 
       logger.info(`Memory Game: Game ${gameId} ended with reason: ${endReason}. Winner: ${winnerId} with score: ${highestScore}`);

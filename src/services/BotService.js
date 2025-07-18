@@ -7,129 +7,235 @@ class BotService {
     this.recentlyUsedBots = new Map(); // botId -> timestamp
     this.botCooldownMs = 5 * 60 * 1000; // 5 minutes cooldown
     
-    // Enhanced bot profiles with strategic intelligence levels
-    this.botProfiles = [
-      // Elite Tier (85-95% skill) - Strategic masters
-      { name: 'NareshMj', skillLevel: 0.92, intelligence: 'strategic', memoryStrength: 0.95, adaptability: 0.88 },
-      { name: 'Siddharth', skillLevel: 0.94, intelligence: 'analytical', memoryStrength: 0.92, adaptability: 0.90 },
-      { name: 'Ganesh', skillLevel: 0.95, intelligence: 'tactical', memoryStrength: 0.89, adaptability: 0.85 },
-      { name: 'Aditya', skillLevel: 0.93, intelligence: 'strategic', memoryStrength: 0.94, adaptability: 0.87 },
-      { name: 'Krishna', skillLevel: 0.90, intelligence: 'analytical', memoryStrength: 0.88, adaptability: 0.92 },
-      { name: 'Ramakrishna', skillLevel: 0.89, intelligence: 'tactical', memoryStrength: 0.91, adaptability: 0.86 },
-      
-      // Advanced Tier (75-84% skill) - Skilled players
-      { name: 'Ritesh', skillLevel: 0.84, intelligence: 'adaptive', memoryStrength: 0.82, adaptability: 0.85 },
-      { name: 'Arjun', skillLevel: 0.83, intelligence: 'strategic', memoryStrength: 0.85, adaptability: 0.80 },
-      { name: 'Veerendra', skillLevel: 0.82, intelligence: 'tactical', memoryStrength: 0.80, adaptability: 0.84 },
-      { name: 'Mahesh', skillLevel: 0.81, intelligence: 'analytical', memoryStrength: 0.83, adaptability: 0.78 },
-      { name: 'Sandeep', skillLevel: 0.80, intelligence: 'adaptive', memoryStrength: 0.78, adaptability: 0.82 },
-      { name: 'Narayan', skillLevel: 0.79, intelligence: 'strategic', memoryStrength: 0.81, adaptability: 0.77 },
-      { name: 'Vijay', skillLevel: 0.78, intelligence: 'tactical', memoryStrength: 0.76, adaptability: 0.80 },
-      { name: 'Yashwanth', skillLevel: 0.77, intelligence: 'analytical', memoryStrength: 0.79, adaptability: 0.75 },
-      { name: 'Abhishek', skillLevel: 0.76, intelligence: 'adaptive', memoryStrength: 0.74, adaptability: 0.78 },
-      { name: 'Rajeev', skillLevel: 0.75, intelligence: 'strategic', memoryStrength: 0.77, adaptability: 0.73 },
-      
-      // Intermediate Tier (65-74% skill) - Competent players
-      { name: 'Vijaya', skillLevel: 0.74, intelligence: 'balanced', memoryStrength: 0.72, adaptability: 0.76 },
-      { name: 'Chetan', skillLevel: 0.73, intelligence: 'tactical', memoryStrength: 0.75, adaptability: 0.71 },
-      { name: 'Vivek', skillLevel: 0.72, intelligence: 'adaptive', memoryStrength: 0.70, adaptability: 0.74 },
-      { name: 'Suresh', skillLevel: 0.71, intelligence: 'analytical', memoryStrength: 0.73, adaptability: 0.69 },
-      { name: 'Veera', skillLevel: 0.70, intelligence: 'balanced', memoryStrength: 0.68, adaptability: 0.72 },
-      { name: 'Praveen', skillLevel: 0.69, intelligence: 'strategic', memoryStrength: 0.71, adaptability: 0.67 },
-      { name: 'Raghav', skillLevel: 0.68, intelligence: 'tactical', memoryStrength: 0.66, adaptability: 0.70 },
-      { name: 'Vikas', skillLevel: 0.67, intelligence: 'adaptive', memoryStrength: 0.69, adaptability: 0.65 },
-      { name: 'Ankit', skillLevel: 0.66, intelligence: 'balanced', memoryStrength: 0.64, adaptability: 0.68 },
-      { name: 'Kalyan', skillLevel: 0.65, intelligence: 'analytical', memoryStrength: 0.67, adaptability: 0.63 },
-      
-      // Casual Tier (55-64% skill) - Average players with occasional brilliance
-      { name: 'Vishal', skillLevel: 0.64, intelligence: 'inconsistent', memoryStrength: 0.62, adaptability: 0.66 },
-      { name: 'Dinesh', skillLevel: 0.63, intelligence: 'balanced', memoryStrength: 0.65, adaptability: 0.61 },
-      { name: 'Kiran', skillLevel: 0.62, intelligence: 'tactical', memoryStrength: 0.60, adaptability: 0.64 },
-      { name: 'Jayanthi', skillLevel: 0.61, intelligence: 'adaptive', memoryStrength: 0.63, adaptability: 0.59 },
-      { name: 'Uday', skillLevel: 0.60, intelligence: 'inconsistent', memoryStrength: 0.58, adaptability: 0.62 },
-      { name: 'Harshad', skillLevel: 0.59, intelligence: 'balanced', memoryStrength: 0.61, adaptability: 0.57 },
-      { name: 'Bala', skillLevel: 0.58, intelligence: 'tactical', memoryStrength: 0.56, adaptability: 0.60 },
-      { name: 'Nagaraju', skillLevel: 0.57, intelligence: 'adaptive', memoryStrength: 0.59, adaptability: 0.55 },
-      { name: 'Aman', skillLevel: 0.56, intelligence: 'inconsistent', memoryStrength: 0.54, adaptability: 0.58 },
-      { name: 'Nikhil', skillLevel: 0.55, intelligence: 'balanced', memoryStrength: 0.57, adaptability: 0.53 },
-      
-      // Developing Tier (45-54% skill) - Learning players with potential
-      { name: 'Swamycharan', skillLevel: 0.54, intelligence: 'developing', memoryStrength: 0.52, adaptability: 0.56 },
-      { name: 'Varun', skillLevel: 0.53, intelligence: 'inconsistent', memoryStrength: 0.55, adaptability: 0.51 },
-      { name: 'Chandan', skillLevel: 0.52, intelligence: 'balanced', memoryStrength: 0.50, adaptability: 0.54 },
-      { name: 'Pawan', skillLevel: 0.51, intelligence: 'developing', memoryStrength: 0.53, adaptability: 0.49 },
-      { name: 'Jagadeesh', skillLevel: 0.50, intelligence: 'inconsistent', memoryStrength: 0.48, adaptability: 0.52 },
-      { name: 'Prasad', skillLevel: 0.49, intelligence: 'balanced', memoryStrength: 0.51, adaptability: 0.47 },
-      { name: 'Amarnath', skillLevel: 0.48, intelligence: 'developing', memoryStrength: 0.46, adaptability: 0.50 },
-      { name: 'Srinivas', skillLevel: 0.47, intelligence: 'inconsistent', memoryStrength: 0.49, adaptability: 0.45 },
-      { name: 'Vinay', skillLevel: 0.46, intelligence: 'balanced', memoryStrength: 0.44, adaptability: 0.48 },
-      { name: 'Tejaswi', skillLevel: 0.45, intelligence: 'developing', memoryStrength: 0.47, adaptability: 0.43 },
-      
-      // Wildcard Tier - Unpredictable players
-      { name: 'Veerabhadra', skillLevel: 0.75, intelligence: 'wildcard', memoryStrength: 0.60, adaptability: 0.90 },
-      { name: 'Karthik', skillLevel: 0.68, intelligence: 'wildcard', memoryStrength: 0.55, adaptability: 0.85 },
-      { name: 'Satya', skillLevel: 0.62, intelligence: 'wildcard', memoryStrength: 0.50, adaptability: 0.80 },
-      { name: 'Gopal', skillLevel: 0.58, intelligence: 'wildcard', memoryStrength: 0.45, adaptability: 0.75 }
+    // 60 Bot profile names for creating diverse bots
+    this.botProfileNames = [
+      'NareshMj', 'Siddharth', 'Ganesh', 'Aditya', 'Krishna', 'Ramakrishna',
+      'Ritesh', 'Arjun', 'Veerendra', 'Mahesh', 'Sandeep', 'Narayan',
+      'Vijay', 'Yashwanth', 'Abhishek', 'Rajeev', 'Vijaya', 'Chetan',
+      'Vivek', 'Suresh', 'Veera', 'Praveen', 'Raghav', 'Vikas',
+      'Ankit', 'Kalyan', 'Vishal', 'Dinesh', 'Kiran', 'Jayanthi',
+      'Uday', 'Harshad', 'Bala', 'Nagaraju', 'Aman', 'Nikhil',
+      'Swamycharan', 'Varun', 'Chandan', 'Pawan', 'Jagadeesh', 'Prasad',
+      'Amarnath', 'Srinivas', 'Vinay', 'Tejaswi', 'Veerabhadra', 'Karthik',
+      'Satya', 'Gopal', 'Ravi', 'Mohan', 'Deepak', 'Rajesh',
+      'Sunil', 'Ashok', 'Pradeep', 'Manoj', 'Rohit', 'Vikram'
     ];
 
-    // Intelligence type definitions for strategic gameplay
-    this.intelligenceTypes = {
-      strategic: {
-        planningDepth: 4,
-        patternRecognition: 0.9,
-        riskAssessment: 0.85,
-        adaptiveThinking: 0.8
+    // 10 Bot Types: 7 Intelligent Winning Bots + 3 Normal/Random Bots
+    this.botTypes = {
+      // 7 Intelligent Winning Bot Types (Human-like behavior with high win probability)
+      STRATEGIC_MASTER: {
+        id: 'strategic_master',
+        name: 'Strategic Master',
+        winProbability: 0.95,
+        intelligence: 'strategic',
+        humanBehavior: {
+          thinkingTimeMin: 1200,
+          thinkingTimeMax: 3500,
+          mistakeProbability: 0.05,
+          adaptivePlay: true,
+          memoryAccuracy: 0.95,
+          patternRecognition: 0.90
+        },
+        gameplayStyle: {
+          planningDepth: 4,
+          riskTolerance: 0.3,
+          aggressiveness: 0.7,
+          patience: 0.9
+        }
       },
-      analytical: {
-        planningDepth: 3,
-        patternRecognition: 0.95,
-        riskAssessment: 0.9,
-        adaptiveThinking: 0.7
+      ANALYTICAL_GENIUS: {
+        id: 'analytical_genius',
+        name: 'Analytical Genius',
+        winProbability: 0.95,
+        intelligence: 'analytical',
+        humanBehavior: {
+          thinkingTimeMin: 1500,
+          thinkingTimeMax: 4000,
+          mistakeProbability: 0.08,
+          adaptivePlay: true,
+          memoryAccuracy: 0.93,
+          patternRecognition: 0.95
+        },
+        gameplayStyle: {
+          planningDepth: 3,
+          riskTolerance: 0.2,
+          aggressiveness: 0.6,
+          patience: 0.95
+        }
       },
-      tactical: {
-        planningDepth: 2,
-        patternRecognition: 0.8,
-        riskAssessment: 0.95,
-        adaptiveThinking: 0.85
+      TACTICAL_EXPERT: {
+        id: 'tactical_expert',
+        name: 'Tactical Expert',
+        winProbability: 0.95,
+        intelligence: 'tactical',
+        humanBehavior: {
+          thinkingTimeMin: 1000,
+          thinkingTimeMax: 2800,
+          mistakeProbability: 0.10,
+          adaptivePlay: true,
+          memoryAccuracy: 0.88,
+          patternRecognition: 0.85
+        },
+        gameplayStyle: {
+          planningDepth: 3,
+          riskTolerance: 0.4,
+          aggressiveness: 0.8,
+          patience: 0.7
+        }
       },
-      adaptive: {
-        planningDepth: 2,
-        patternRecognition: 0.75,
-        riskAssessment: 0.8,
-        adaptiveThinking: 0.95
+      ADAPTIVE_CHAMPION: {
+        id: 'adaptive_champion',
+        name: 'Adaptive Champion',
+        winProbability: 0.95,
+        intelligence: 'adaptive',
+        humanBehavior: {
+          thinkingTimeMin: 900,
+          thinkingTimeMax: 2500,
+          mistakeProbability: 0.12,
+          adaptivePlay: true,
+          memoryAccuracy: 0.85,
+          patternRecognition: 0.80
+        },
+        gameplayStyle: {
+          planningDepth: 2,
+          riskTolerance: 0.5,
+          aggressiveness: 0.7,
+          patience: 0.8
+        }
       },
-      balanced: {
-        planningDepth: 2,
-        patternRecognition: 0.8,
-        riskAssessment: 0.8,
-        adaptiveThinking: 0.8
+      INTUITIVE_PLAYER: {
+        id: 'intuitive_player',
+        name: 'Intuitive Player',
+        winProbability: 0.95,
+        intelligence: 'intuitive',
+        humanBehavior: {
+          thinkingTimeMin: 800,
+          thinkingTimeMax: 2200,
+          mistakeProbability: 0.15,
+          adaptivePlay: true,
+          memoryAccuracy: 0.82,
+          patternRecognition: 0.75
+        },
+        gameplayStyle: {
+          planningDepth: 2,
+          riskTolerance: 0.6,
+          aggressiveness: 0.6,
+          patience: 0.6
+        }
       },
-      inconsistent: {
-        planningDepth: 1,
-        patternRecognition: 0.6,
-        riskAssessment: 0.7,
-        adaptiveThinking: 0.9
+      CALCULATED_WINNER: {
+        id: 'calculated_winner',
+        name: 'Calculated Winner',
+        winProbability: 0.95,
+        intelligence: 'calculated',
+        humanBehavior: {
+          thinkingTimeMin: 1100,
+          thinkingTimeMax: 3000,
+          mistakeProbability: 0.18,
+          adaptivePlay: true,
+          memoryAccuracy: 0.80,
+          patternRecognition: 0.78
+        },
+        gameplayStyle: {
+          planningDepth: 3,
+          riskTolerance: 0.3,
+          aggressiveness: 0.5,
+          patience: 0.9
+        }
       },
-      developing: {
-        planningDepth: 1,
-        patternRecognition: 0.5,
-        riskAssessment: 0.6,
-        adaptiveThinking: 0.7
+      SMART_COMPETITOR: {
+        id: 'smart_competitor',
+        name: 'Smart Competitor',
+        winProbability: 0.95,
+        intelligence: 'competitive',
+        humanBehavior: {
+          thinkingTimeMin: 700,
+          thinkingTimeMax: 2000,
+          mistakeProbability: 0.20,
+          adaptivePlay: true,
+          memoryAccuracy: 0.78,
+          patternRecognition: 0.72
+        },
+        gameplayStyle: {
+          planningDepth: 2,
+          riskTolerance: 0.7,
+          aggressiveness: 0.8,
+          patience: 0.5
+        }
       },
-      wildcard: {
-        planningDepth: 3,
-        patternRecognition: 0.7,
-        riskAssessment: 0.6,
-        adaptiveThinking: 0.95
+
+      // 3 Normal/Random Bot Types (Standard behavior with random outcomes)
+      CASUAL_PLAYER: {
+        id: 'casual_player',
+        name: 'Casual Player',
+        winProbability: 0.60,
+        intelligence: 'casual',
+        humanBehavior: {
+          thinkingTimeMin: 500,
+          thinkingTimeMax: 1800,
+          mistakeProbability: 0.35,
+          adaptivePlay: false,
+          memoryAccuracy: 0.60,
+          patternRecognition: 0.50
+        },
+        gameplayStyle: {
+          planningDepth: 1,
+          riskTolerance: 0.8,
+          aggressiveness: 0.4,
+          patience: 0.3
+        }
+      },
+      RANDOM_PLAYER: {
+        id: 'random_player',
+        name: 'Random Player',
+        winProbability: 0.60,
+        intelligence: 'random',
+        humanBehavior: {
+          thinkingTimeMin: 300,
+          thinkingTimeMax: 1500,
+          mistakeProbability: 0.45,
+          adaptivePlay: false,
+          memoryAccuracy: 0.50,
+          patternRecognition: 0.40
+        },
+        gameplayStyle: {
+          planningDepth: 1,
+          riskTolerance: 0.9,
+          aggressiveness: 0.5,
+          patience: 0.2
+        }
+      },
+      BEGINNER_BOT: {
+        id: 'beginner_bot',
+        name: 'Beginner Bot',
+        winProbability: 0.65,
+        intelligence: 'beginner',
+        humanBehavior: {
+          thinkingTimeMin: 400,
+          thinkingTimeMax: 2000,
+          mistakeProbability: 0.50,
+          adaptivePlay: false,
+          memoryAccuracy: 0.45,
+          patternRecognition: 0.35
+        },
+        gameplayStyle: {
+          planningDepth: 1,
+          riskTolerance: 0.7,
+          aggressiveness: 0.3,
+          patience: 0.4
+        }
       }
     };
 
-    // Target win rate configuration
-    this.targetWinRate = 0.65; // 65% win rate for bots
-    this.winRateWindow = 20; // Track last 20 games for adjustment
-    this.botPerformanceTracking = new Map(); // Track individual bot performance
+    // Bot type distribution for creating balanced bot pools
+    this.botTypeDistribution = {
+      winning: ['strategic_master', 'analytical_genius', 'tactical_expert', 'adaptive_champion', 'intuitive_player', 'calculated_winner', 'smart_competitor'],
+      normal: ['casual_player', 'random_player', 'beginner_bot']
+    };
 
-
+    // Track bot performance for monitoring
+    this.botPerformanceTracking = new Map();
   }
 
   // Fisher-Yates shuffle algorithm for true randomness
@@ -162,12 +268,39 @@ class BotService {
     }
   }
 
-  async createBotUser() {
+  // Select bot type based on distribution (7 winning, 3 normal)
+  selectBotType() {
+    const random = Math.random();
+    
+    // 70% chance for winning bots, 30% chance for normal bots
+    if (random < 0.7) {
+      const winningTypes = this.botTypeDistribution.winning;
+      return winningTypes[Math.floor(Math.random() * winningTypes.length)];
+    } else {
+      const normalTypes = this.botTypeDistribution.normal;
+      return normalTypes[Math.floor(Math.random() * normalTypes.length)];
+    }
+  }
+
+  // Get bot type configuration
+  getBotTypeConfig(botTypeId) {
+    return this.botTypes[botTypeId] || this.botTypes.CASUAL_PLAYER;
+  }
+
+  // Create a new bot user with specified type
+  async createBotUser(botTypeId = null) {
     try {
-      // Select a bot profile with skill level
-      const profile = this.botProfiles[Math.floor(Math.random() * this.botProfiles.length)];
+      // Select bot type if not specified
+      if (!botTypeId) {
+        botTypeId = this.selectBotType();
+      }
+
+      const botConfig = this.getBotTypeConfig(botTypeId);
+      
+      // Select random name from profile names
+      const randomName = this.botProfileNames[Math.floor(Math.random() * this.botProfileNames.length)];
       const uniqueId = Math.floor(Math.random() * 999) + 1;
-      const botName = `${profile.name}${uniqueId}`;
+      const botName = `${randomName}${uniqueId}`;
       const botPhone = `+91${Math.floor(Math.random() * 9000000000) + 1000000000}`;
       
       const bot = await prisma.user.create({
@@ -176,6 +309,7 @@ class BotService {
           name: botName,
           isVerified: true,
           isBot: true,
+          botType: botTypeId, // Store bot type in database
           wallet: {
             create: {
               balance: 1000,
@@ -187,7 +321,17 @@ class BotService {
         include: { wallet: true }
       });
 
-      logger.info(`Bot user created: ${bot.name} (${bot.id})`);
+      // Initialize bot performance tracking
+      this.botPerformanceTracking.set(bot.id, {
+        botType: botTypeId,
+        config: botConfig,
+        gamesPlayed: 0,
+        wins: 0,
+        winRate: 0,
+        createdAt: Date.now()
+      });
+
+      logger.info(`🤖 Bot created: ${bot.name} (${botConfig.name}) - Type: ${botTypeId}`);
       return bot;
     } catch (error) {
       logger.error('Create bot user error:', error);
@@ -195,6 +339,7 @@ class BotService {
     }
   }
 
+  // Get bot for matchmaking with intelligent selection
   async getBotForMatchmaking(gameType, entryFee, maxPlayers = 2) {
     try {
       logger.info(`🤖 Looking for available bot for ${gameType} with entry fee ₹${entryFee}, maxPlayers: ${maxPlayers}`);
@@ -220,13 +365,9 @@ class BotService {
       });
 
       logger.info(`🤖 Found ${availableBots.length} available bots in database`);
-      if (availableBots.length > 0) {
-        logger.info(`🤖 Available bot names: ${availableBots.map(bot => bot.name).join(', ')}`);
-      }
-
+      
       let bot;
       
-      // If we have available bots, select one randomly with cooldown consideration
       if (availableBots.length > 0) {
         // Clean up expired cooldowns
         this.cleanupExpiredCooldowns();
@@ -246,8 +387,8 @@ class BotService {
         // Mark this bot as recently used
         this.recentlyUsedBots.set(bot.id, Date.now());
         
-        const cooldownStatus = botsNotInCooldown.length > 0 ? 'fresh' : 'cooldown-ignored';
-        logger.info(`🤖 Randomly selected bot: ${bot.name} (${bot.id}) from ${availableBots.length} available bots (${cooldownStatus})`);
+        const botConfig = this.getBotTypeConfig(bot.botType || 'casual_player');
+        logger.info(`🤖 Selected bot: ${bot.name} (${botConfig.name}) from ${availableBots.length} available bots`);
       } else {
         // If no available bot, create one
         logger.info(`🤖 No available bot found, creating new bot`);
@@ -292,7 +433,7 @@ class BotService {
         }
       });
 
-      logger.info(`🤖 Bot ${bot.name} (${bot.id}) successfully added to matchmaking queue (${queueEntry.id}) for ${gameType} ${maxPlayers}P ₹${entryFee}`);
+      logger.info(`🤖 Bot ${bot.name} successfully added to matchmaking queue for ${gameType} ${maxPlayers}P ₹${entryFee}`);
       return bot;
     } catch (error) {
       logger.error('Get bot for matchmaking error:', error);
@@ -300,6 +441,81 @@ class BotService {
     }
   }
 
+  // Create multiple bots with proper distribution
+  async createBotPool(totalBots = 10) {
+    try {
+      const createdBots = [];
+      const winningBotsCount = 7;
+      const normalBotsCount = 3;
+
+      // Create 7 winning bots
+      for (let i = 0; i < winningBotsCount; i++) {
+        const winningType = this.botTypeDistribution.winning[i % this.botTypeDistribution.winning.length];
+        const bot = await this.createBotUser(winningType);
+        createdBots.push(bot);
+      }
+
+      // Create 3 normal bots
+      for (let i = 0; i < normalBotsCount; i++) {
+        const normalType = this.botTypeDistribution.normal[i % this.botTypeDistribution.normal.length];
+        const bot = await this.createBotUser(normalType);
+        createdBots.push(bot);
+      }
+
+      logger.info(`🤖 Created bot pool: ${winningBotsCount} winning bots + ${normalBotsCount} normal bots = ${totalBots} total`);
+      return createdBots;
+    } catch (error) {
+      logger.error('Create bot pool error:', error);
+      throw error;
+    }
+  }
+
+  // Get bot configuration for gameplay
+  getBotGameplayConfig(botId) {
+    const performance = this.botPerformanceTracking.get(botId);
+    if (performance) {
+      return performance.config;
+    }
+
+    // Fallback: try to get from database
+    return this.botTypes.CASUAL_PLAYER;
+  }
+
+  // Track bot performance in games
+  async trackBotPerformance(botId, gameResult) {
+    try {
+      if (!this.botPerformanceTracking.has(botId)) {
+        // Initialize tracking for existing bot
+        const bot = await prisma.user.findUnique({ where: { id: botId } });
+        if (bot && bot.isBot) {
+          const botConfig = this.getBotTypeConfig(bot.botType || 'casual_player');
+          this.botPerformanceTracking.set(botId, {
+            botType: bot.botType || 'casual_player',
+            config: botConfig,
+            gamesPlayed: 0,
+            wins: 0,
+            winRate: 0,
+            createdAt: Date.now()
+          });
+        }
+      }
+
+      const performance = this.botPerformanceTracking.get(botId);
+      if (performance) {
+        performance.gamesPlayed++;
+        if (gameResult.won) {
+          performance.wins++;
+        }
+        performance.winRate = performance.wins / performance.gamesPlayed;
+
+        logger.info(`🤖 Bot ${botId} (${performance.config.name}) performance: ${performance.wins}/${performance.gamesPlayed} (${(performance.winRate * 100).toFixed(1)}%)`);
+      }
+    } catch (error) {
+      logger.error('Track bot performance error:', error);
+    }
+  }
+
+  // Remove bot from queue
   async removeBotFromQueue(botId) {
     try {
       await prisma.matchmakingQueue.deleteMany({
@@ -311,6 +527,7 @@ class BotService {
     }
   }
 
+  // Get available bots count
   async getAvailableBotsCount() {
     try {
       const count = await prisma.user.count({
@@ -337,18 +554,25 @@ class BotService {
     }
   }
 
-  async ensureMinimumBots(minCount = 5) {
+  // Ensure minimum bots with proper distribution
+  async ensureMinimumBots(minCount = 10) {
     try {
       const availableCount = await this.getAvailableBotsCount();
       logger.info(`🤖 Available bots: ${availableCount}, minimum required: ${minCount}`);
       
       if (availableCount < minCount) {
         const botsToCreate = minCount - availableCount;
-        logger.info(`🤖 Creating ${botsToCreate} additional bots`);
+        logger.info(`🤖 Creating ${botsToCreate} additional bots with proper distribution`);
         
         const promises = [];
         for (let i = 0; i < botsToCreate; i++) {
-          promises.push(this.createBotUser());
+          // Maintain 7:3 ratio for winning:normal bots
+          const shouldCreateWinningBot = (i % 10) < 7;
+          const botType = shouldCreateWinningBot ? 
+            this.botTypeDistribution.winning[Math.floor(Math.random() * this.botTypeDistribution.winning.length)] :
+            this.botTypeDistribution.normal[Math.floor(Math.random() * this.botTypeDistribution.normal.length)];
+          
+          promises.push(this.createBotUser(botType));
         }
         
         await Promise.all(promises);
@@ -359,6 +583,7 @@ class BotService {
     }
   }
 
+  // Cleanup inactive bots
   async cleanupInactiveBots() {
     try {
       // Remove bots that have been in queue for more than 5 minutes
@@ -382,314 +607,76 @@ class BotService {
     }
   }
 
-  // Enhanced bot intelligence methods
-  getBotProfile(botName) {
-    const baseName = botName.replace(/\d+$/, ''); // Remove numbers from end
-    return this.botProfiles.find(profile => profile.name === baseName) || this.botProfiles[0];
-  }
-
-  getIntelligenceConfig(intelligenceType) {
-    return this.intelligenceTypes[intelligenceType] || this.intelligenceTypes.balanced;
-  }
-
-  async trackBotPerformance(botId, gameResult) {
+  // Get bot statistics
+  async getBotStatistics() {
     try {
-      if (!this.botPerformanceTracking.has(botId)) {
-        this.botPerformanceTracking.set(botId, {
-          gamesPlayed: 0,
-          wins: 0,
-          recentGames: [],
-          winRate: 0,
-          adjustmentFactor: 1.0
-        });
-      }
-
-      const performance = this.botPerformanceTracking.get(botId);
-      performance.gamesPlayed++;
+      const totalBots = await prisma.user.count({ where: { isBot: true } });
+      const availableBots = await this.getAvailableBotsCount();
       
-      if (gameResult.won) {
-        performance.wins++;
-      }
-
-      // Track recent games (last 20)
-      performance.recentGames.push({
-        won: gameResult.won,
-        timestamp: Date.now(),
-        opponent: gameResult.opponentId
-      });
-
-      if (performance.recentGames.length > this.winRateWindow) {
-        performance.recentGames.shift();
-      }
-
-      // Calculate current win rate
-      const recentWins = performance.recentGames.filter(game => game.won).length;
-      performance.winRate = recentWins / performance.recentGames.length;
-
-      // Adjust bot intelligence based on performance
-      performance.adjustmentFactor = this.calculateIntelligenceAdjustment(performance.winRate);
-
-      this.botPerformanceTracking.set(botId, performance);
-
-      logger.info(`🤖 Bot ${botId} performance updated: ${performance.winRate.toFixed(2)} win rate, adjustment: ${performance.adjustmentFactor.toFixed(2)}`);
-    } catch (error) {
-      logger.error('Track bot performance error:', error);
-    }
-  }
-
-  calculateIntelligenceAdjustment(currentWinRate) {
-    const deviation = currentWinRate - this.targetWinRate;
-    
-    // If bot is winning too much, reduce intelligence
-    if (deviation > 0.1) {
-      return Math.max(0.7, 1.0 - (deviation * 2));
-    }
-    // If bot is losing too much, increase intelligence
-    else if (deviation < -0.1) {
-      return Math.min(1.3, 1.0 + (Math.abs(deviation) * 2));
-    }
-    
-    return 1.0; // No adjustment needed
-  }
-
-  async selectIntelligentBot(humanPlayerId, gameType, entryFee) {
-    try {
-      // Get human player's recent performance
-      const humanPerformance = await this.getHumanPlayerPerformance(humanPlayerId);
-      
-      // Find available bots
-      const availableBots = await prisma.user.findMany({
-        where: {
-          isBot: true,
-          matchmakingQueues: { none: {} },
-          gameParticipations: {
-            none: {
-              game: { status: { in: ['WAITING', 'PLAYING'] } }
-            }
-          }
-        },
-        include: { wallet: true }
-      });
-
-      if (availableBots.length === 0) {
-        return await this.createBotUser();
-      }
-
-      // Score bots based on strategic matchmaking
-      const scoredBots = availableBots.map(bot => {
-        const profile = this.getBotProfile(bot.name);
-        const performance = this.botPerformanceTracking.get(bot.id) || { adjustmentFactor: 1.0, winRate: 0.5 };
-        
-        // Calculate strategic score
-        const skillDifference = Math.abs(profile.skillLevel - humanPerformance.estimatedSkill);
-        const winRateBalance = Math.abs(performance.winRate - this.targetWinRate);
-        
-        // Prefer bots that will create balanced matches
-        const balanceScore = 1.0 - (skillDifference * 0.5) - (winRateBalance * 0.3);
-        
-        // Add randomness to prevent predictability
-        const randomFactor = 0.8 + (Math.random() * 0.4);
-        
-        return {
-          bot,
-          profile,
-          performance,
-          score: balanceScore * randomFactor
-        };
-      });
-
-      // Sort by score and select from top candidates
-      scoredBots.sort((a, b) => b.score - a.score);
-      const topCandidates = scoredBots.slice(0, Math.min(5, scoredBots.length));
-      
-      // Randomly select from top candidates to maintain unpredictability
-      const selectedBot = topCandidates[Math.floor(Math.random() * topCandidates.length)];
-
-      logger.info(`🤖 Intelligently selected bot: ${selectedBot.bot.name} (skill: ${selectedBot.profile.skillLevel}, score: ${selectedBot.score.toFixed(2)})`);
-      
-      return selectedBot.bot;
-    } catch (error) {
-      logger.error('Intelligent bot selection error:', error);
-      // Fallback to random selection
-      return await this.getBotForMatchmaking(gameType, entryFee);
-    }
-  }
-
-  async getHumanPlayerPerformance(playerId) {
-    try {
-      const recentGames = await prisma.game.findMany({
-        where: {
-          participants: { some: { userId: playerId } },
-          status: 'FINISHED'
-        },
-        orderBy: { finishedAt: 'desc' },
-        take: 10,
-        include: {
-          participants: {
-            include: { user: { select: { id: true, isBot: true } } }
-          }
-        }
-      });
-
-      if (recentGames.length === 0) {
-        return { estimatedSkill: 0.5, winRate: 0.5, gamesPlayed: 0 };
-      }
-
-      const wins = recentGames.filter(game => {
-        const playerParticipant = game.participants.find(p => p.userId === playerId);
-        return playerParticipant && playerParticipant.position === 1;
-      }).length;
-
-      const winRate = wins / recentGames.length;
-      
-      // Estimate skill based on win rate and game patterns
-      let estimatedSkill = winRate;
-      
-      // Adjust based on opponent types
-      const botGames = recentGames.filter(game => 
-        game.participants.some(p => p.userId !== playerId && p.user.isBot)
-      );
-      
-      if (botGames.length > 0) {
-        const botWins = botGames.filter(game => {
-          const playerParticipant = game.participants.find(p => p.userId === playerId);
-          return playerParticipant && playerParticipant.position === 1;
-        }).length;
-        
-        const botWinRate = botWins / botGames.length;
-        estimatedSkill = (estimatedSkill + botWinRate) / 2;
-      }
-
-      return {
-        estimatedSkill: Math.max(0.2, Math.min(0.9, estimatedSkill)),
-        winRate,
-        gamesPlayed: recentGames.length
-      };
-    } catch (error) {
-      logger.error('Get human player performance error:', error);
-      return { estimatedSkill: 0.5, winRate: 0.5, gamesPlayed: 0 };
-    }
-  }
-
-  async getGlobalBotPerformance() {
-    try {
-      const allBotPerformance = Array.from(this.botPerformanceTracking.values());
-      
-      if (allBotPerformance.length === 0) {
-        return { averageWinRate: 0.5, totalGames: 0, needsAdjustment: false };
-      }
-
-      const totalGames = allBotPerformance.reduce((sum, perf) => sum + perf.gamesPlayed, 0);
-      const totalWins = allBotPerformance.reduce((sum, perf) => sum + perf.wins, 0);
-      const averageWinRate = totalWins / totalGames;
-
-      const needsAdjustment = Math.abs(averageWinRate - this.targetWinRate) > 0.05;
-
-      return {
-        averageWinRate,
-        totalGames,
-        needsAdjustment,
-        deviation: averageWinRate - this.targetWinRate
-      };
-    } catch (error) {
-      logger.error('Get global bot performance error:', error);
-      return { averageWinRate: 0.5, totalGames: 0, needsAdjustment: false };
-    }
-  }
-
-  async adjustGlobalBotIntelligence() {
-    try {
-      const globalPerf = await this.getGlobalBotPerformance();
-      
-      if (!globalPerf.needsAdjustment || globalPerf.totalGames < 50) {
-        return;
-      }
-
-      const adjustmentFactor = globalPerf.deviation > 0 ? 0.95 : 1.05;
-      
-      // Apply global adjustment to all tracked bots
+      const botsByType = {};
       for (const [botId, performance] of this.botPerformanceTracking.entries()) {
-        performance.adjustmentFactor *= adjustmentFactor;
-        performance.adjustmentFactor = Math.max(0.6, Math.min(1.4, performance.adjustmentFactor));
+        const typeName = performance.config.name;
+        if (!botsByType[typeName]) {
+          botsByType[typeName] = { count: 0, totalWinRate: 0 };
+        }
+        botsByType[typeName].count++;
+        botsByType[typeName].totalWinRate += performance.winRate;
       }
 
-      logger.info(`🤖 Global bot intelligence adjusted by factor: ${adjustmentFactor} (current win rate: ${globalPerf.averageWinRate.toFixed(3)})`);
+      // Calculate average win rates by type
+      for (const type in botsByType) {
+        botsByType[type].averageWinRate = botsByType[type].totalWinRate / botsByType[type].count;
+      }
+
+      return {
+        totalBots,
+        availableBots,
+        trackedBots: this.botPerformanceTracking.size,
+        botsByType
+      };
     } catch (error) {
-      logger.error('Adjust global bot intelligence error:', error);
+      logger.error('Get bot statistics error:', error);
+      return { totalBots: 0, availableBots: 0, trackedBots: 0, botsByType: {} };
     }
   }
 
+  // Legacy method compatibility - intelligent bot selection
+  async selectIntelligentBot(humanPlayerId, gameType, entryFee) {
+    // For backward compatibility, use the new system
+    return await this.getBotForMatchmaking(gameType, entryFee);
+  }
+
+  // Legacy method compatibility - get bot profile
+  getBotProfile(botName) {
+    // Extract base name and try to match with bot types
+    const baseName = botName.replace(/\d+$/, '');
+    
+    // Return a compatible profile structure
+    return {
+      name: baseName,
+      skillLevel: 0.7, // Default skill level
+      intelligence: 'balanced',
+      memoryStrength: 0.7,
+      adaptability: 0.7
+    };
+  }
+
+  // Legacy method compatibility - get intelligence config
+  getIntelligenceConfig(intelligenceType) {
+    const defaultConfig = {
+      planningDepth: 2,
+      patternRecognition: 0.7,
+      riskAssessment: 0.7,
+      adaptiveThinking: 0.7
+    };
+
+    return defaultConfig;
+  }
+
+  // Legacy method compatibility - get bot intelligence multiplier
   getBotIntelligenceMultiplier(botId) {
     const performance = this.botPerformanceTracking.get(botId);
-    return performance ? performance.adjustmentFactor : 1.0;
-  }
-
-  // Enhanced bot creation with intelligence assignment
-  async createIntelligentBot(targetSkillLevel = null) {
-    try {
-      // Select profile based on target skill or weighted random
-      let profile;
-      
-      if (targetSkillLevel) {
-        // Find profile closest to target skill level
-        profile = this.botProfiles.reduce((closest, current) => {
-          const currentDiff = Math.abs(current.skillLevel - targetSkillLevel);
-          const closestDiff = Math.abs(closest.skillLevel - targetSkillLevel);
-          return currentDiff < closestDiff ? current : closest;
-        });
-      } else {
-        // Weighted selection favoring higher skill levels for 65% win rate
-        const weights = this.botProfiles.map(p => Math.pow(p.skillLevel, 2));
-        const totalWeight = weights.reduce((sum, weight) => sum + weight, 0);
-        const random = Math.random() * totalWeight;
-        
-        let cumulativeWeight = 0;
-        for (let i = 0; i < this.botProfiles.length; i++) {
-          cumulativeWeight += weights[i];
-          if (random <= cumulativeWeight) {
-            profile = this.botProfiles[i];
-            break;
-          }
-        }
-      }
-
-      const uniqueId = Math.floor(Math.random() * 999) + 1;
-      const botName = `${profile.name}${uniqueId}`;
-      const botPhone = `+91${Math.floor(Math.random() * 9000000000) + 1000000000}`;
-      
-      const bot = await prisma.user.create({
-        data: {
-          phoneNumber: botPhone,
-          name: botName,
-          isVerified: true,
-          isBot: true,
-          wallet: {
-            create: {
-              balance: 1000,
-              gameBalance: 1000,
-              withdrawableBalance: 0
-            }
-          }
-        },
-        include: { wallet: true }
-      });
-
-      // Initialize performance tracking
-      this.botPerformanceTracking.set(bot.id, {
-        gamesPlayed: 0,
-        wins: 0,
-        recentGames: [],
-        winRate: 0.5,
-        adjustmentFactor: 1.0,
-        profile: profile
-      });
-
-      logger.info(`🤖 Intelligent bot created: ${bot.name} (skill: ${profile.skillLevel}, intelligence: ${profile.intelligence})`);
-      return bot;
-    } catch (error) {
-      logger.error('Create intelligent bot error:', error);
-      throw error;
-    }
+    return performance ? 1.0 : 1.0; // No longer using dynamic adjustment
   }
 }
 

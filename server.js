@@ -502,8 +502,35 @@ io.on('connection', (socket) => {
 });
 
 // Matchmaking callback - Only Memory Game
-matchmakingService.setGameCreatedCallback(async (game, matchedUsers) => {
+matchmakingService.setGameCreatedCallback(async (game, matchedUsers, eventData) => {
   try {
+    // Handle queue timeout events
+    if (eventData && eventData.type === 'QUEUE_TIMEOUT') {
+      const { userId, message, refunded } = eventData;
+      const userSocketIds = socketManager.getUserSockets(userId);
+      
+      if (userSocketIds.size > 0) {
+        for (const socketId of userSocketIds) {
+          const socket = io.sockets.sockets.get(socketId);
+          if (socket) {
+            socket.emit('queueTimeout', {
+              message,
+              refunded,
+              entryFee: eventData.entryFee
+            });
+            logger.info(`Sent queue timeout notification to user : ${userId}: ${message}`);
+          }
+        }
+      }
+      return;
+    }
+
+    // Handle normal game creation
+    if (!game || !matchedUsers) {
+      logger.warn('Invalid game creation callback - missing game or users');
+      return;
+    }
+
     logger.info(`Game created: ${game.id} (${game.type}) with ${matchedUsers.length} players`);
 
     for (const user of matchedUsers) {

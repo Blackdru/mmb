@@ -18,6 +18,7 @@ model User {
   avatar      String?
   isVerified  Boolean  @default(false)
   isBot       Boolean  @default(false) @map("is_bot") // Flag to identify bot users
+  botType     String?  @map("bot_type") // Type of bot (strategic_master, casual_player, etc.)
   
   // Referral system
   referralCode String?  @unique @map("referral_code")

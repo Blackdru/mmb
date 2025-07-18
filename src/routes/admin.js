@@ -172,7 +172,8 @@ router.get('/users', adminAuth, async (req, res) => {
           _count: {
             select: {
               gameParticipations: true,
-              transactions: true
+              transactions: true,
+              withdrawalRequests: true
             }
           }
         },
@@ -181,9 +182,50 @@ router.get('/users', adminAuth, async (req, res) => {
       prisma.user.count({ where })
     ]);
 
-    res.json({
-      success: true,
-      users: users.map(user => ({
+    // Get detailed statistics for each user
+    const usersWithStats = await Promise.all(users.map(async (user) => {
+      const [
+        gamesWon,
+        gamesLost,
+        totalWinnings,
+        totalLosses,
+        totalDeposits,
+        totalWithdrawals,
+        referralCount,
+        referredByUser
+      ] = await Promise.all([
+        prisma.gameParticipation.count({
+          where: { userId: user.id, rank: 1 }
+        }),
+        prisma.gameParticipation.count({
+          where: { userId: user.id, rank: { not: 1 } }
+        }),
+        prisma.transaction.aggregate({
+          where: { userId: user.id, type: 'GAME_WINNING', status: 'COMPLETED' },
+          _sum: { amount: true }
+        }),
+        prisma.transaction.aggregate({
+          where: { userId: user.id, type: 'GAME_ENTRY' },
+          _sum: { amount: true }
+        }),
+        prisma.transaction.aggregate({
+          where: { userId: user.id, type: 'DEPOSIT', status: 'COMPLETED' },
+          _sum: { amount: true }
+        }),
+        prisma.transaction.aggregate({
+          where: { userId: user.id, type: 'WITHDRAWAL', status: 'COMPLETED' },
+          _sum: { amount: true }
+        }),
+        prisma.user.count({
+          where: { referredBy: user.referralCode }
+        }),
+        user.referredBy ? prisma.user.findFirst({
+          where: { referralCode: user.referredBy },
+          select: { name: true, phoneNumber: true }
+        }) : null
+      ]);
+
+      return {
         id: user.id,
         name: user.name,
         phoneNumber: user.phoneNumber,
@@ -193,11 +235,28 @@ router.get('/users', adminAuth, async (req, res) => {
         gameBalance: user.wallet?.gameBalance || 0,
         withdrawableBalance: user.wallet?.withdrawableBalance || 0,
         gamesPlayed: user._count.gameParticipations,
+        gamesWon,
+        gamesLost,
+        winRate: user._count.gameParticipations > 0 ? ((gamesWon / user._count.gameParticipations) * 100).toFixed(2) : 0,
+        totalWinnings: totalWinnings._sum.amount || 0,
+        totalLosses: totalLosses._sum.amount || 0,
+        totalDeposits: totalDeposits._sum.amount || 0,
+        totalWithdrawals: totalWithdrawals._sum.amount || 0,
         totalTransactions: user._count.transactions,
-        createdAt: user.createdAt,
+        totalWithdrawalRequests: user._count.withdrawalRequests,
         referralCode: user.referralCode,
-        referredBy: user.referredBy
-      })),
+        referredBy: user.referredBy,
+        referredByUser,
+        referralCount,
+        createdAt: user.createdAt,
+        lastActive: user.updatedAt,
+        profitLoss: (totalWinnings._sum.amount || 0) - (totalLosses._sum.amount || 0)
+      };
+    }));
+
+    res.json({
+      success: true,
+      users: usersWithStats,
       pagination: {
         page: parseInt(page),
         limit: parseInt(limit),
@@ -994,6 +1053,414 @@ router.get('/reports/financial', adminAuth, async (req, res) => {
   } catch (error) {
     logger.error('Financial report error:', error);
     res.status(500).json({ success: false, message: 'Failed to generate financial report' });
+  }
+});
+
+// Referral management
+router.get('/referrals', adminAuth, async (req, res) => {
+  try {
+    const { page = 1, limit = 20 } = req.query;
+    const skip = (page - 1) * limit;
+
+    // Get users with referral codes and their referral statistics
+    const [referrers, total] = await Promise.all([
+      prisma.user.findMany({
+        where: { 
+          referralCode: { not: null },
+          isBot: false
+        },
+        skip: parseInt(skip),
+        take: parseInt(limit),
+        include: {
+          wallet: true
+        },
+        orderBy: { createdAt: 'desc' }
+      }),
+      prisma.user.count({ 
+        where: { 
+          referralCode: { not: null },
+          isBot: false
+        }
+      })
+    ]);
+
+    // Get referral statistics for each user
+    const referralStats = await Promise.all(referrers.map(async (user) => {
+      const [
+        referralCount,
+        referralBonusEarned,
+        referredUsers
+      ] = await Promise.all([
+        prisma.user.count({
+          where: { referredBy: user.referralCode }
+        }),
+        prisma.transaction.aggregate({
+          where: { 
+            userId: user.id, 
+            type: { in: ['REFERRAL_BONUS', 'REFERRAL_SIGNUP_BONUS'] },
+            status: 'COMPLETED'
+          },
+          _sum: { amount: true }
+        }),
+        prisma.user.findMany({
+          where: { referredBy: user.referralCode },
+          select: {
+            id: true,
+            name: true,
+            phoneNumber: true,
+            createdAt: true,
+            isVerified: true
+          },
+          take: 5,
+          orderBy: { createdAt: 'desc' }
+        })
+      ]);
+
+      return {
+        ...user,
+        referralCount,
+        referralBonusEarned: referralBonusEarned._sum.amount || 0,
+        referredUsers
+      };
+    }));
+
+    res.json({
+      success: true,
+      referrals: referralStats,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total,
+        pages: Math.ceil(total / limit)
+      }
+    });
+  } catch (error) {
+    logger.error('Referrals fetch error:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch referral data' });
+  }
+});
+
+// Referral details for specific user
+router.get('/referrals/:userId', adminAuth, async (req, res) => {
+  try {
+    const { userId } = req.params;
+    
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: { wallet: true }
+    });
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    const [
+      referredUsers,
+      referralTransactions,
+      referralStats
+    ] = await Promise.all([
+      prisma.user.findMany({
+        where: { referredBy: user.referralCode },
+        include: {
+          wallet: true,
+          _count: {
+            select: {
+              gameParticipations: true,
+              transactions: { where: { type: 'DEPOSIT', status: 'COMPLETED' } }
+            }
+          }
+        },
+        orderBy: { createdAt: 'desc' }
+      }),
+      prisma.transaction.findMany({
+        where: { 
+          userId: user.id, 
+          type: { in: ['REFERRAL_BONUS', 'REFERRAL_SIGNUP_BONUS'] }
+        },
+        orderBy: { createdAt: 'desc' }
+      }),
+      prisma.transaction.aggregate({
+        where: { 
+          userId: user.id, 
+          type: { in: ['REFERRAL_BONUS', 'REFERRAL_SIGNUP_BONUS'] },
+          status: 'COMPLETED'
+        },
+        _sum: { amount: true },
+        _count: true
+      })
+    ]);
+
+    res.json({
+      success: true,
+      user,
+      referredUsers,
+      referralTransactions,
+      stats: {
+        totalReferrals: referredUsers.length,
+        totalBonusEarned: referralStats._sum.amount || 0,
+        totalBonusTransactions: referralStats._count
+      }
+    });
+  } catch (error) {
+    logger.error('Referral details error:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch referral details' });
+  }
+});
+
+// Website data management
+router.get('/website-data', adminAuth, async (req, res) => {
+  try {
+    const { type = 'all', page = 1, limit = 20 } = req.query;
+    const skip = (page - 1) * limit;
+
+    let data = {};
+
+    if (type === 'all' || type === 'contact') {
+      const [contacts, contactsTotal] = await Promise.all([
+        prisma.contactSubmission.findMany({
+          skip: type === 'contact' ? parseInt(skip) : 0,
+          take: type === 'contact' ? parseInt(limit) : 10,
+          orderBy: { createdAt: 'desc' }
+        }),
+        prisma.contactSubmission.count()
+      ]);
+      data.contacts = { data: contacts, total: contactsTotal };
+    }
+
+    if (type === 'all' || type === 'feedback') {
+      const [websiteFeedback, feedbackTotal] = await Promise.all([
+        prisma.websiteFeedback.findMany({
+          skip: type === 'feedback' ? parseInt(skip) : 0,
+          take: type === 'feedback' ? parseInt(limit) : 10,
+          orderBy: { createdAt: 'desc' }
+        }),
+        prisma.websiteFeedback.count()
+      ]);
+      data.websiteFeedback = { data: websiteFeedback, total: feedbackTotal };
+    }
+
+    if (type === 'all' || type === 'newsletter') {
+      const [newsletters, newsletterTotal] = await Promise.all([
+        prisma.newsletterSubscription.findMany({
+          skip: type === 'newsletter' ? parseInt(skip) : 0,
+          take: type === 'newsletter' ? parseInt(limit) : 10,
+          orderBy: { createdAt: 'desc' }
+        }),
+        prisma.newsletterSubscription.count()
+      ]);
+      data.newsletters = { data: newsletters, total: newsletterTotal };
+    }
+
+    if (type === 'all' || type === 'downloads') {
+      const [downloads, downloadsTotal] = await Promise.all([
+        prisma.downloadTracking.findMany({
+          skip: type === 'downloads' ? parseInt(skip) : 0,
+          take: type === 'downloads' ? parseInt(limit) : 10,
+          orderBy: { timestamp: 'desc' }
+        }),
+        prisma.downloadTracking.count()
+      ]);
+      data.downloads = { data: downloads, total: downloadsTotal };
+    }
+
+    // Get summary stats
+    const [
+      totalContacts,
+      totalWebsiteFeedback,
+      totalNewsletters,
+      totalDownloads
+    ] = await Promise.all([
+      prisma.contactSubmission.count(),
+      prisma.websiteFeedback.count(),
+      prisma.newsletterSubscription.count(),
+      prisma.downloadTracking.count()
+    ]);
+
+    res.json({
+      success: true,
+      data,
+      stats: {
+        totalContacts,
+        totalWebsiteFeedback,
+        totalNewsletters,
+        totalDownloads
+      },
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        type
+      }
+    });
+  } catch (error) {
+    logger.error('Website data fetch error:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch website data' });
+  }
+});
+
+// Analytics endpoint
+router.get('/analytics', adminAuth, async (req, res) => {
+  try {
+    const { period = 'month' } = req.query;
+    
+    // Calculate date range based on period
+    let startDate = new Date();
+    switch (period) {
+      case 'today':
+        startDate.setHours(0, 0, 0, 0);
+        break;
+      case 'week':
+        startDate.setDate(startDate.getDate() - 7);
+        break;
+      case 'month':
+        startDate.setMonth(startDate.getMonth() - 1);
+        break;
+      case 'quarter':
+        startDate.setMonth(startDate.getMonth() - 3);
+        break;
+      case 'year':
+        startDate.setFullYear(startDate.getFullYear() - 1);
+        break;
+    }
+
+    const [
+      userGrowth,
+      revenueAnalytics,
+      gameAnalytics,
+      topUsers
+    ] = await Promise.all([
+      // User growth analytics
+      Promise.all([
+        prisma.user.count({
+          where: { 
+            isBot: false,
+            createdAt: { gte: startDate }
+          }
+        }),
+        prisma.user.count({
+          where: { 
+            isBot: false,
+            updatedAt: { gte: startDate }
+          }
+        })
+      ]),
+      
+      // Revenue analytics
+      Promise.all([
+        prisma.transaction.aggregate({
+          where: {
+            type: 'DEPOSIT',
+            status: 'COMPLETED',
+            createdAt: { gte: startDate }
+          },
+          _sum: { amount: true }
+        }),
+        prisma.transaction.aggregate({
+          where: {
+            type: 'WITHDRAWAL',
+            status: 'COMPLETED',
+            createdAt: { gte: startDate }
+          },
+          _sum: { amount: true }
+        })
+      ]),
+      
+      // Game analytics
+      Promise.all([
+        prisma.game.count({
+          where: { createdAt: { gte: startDate } }
+        }),
+        prisma.game.aggregate({
+          where: { 
+            status: 'FINISHED',
+            finishedAt: { gte: startDate }
+          },
+          _avg: {
+            // Calculate average duration in minutes
+          }
+        }),
+        prisma.game.groupBy({
+          by: ['type'],
+          where: { createdAt: { gte: startDate } },
+          _count: { type: true },
+          orderBy: { _count: { type: 'desc' } },
+          take: 1
+        })
+      ]),
+      
+      // Top performing users
+      prisma.user.findMany({
+        where: { isBot: false },
+        include: {
+          wallet: true,
+          _count: {
+            select: {
+              gameParticipations: true
+            }
+          }
+        },
+        take: 10,
+        orderBy: {
+          wallet: {
+            withdrawableBalance: 'desc'
+          }
+        }
+      })
+    ]);
+
+    const [newUsers, activeUsers] = userGrowth;
+    const [totalDeposits, totalWithdrawals] = revenueAnalytics;
+    const [gamesPlayed, avgDuration, popularGameType] = gameAnalytics;
+
+    // Calculate top users with their statistics
+    const topUsersWithStats = await Promise.all(topUsers.map(async (user) => {
+      const [gamesWon, totalWinnings, totalDeposits] = await Promise.all([
+        prisma.gameParticipation.count({
+          where: { userId: user.id, rank: 1 }
+        }),
+        prisma.transaction.aggregate({
+          where: { userId: user.id, type: 'GAME_WINNING', status: 'COMPLETED' },
+          _sum: { amount: true }
+        }),
+        prisma.transaction.aggregate({
+          where: { userId: user.id, type: 'DEPOSIT', status: 'COMPLETED' },
+          _sum: { amount: true }
+        })
+      ]);
+
+      return {
+        id: user.id,
+        name: user.name || user.phoneNumber,
+        gamesPlayed: user._count.gameParticipations,
+        winRate: user._count.gameParticipations > 0 ? ((gamesWon / user._count.gameParticipations) * 100).toFixed(2) : 0,
+        totalWinnings: totalWinnings._sum.amount || 0,
+        totalDeposits: totalDeposits._sum.amount || 0
+      };
+    }));
+
+    res.json({
+      success: true,
+      analytics: {
+        userGrowth: {
+          newUsers,
+          activeUsers,
+          retentionRate: newUsers > 0 ? ((activeUsers / newUsers) * 100).toFixed(2) : 0
+        },
+        revenue: {
+          totalDeposits: totalDeposits._sum.amount || 0,
+          totalWithdrawals: totalWithdrawals._sum.amount || 0,
+          netRevenue: (totalDeposits._sum.amount || 0) - (totalWithdrawals._sum.amount || 0)
+        },
+        games: {
+          gamesPlayed,
+          avgGameDuration: '15m', // Placeholder
+          popularGameType: popularGameType[0]?.type || 'LUDO'
+        },
+        topUsers: topUsersWithStats
+      }
+    });
+  } catch (error) {
+    logger.error('Analytics fetch error:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch analytics data' });
   }
 });
 
