@@ -1,8 +1,8 @@
 {
   "version": "1.0.0",
-  "apkUrl": "http://localhost:8080/apks/Budzee-v1.0.0.apk",
+  "apkUrl": "http://test.fivlog.space/apks/Budzee-v1.0.1.apk",
   "type": "mandatory",
-  "notes": "Updated to version 1.0.0 with stability improvements and bug fixes.",
+  "notes": "Updated to version 1.0.1 with stability improvements and bug fixes.",
   "publishedAt": "2023-11-15T10:00:00.000Z",
   "fileSize": 47401288
 }
