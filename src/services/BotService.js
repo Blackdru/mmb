@@ -21,155 +21,176 @@ class BotService {
       'Sunil', 'Ashok', 'Pradeep', 'Manoj', 'Rohit', 'Vikram'
     ];
 
-    // 10 Bot Types: 7 Intelligent Winning Bots + 3 Normal/Random Bots
+    // 10 Bot Types: 7 Intelligent Winning Bots (100% win rate) + 3 Normal/Random Bots
     this.botTypes = {
-      // 7 Intelligent Winning Bot Types (Human-like behavior with high win probability)
+      // 7 Intelligent Winning Bot Types (Human-like behavior with 100% win probability)
       STRATEGIC_MASTER: {
         id: 'strategic_master',
         name: 'Strategic Master',
-        winProbability: 0.95,
+        winProbability: 1.0, // 100% win rate
         intelligence: 'strategic',
         humanBehavior: {
           thinkingTimeMin: 1200,
           thinkingTimeMax: 3500,
-          mistakeProbability: 0.05,
+          mistakeProbability: 0.02, // Very low mistake rate
           adaptivePlay: true,
-          memoryAccuracy: 0.95,
-          patternRecognition: 0.90
+          memoryAccuracy: 0.98, // Near perfect memory
+          patternRecognition: 0.95,
+          humanLikeDelay: true,
+          naturalVariation: 0.15
         },
         gameplayStyle: {
-          planningDepth: 4,
-          riskTolerance: 0.3,
-          aggressiveness: 0.7,
-          patience: 0.9
+          planningDepth: 5,
+          riskTolerance: 0.2,
+          aggressiveness: 0.8,
+          patience: 0.95,
+          perfectMemory: true
         }
       },
       ANALYTICAL_GENIUS: {
         id: 'analytical_genius',
         name: 'Analytical Genius',
-        winProbability: 0.95,
+        winProbability: 1.0, // 100% win rate
         intelligence: 'analytical',
         humanBehavior: {
           thinkingTimeMin: 1500,
           thinkingTimeMax: 4000,
-          mistakeProbability: 0.08,
+          mistakeProbability: 0.03,
           adaptivePlay: true,
-          memoryAccuracy: 0.93,
-          patternRecognition: 0.95
+          memoryAccuracy: 0.97,
+          patternRecognition: 0.98,
+          humanLikeDelay: true,
+          naturalVariation: 0.18
         },
         gameplayStyle: {
-          planningDepth: 3,
-          riskTolerance: 0.2,
-          aggressiveness: 0.6,
-          patience: 0.95
+          planningDepth: 4,
+          riskTolerance: 0.15,
+          aggressiveness: 0.7,
+          patience: 0.98,
+          perfectMemory: true
         }
       },
       TACTICAL_EXPERT: {
         id: 'tactical_expert',
         name: 'Tactical Expert',
-        winProbability: 0.95,
+        winProbability: 1.0, // 100% win rate
         intelligence: 'tactical',
         humanBehavior: {
           thinkingTimeMin: 1000,
           thinkingTimeMax: 2800,
-          mistakeProbability: 0.10,
+          mistakeProbability: 0.04,
           adaptivePlay: true,
-          memoryAccuracy: 0.88,
-          patternRecognition: 0.85
+          memoryAccuracy: 0.96,
+          patternRecognition: 0.92,
+          humanLikeDelay: true,
+          naturalVariation: 0.20
         },
         gameplayStyle: {
-          planningDepth: 3,
-          riskTolerance: 0.4,
-          aggressiveness: 0.8,
-          patience: 0.7
+          planningDepth: 4,
+          riskTolerance: 0.25,
+          aggressiveness: 0.85,
+          patience: 0.85,
+          perfectMemory: true
         }
       },
       ADAPTIVE_CHAMPION: {
         id: 'adaptive_champion',
         name: 'Adaptive Champion',
-        winProbability: 0.95,
+        winProbability: 1.0, // 100% win rate
         intelligence: 'adaptive',
         humanBehavior: {
           thinkingTimeMin: 900,
           thinkingTimeMax: 2500,
-          mistakeProbability: 0.12,
+          mistakeProbability: 0.05,
           adaptivePlay: true,
-          memoryAccuracy: 0.85,
-          patternRecognition: 0.80
+          memoryAccuracy: 0.95,
+          patternRecognition: 0.88,
+          humanLikeDelay: true,
+          naturalVariation: 0.22
         },
         gameplayStyle: {
-          planningDepth: 2,
-          riskTolerance: 0.5,
-          aggressiveness: 0.7,
-          patience: 0.8
+          planningDepth: 3,
+          riskTolerance: 0.35,
+          aggressiveness: 0.75,
+          patience: 0.90,
+          perfectMemory: true
         }
       },
       INTUITIVE_PLAYER: {
         id: 'intuitive_player',
         name: 'Intuitive Player',
-        winProbability: 0.95,
+        winProbability: 1.0, // 100% win rate
         intelligence: 'intuitive',
         humanBehavior: {
           thinkingTimeMin: 800,
           thinkingTimeMax: 2200,
-          mistakeProbability: 0.15,
+          mistakeProbability: 0.06,
           adaptivePlay: true,
-          memoryAccuracy: 0.82,
-          patternRecognition: 0.75
+          memoryAccuracy: 0.94,
+          patternRecognition: 0.85,
+          humanLikeDelay: true,
+          naturalVariation: 0.25
         },
         gameplayStyle: {
-          planningDepth: 2,
-          riskTolerance: 0.6,
-          aggressiveness: 0.6,
-          patience: 0.6
+          planningDepth: 3,
+          riskTolerance: 0.40,
+          aggressiveness: 0.70,
+          patience: 0.80,
+          perfectMemory: true
         }
       },
       CALCULATED_WINNER: {
         id: 'calculated_winner',
         name: 'Calculated Winner',
-        winProbability: 0.95,
+        winProbability: 1.0, // 100% win rate
         intelligence: 'calculated',
         humanBehavior: {
           thinkingTimeMin: 1100,
           thinkingTimeMax: 3000,
-          mistakeProbability: 0.18,
+          mistakeProbability: 0.07,
           adaptivePlay: true,
-          memoryAccuracy: 0.80,
-          patternRecognition: 0.78
+          memoryAccuracy: 0.93,
+          patternRecognition: 0.90,
+          humanLikeDelay: true,
+          naturalVariation: 0.20
         },
         gameplayStyle: {
-          planningDepth: 3,
-          riskTolerance: 0.3,
-          aggressiveness: 0.5,
-          patience: 0.9
+          planningDepth: 4,
+          riskTolerance: 0.20,
+          aggressiveness: 0.65,
+          patience: 0.95,
+          perfectMemory: true
         }
       },
       SMART_COMPETITOR: {
         id: 'smart_competitor',
         name: 'Smart Competitor',
-        winProbability: 0.95,
+        winProbability: 1.0, // 100% win rate
         intelligence: 'competitive',
         humanBehavior: {
           thinkingTimeMin: 700,
           thinkingTimeMax: 2000,
-          mistakeProbability: 0.20,
+          mistakeProbability: 0.08,
           adaptivePlay: true,
-          memoryAccuracy: 0.78,
-          patternRecognition: 0.72
+          memoryAccuracy: 0.92,
+          patternRecognition: 0.82,
+          humanLikeDelay: true,
+          naturalVariation: 0.28
         },
         gameplayStyle: {
-          planningDepth: 2,
-          riskTolerance: 0.7,
-          aggressiveness: 0.8,
-          patience: 0.5
+          planningDepth: 3,
+          riskTolerance: 0.45,
+          aggressiveness: 0.90,
+          patience: 0.70,
+          perfectMemory: true
         }
       },
 
-      // 3 Normal/Random Bot Types (Standard behavior with random outcomes)
+      // 3 Normal/Random Bot Types (Standard human behavior with random outcomes)
       CASUAL_PLAYER: {
         id: 'casual_player',
         name: 'Casual Player',
-        winProbability: 0.60,
+        winProbability: 0.45, // Normal human-like win rate
         intelligence: 'casual',
         humanBehavior: {
           thinkingTimeMin: 500,
@@ -177,19 +198,22 @@ class BotService {
           mistakeProbability: 0.35,
           adaptivePlay: false,
           memoryAccuracy: 0.60,
-          patternRecognition: 0.50
+          patternRecognition: 0.50,
+          humanLikeDelay: true,
+          naturalVariation: 0.40
         },
         gameplayStyle: {
           planningDepth: 1,
           riskTolerance: 0.8,
           aggressiveness: 0.4,
-          patience: 0.3
+          patience: 0.3,
+          perfectMemory: false
         }
       },
       RANDOM_PLAYER: {
         id: 'random_player',
         name: 'Random Player',
-        winProbability: 0.60,
+        winProbability: 0.40, // Normal human-like win rate
         intelligence: 'random',
         humanBehavior: {
           thinkingTimeMin: 300,
@@ -197,19 +221,22 @@ class BotService {
           mistakeProbability: 0.45,
           adaptivePlay: false,
           memoryAccuracy: 0.50,
-          patternRecognition: 0.40
+          patternRecognition: 0.40,
+          humanLikeDelay: true,
+          naturalVariation: 0.50
         },
         gameplayStyle: {
           planningDepth: 1,
           riskTolerance: 0.9,
           aggressiveness: 0.5,
-          patience: 0.2
+          patience: 0.2,
+          perfectMemory: false
         }
       },
       BEGINNER_BOT: {
         id: 'beginner_bot',
         name: 'Beginner Bot',
-        winProbability: 0.65,
+        winProbability: 0.50, // Normal human-like win rate
         intelligence: 'beginner',
         humanBehavior: {
           thinkingTimeMin: 400,
@@ -217,13 +244,16 @@ class BotService {
           mistakeProbability: 0.50,
           adaptivePlay: false,
           memoryAccuracy: 0.45,
-          patternRecognition: 0.35
+          patternRecognition: 0.35,
+          humanLikeDelay: true,
+          naturalVariation: 0.45
         },
         gameplayStyle: {
           planningDepth: 1,
           riskTolerance: 0.7,
           aggressiveness: 0.3,
-          patience: 0.4
+          patience: 0.4,
+          perfectMemory: false
         }
       }
     };
@@ -284,7 +314,9 @@ class BotService {
 
   // Get bot type configuration
   getBotTypeConfig(botTypeId) {
-    return this.botTypes[botTypeId] || this.botTypes.CASUAL_PLAYER;
+    // Convert lowercase bot type ID to uppercase key
+    const upperCaseKey = botTypeId ? botTypeId.toUpperCase() : 'CASUAL_PLAYER';
+    return this.botTypes[upperCaseKey] || this.botTypes.CASUAL_PLAYER;
   }
 
   // Create a new bot user with specified type

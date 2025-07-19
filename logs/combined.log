@@ -1,0 +1,117 @@
+{"level":"info","message":"Razorpay instance initialized.","service":"budzee-gaming","timestamp":"2025-07-19T15:44:00.669Z"}
+{"level":"info","message":"Database connected successfully","service":"budzee-gaming","timestamp":"2025-07-19T15:44:02.053Z"}
+{"level":"info","message":"Matchmaking interval started, running every 1 second for real-time matching.","service":"budzee-gaming","timestamp":"2025-07-19T15:44:02.053Z"}
+{"level":"info","message":"MatchmakingService initialized successfully","service":"budzee-gaming","timestamp":"2025-07-19T15:44:02.054Z"}
+{"level":"info","message":"Matchmaking service initialized","service":"budzee-gaming","timestamp":"2025-07-19T15:44:02.054Z"}
+{"level":"info","message":"GameStateManager initialized successfully with 9 active games","service":"budzee-gaming","timestamp":"2025-07-19T15:44:02.658Z"}
+{"level":"info","message":"Game state manager initialized","service":"budzee-gaming","timestamp":"2025-07-19T15:44:02.658Z"}
+{"level":"info","message":"🤖 Available bots: 20, minimum required: 10","service":"budzee-gaming","timestamp":"2025-07-19T15:44:02.825Z"}
+{"level":"info","message":"Bot service initialized with minimum bots","service":"budzee-gaming","timestamp":"2025-07-19T15:44:02.826Z"}
+{"level":"info","message":"Advanced bot system initialized with 50% win rate balancing","service":"budzee-gaming","timestamp":"2025-07-19T15:44:02.826Z"}
+{"level":"info","message":"Server running on port 8080","service":"budzee-gaming","timestamp":"2025-07-19T15:44:02.828Z"}
+{"level":"info","message":"Health check: http://localhost:8080/health","service":"budzee-gaming","timestamp":"2025-07-19T15:44:02.828Z"}
+{"level":"info","message":"Environment: production","service":"budzee-gaming","timestamp":"2025-07-19T15:44:02.828Z"}
+{"level":"info","message":"Rate limiting enabled for socket events","service":"budzee-gaming","timestamp":"2025-07-19T15:44:02.828Z"}
+{"level":"info","message":"Processing matchmaking cycle...","service":"budzee-gaming","timestamp":"2025-07-19T15:44:03.066Z"}
+{"level":"info","message":"Matchmaking cycle completed. No new games created in this cycle.","service":"budzee-gaming","timestamp":"2025-07-19T15:44:03.504Z"}
+{"level":"info","message":"Processing matchmaking cycle...","service":"budzee-gaming","timestamp":"2025-07-19T15:44:04.070Z"}
+{"level":"info","message":"Matchmaking cycle completed. No new games created in this cycle.","service":"budzee-gaming","timestamp":"2025-07-19T15:44:04.227Z"}
+{"level":"info","message":"Processing matchmaking cycle...","service":"budzee-gaming","timestamp":"2025-07-19T15:44:05.070Z"}
+{"level":"info","message":"Matchmaking cycle completed. No new games created in this cycle.","service":"budzee-gaming","timestamp":"2025-07-19T15:44:05.274Z"}
+{"level":"info","message":"Processing matchmaking cycle...","service":"budzee-gaming","timestamp":"2025-07-19T15:44:06.073Z"}
+{"level":"info","message":"Matchmaking cycle completed. No new games created in this cycle.","service":"budzee-gaming","timestamp":"2025-07-19T15:44:06.236Z"}
+{"level":"info","message":"Processing matchmaking cycle...","service":"budzee-gaming","timestamp":"2025-07-19T15:44:07.085Z"}
+{"level":"info","message":"Matchmaking cycle completed. No new games created in this cycle.","service":"budzee-gaming","timestamp":"2025-07-19T15:44:07.535Z"}
+{"level":"info","message":"Processing matchmaking cycle...","service":"budzee-gaming","timestamp":"2025-07-19T15:44:08.099Z"}
+{"level":"info","message":"Matchmaking cycle completed. No new games created in this cycle.","service":"budzee-gaming","timestamp":"2025-07-19T15:44:08.342Z"}
+{"level":"info","message":"Processing matchmaking cycle...","service":"budzee-gaming","timestamp":"2025-07-19T15:44:09.114Z"}
+{"level":"info","message":"Matchmaking cycle completed. No new games created in this cycle.","service":"budzee-gaming","timestamp":"2025-07-19T15:44:09.400Z"}
+{"level":"info","message":"Processing matchmaking cycle...","service":"budzee-gaming","timestamp":"2025-07-19T15:44:10.128Z"}
+{"level":"info","message":"Matchmaking cycle completed. No new games created in this cycle.","service":"budzee-gaming","timestamp":"2025-07-19T15:44:10.295Z"}
+{"level":"info","message":"Processing matchmaking cycle...","service":"budzee-gaming","timestamp":"2025-07-19T15:44:11.129Z"}
+{"level":"info","message":"Matchmaking cycle completed. No new games created in this cycle.","service":"budzee-gaming","timestamp":"2025-07-19T15:44:11.351Z"}
+{"level":"info","message":"Processing matchmaking cycle...","service":"budzee-gaming","timestamp":"2025-07-19T15:44:12.133Z"}
+{"level":"info","message":"Matchmaking cycle completed. No new games created in this cycle.","service":"budzee-gaming","timestamp":"2025-07-19T15:44:12.310Z"}
+{"level":"info","message":"Processing matchmaking cycle...","service":"budzee-gaming","timestamp":"2025-07-19T15:44:13.147Z"}
+{"level":"info","message":"Matchmaking cycle completed. No new games created in this cycle.","service":"budzee-gaming","timestamp":"2025-07-19T15:44:13.281Z"}
+{"level":"info","message":"Processing matchmaking cycle...","service":"budzee-gaming","timestamp":"2025-07-19T15:44:14.149Z"}
+{"level":"info","message":"Matchmaking cycle completed. No new games created in this cycle.","service":"budzee-gaming","timestamp":"2025-07-19T15:44:14.510Z"}
+{"level":"info","message":"Processing matchmaking cycle...","service":"budzee-gaming","timestamp":"2025-07-19T15:44:15.162Z"}
+{"level":"info","message":"Matchmaking cycle completed. No new games created in this cycle.","service":"budzee-gaming","timestamp":"2025-07-19T15:44:15.349Z"}
+{"level":"info","message":"Processing matchmaking cycle...","service":"budzee-gaming","timestamp":"2025-07-19T15:44:16.164Z"}
+{"level":"info","message":"Matchmaking cycle completed. No new games created in this cycle.","service":"budzee-gaming","timestamp":"2025-07-19T15:44:16.322Z"}
+{"level":"info","message":"Processing matchmaking cycle...","service":"budzee-gaming","timestamp":"2025-07-19T15:44:17.168Z"}
+{"level":"info","message":"Matchmaking cycle completed. No new games created in this cycle.","service":"budzee-gaming","timestamp":"2025-07-19T15:44:17.422Z"}
+{"level":"info","message":"Processing matchmaking cycle...","service":"budzee-gaming","timestamp":"2025-07-19T15:44:18.179Z"}
+{"level":"info","message":"Matchmaking cycle completed. No new games created in this cycle.","service":"budzee-gaming","timestamp":"2025-07-19T15:44:18.640Z"}
+{"level":"info","message":"Processing matchmaking cycle...","service":"budzee-gaming","timestamp":"2025-07-19T15:44:19.183Z"}
+{"level":"info","message":"Matchmaking cycle completed. No new games created in this cycle.","service":"budzee-gaming","timestamp":"2025-07-19T15:44:19.361Z"}
+{"level":"info","message":"Processing matchmaking cycle...","service":"budzee-gaming","timestamp":"2025-07-19T15:44:20.188Z"}
+{"level":"info","message":"Matchmaking cycle completed. No new games created in this cycle.","service":"budzee-gaming","timestamp":"2025-07-19T15:44:20.450Z"}
+{"level":"info","message":"Processing matchmaking cycle...","service":"budzee-gaming","timestamp":"2025-07-19T15:44:21.189Z"}
+{"level":"info","message":"Matchmaking cycle completed. No new games created in this cycle.","service":"budzee-gaming","timestamp":"2025-07-19T15:44:21.371Z"}
+{"level":"info","message":"Processing matchmaking cycle...","service":"budzee-gaming","timestamp":"2025-07-19T15:44:22.204Z"}
+{"level":"info","message":"Matchmaking cycle completed. No new games created in this cycle.","service":"budzee-gaming","timestamp":"2025-07-19T15:44:22.432Z"}
+{"level":"info","message":"Processing matchmaking cycle...","service":"budzee-gaming","timestamp":"2025-07-19T15:44:23.219Z"}
+{"level":"info","message":"Matchmaking cycle completed. No new games created in this cycle.","service":"budzee-gaming","timestamp":"2025-07-19T15:44:23.432Z"}
+{"level":"info","message":"Processing matchmaking cycle...","service":"budzee-gaming","timestamp":"2025-07-19T15:44:24.223Z"}
+{"level":"info","message":"Matchmaking cycle completed. No new games created in this cycle.","service":"budzee-gaming","timestamp":"2025-07-19T15:44:24.391Z"}
+{"level":"info","message":"Processing matchmaking cycle...","service":"budzee-gaming","timestamp":"2025-07-19T15:44:25.238Z"}
+{"level":"info","message":"Matchmaking cycle completed. No new games created in this cycle.","service":"budzee-gaming","timestamp":"2025-07-19T15:44:25.432Z"}
+{"level":"info","message":"Processing matchmaking cycle...","service":"budzee-gaming","timestamp":"2025-07-19T15:44:26.248Z"}
+{"level":"info","message":"Matchmaking cycle completed. No new games created in this cycle.","service":"budzee-gaming","timestamp":"2025-07-19T15:44:26.390Z"}
+{"level":"info","message":"Processing matchmaking cycle...","service":"budzee-gaming","timestamp":"2025-07-19T15:44:27.261Z"}
+{"level":"info","message":"Matchmaking cycle completed. No new games created in this cycle.","service":"budzee-gaming","timestamp":"2025-07-19T15:44:27.520Z"}
+{"level":"info","message":"Processing matchmaking cycle...","service":"budzee-gaming","timestamp":"2025-07-19T15:44:28.275Z"}
+{"level":"info","message":"Matchmaking cycle completed. No new games created in this cycle.","service":"budzee-gaming","timestamp":"2025-07-19T15:44:28.430Z"}
+{"level":"info","message":"Processing matchmaking cycle...","service":"budzee-gaming","timestamp":"2025-07-19T15:44:29.284Z"}
+{"level":"info","message":"Matchmaking cycle completed. No new games created in this cycle.","service":"budzee-gaming","timestamp":"2025-07-19T15:44:29.426Z"}
+{"level":"info","message":"Processing matchmaking cycle...","service":"budzee-gaming","timestamp":"2025-07-19T15:44:30.298Z"}
+{"level":"info","message":"Matchmaking cycle completed. No new games created in this cycle.","service":"budzee-gaming","timestamp":"2025-07-19T15:44:30.470Z"}
+{"level":"info","message":"Processing matchmaking cycle...","service":"budzee-gaming","timestamp":"2025-07-19T15:44:31.299Z"}
+{"level":"info","message":"Matchmaking cycle completed. No new games created in this cycle.","service":"budzee-gaming","timestamp":"2025-07-19T15:44:31.510Z"}
+{"level":"info","message":"Processing matchmaking cycle...","service":"budzee-gaming","timestamp":"2025-07-19T15:44:32.302Z"}
+{"level":"info","message":"Matchmaking cycle completed. No new games created in this cycle.","service":"budzee-gaming","timestamp":"2025-07-19T15:44:32.531Z"}
+{"level":"info","message":"Processing matchmaking cycle...","service":"budzee-gaming","timestamp":"2025-07-19T15:44:33.315Z"}
+{"level":"info","message":"Matchmaking cycle completed. No new games created in this cycle.","service":"budzee-gaming","timestamp":"2025-07-19T15:44:33.625Z"}
+{"level":"info","message":"Received SIGINT. Shutting down gracefully...","service":"budzee-gaming","timestamp":"2025-07-19T15:44:34.055Z"}
+{"level":"info","message":"Razorpay instance initialized.","service":"budzee-gaming","timestamp":"2025-07-19T15:44:39.084Z"}
+{"level":"info","message":"Database connected successfully","service":"budzee-gaming","timestamp":"2025-07-19T15:44:40.105Z"}
+{"level":"info","message":"Matchmaking interval started, running every 1 second for real-time matching.","service":"budzee-gaming","timestamp":"2025-07-19T15:44:40.105Z"}
+{"level":"info","message":"MatchmakingService initialized successfully","service":"budzee-gaming","timestamp":"2025-07-19T15:44:40.105Z"}
+{"level":"info","message":"Matchmaking service initialized","service":"budzee-gaming","timestamp":"2025-07-19T15:44:40.105Z"}
+{"level":"info","message":"GameStateManager initialized successfully with 9 active games","service":"budzee-gaming","timestamp":"2025-07-19T15:44:41.070Z"}
+{"level":"info","message":"Game state manager initialized","service":"budzee-gaming","timestamp":"2025-07-19T15:44:41.071Z"}
+{"level":"info","message":"Processing matchmaking cycle...","service":"budzee-gaming","timestamp":"2025-07-19T15:44:41.113Z"}
+{"level":"info","message":"🤖 Available bots: 20, minimum required: 10","service":"budzee-gaming","timestamp":"2025-07-19T15:44:41.462Z"}
+{"level":"info","message":"Bot service initialized with minimum bots","service":"budzee-gaming","timestamp":"2025-07-19T15:44:41.463Z"}
+{"level":"info","message":"Advanced bot system initialized with 50% win rate balancing","service":"budzee-gaming","timestamp":"2025-07-19T15:44:41.463Z"}
+{"level":"info","message":"Server running on port 8080","service":"budzee-gaming","timestamp":"2025-07-19T15:44:41.464Z"}
+{"level":"info","message":"Health check: http://localhost:8080/health","service":"budzee-gaming","timestamp":"2025-07-19T15:44:41.465Z"}
+{"level":"info","message":"Environment: production","service":"budzee-gaming","timestamp":"2025-07-19T15:44:41.465Z"}
+{"level":"info","message":"Rate limiting enabled for socket events","service":"budzee-gaming","timestamp":"2025-07-19T15:44:41.465Z"}
+{"level":"info","message":"Matchmaking cycle completed. No new games created in this cycle.","service":"budzee-gaming","timestamp":"2025-07-19T15:44:41.987Z"}
+{"level":"info","message":"Processing matchmaking cycle...","service":"budzee-gaming","timestamp":"2025-07-19T15:44:42.124Z"}
+{"level":"info","message":"Matchmaking cycle completed. No new games created in this cycle.","service":"budzee-gaming","timestamp":"2025-07-19T15:44:42.354Z"}
+{"level":"info","message":"Processing matchmaking cycle...","service":"budzee-gaming","timestamp":"2025-07-19T15:44:43.125Z"}
+{"level":"info","message":"Matchmaking cycle completed. No new games created in this cycle.","service":"budzee-gaming","timestamp":"2025-07-19T15:44:43.262Z"}
+{"level":"info","message":"Processing matchmaking cycle...","service":"budzee-gaming","timestamp":"2025-07-19T15:44:44.125Z"}
+{"level":"info","message":"Matchmaking cycle completed. No new games created in this cycle.","service":"budzee-gaming","timestamp":"2025-07-19T15:44:44.720Z"}
+{"level":"info","message":"Processing matchmaking cycle...","service":"budzee-gaming","timestamp":"2025-07-19T15:44:45.138Z"}
+{"level":"info","message":"Matchmaking cycle completed. No new games created in this cycle.","service":"budzee-gaming","timestamp":"2025-07-19T15:44:45.276Z"}
+{"level":"info","message":"Processing matchmaking cycle...","service":"budzee-gaming","timestamp":"2025-07-19T15:44:46.152Z"}
+{"level":"info","message":"Matchmaking cycle completed. No new games created in this cycle.","service":"budzee-gaming","timestamp":"2025-07-19T15:44:46.296Z"}
+{"level":"info","message":"Processing matchmaking cycle...","service":"budzee-gaming","timestamp":"2025-07-19T15:44:47.166Z"}
+{"level":"info","message":"Matchmaking cycle completed. No new games created in this cycle.","service":"budzee-gaming","timestamp":"2025-07-19T15:44:47.362Z"}
+{"level":"info","message":"Processing matchmaking cycle...","service":"budzee-gaming","timestamp":"2025-07-19T15:44:48.179Z"}
+{"level":"info","message":"Matchmaking cycle completed. No new games created in this cycle.","service":"budzee-gaming","timestamp":"2025-07-19T15:44:48.396Z"}
+{"level":"info","message":"Processing matchmaking cycle...","service":"budzee-gaming","timestamp":"2025-07-19T15:44:49.184Z"}
+{"level":"info","message":"Matchmaking cycle completed. No new games created in this cycle.","service":"budzee-gaming","timestamp":"2025-07-19T15:44:49.343Z"}
+{"level":"info","message":"Processing matchmaking cycle...","service":"budzee-gaming","timestamp":"2025-07-19T15:44:50.185Z"}
+{"level":"info","message":"Received SIGINT. Shutting down gracefully...","service":"budzee-gaming","timestamp":"2025-07-19T15:44:50.361Z"}
+{"level":"info","message":"HTTP server closed","service":"budzee-gaming","timestamp":"2025-07-19T15:44:50.362Z"}
+{"level":"info","message":"Matchmaking interval stopped.","service":"budzee-gaming","timestamp":"2025-07-19T15:44:50.362Z"}
+{"level":"info","message":"Matchmaking service stopped","service":"budzee-gaming","timestamp":"2025-07-19T15:44:50.362Z"}
+{"level":"info","message":"Socket.IO server closed","service":"budzee-gaming","timestamp":"2025-07-19T15:44:50.362Z"}
+{"level":"info","message":"Matchmaking cycle completed. No new games created in this cycle.","service":"budzee-gaming","timestamp":"2025-07-19T15:44:50.376Z"}
+{"level":"info","message":"Database disconnected","service":"budzee-gaming","timestamp":"2025-07-19T15:44:50.379Z"}

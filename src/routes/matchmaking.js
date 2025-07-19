@@ -3,10 +3,11 @@ const router = express.Router();
 const matchmakingService = require('../services/matchmakingService');
 const { gameSchemas } = require('../validation/schemas');
 const { authenticateToken } = require('../middleware/auth');
+const { rateLimitMiddleware } = require('../middleware/rateLimitMiddleware');
 const logger = require('../config/logger');
 
 // Join matchmaking queue
-router.post('/join', authenticateToken, async (req, res) => {
+router.post('/join', authenticateToken, rateLimitMiddleware, async (req, res) => {
   try {
     const { error, value } = gameSchemas.joinMatchmaking.validate(req.body);
     if (error) {
