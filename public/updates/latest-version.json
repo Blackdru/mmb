@@ -2,7 +2,7 @@
   "version": "1.0.2",
   "apkUrl": "http://test.fivlog.space/apks/Budzee-v1.0.2.apk",
   "type": "mandatory",
-  "notes": "🎉 Major Update v1.0.2 - Enhanced Security & Performance!\n\n✅ SECURITY FIXES:\n• Fixed critical system vulnerability (invalid opponent games)\n• Eliminated duplicate transaction issues\n• Enhanced bot system with 10 intelligent bot types\n• Implemented comprehensive fraud prevention\n\n✅ PERFORMANCE IMPROVEMENTS:\n• Fixed rapid transaction issues (10-second cooldown)\n• Added multi-layer rate limiting protection\n• Enhanced wallet security with duplicate prevention\n• Improved game validation and integrity checks\n\n✅ BOT SYSTEM OVERHAUL:\n• 7 intelligent winning bots (100% human-like behavior)\n• 3 normal bots with random patterns\n• Complete random card shuffling (no seed logic)\n• Enhanced bot rotation and variety\n\n✅ STABILITY ENHANCEMENTS:\n• Real-time transaction monitoring\n• Automatic game validation\n• Enhanced error handling\n• Improved user experience\n\nThis update ensures fair gameplay, secure transactions, and optimal performance. All known exploits have been patched.",
+  "notes": "🎉 Major Update v1.0.2 - Enhanced Security & Performance!, Added New Features, Improved User Experience" ,
   "publishedAt": "2025-01-19T15:30:00.000Z",
   "fileSize": 47401288
 }
