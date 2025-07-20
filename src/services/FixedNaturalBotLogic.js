@@ -186,12 +186,30 @@ class NaturalBotLogic {
     logger.info(`🤖 Bot randomly flipping first card at position ${firstCard.index}`);
     await selectCardCallback(gameId, botId, firstCard.index);
     
-    // Get the symbol of the flipped card
-    const firstCardSymbol = gameState.board[firstCard.index].symbol;
+    // CRITICAL FIX: Bot must wait for the card to be revealed through the game system
+    // Bot cannot access unrevealed card symbols directly from gameState.board
+    // The symbol will be learned when the card is actually flipped and revealed
+    
+    // Wait for the card flip to be processed by the game system
+    await this.delay(500); // Give time for the card to be revealed
+    
+    // Get the revealed symbol from memory (it should have been updated by updateMemoryFromGameState)
+    let firstCardSymbol = memory.revealedCards.get(firstCard.index);
+    
+    // If symbol is not in memory yet, it means the card wasn't properly revealed
+    if (!firstCardSymbol) {
+      logger.warn(`🤖 Bot cannot see first card symbol yet at position ${firstCard.index}, will flip random second card`);
+      // Flip a random second card since we can't see the first card's symbol
+      const remainingCards = availableCards.filter(c => c.index !== firstCard.index);
+      if (remainingCards.length > 0) {
+        const secondCard = this.selectRandomCard(remainingCards);
+        logger.info(`🤖 Bot flipping second random card at position ${secondCard.index} (first card not visible)`);
+        await selectCardCallback(gameId, botId, secondCard.index);
+      }
+      return;
+    }
+    
     logger.info(`🧠 First card revealed: ${firstCardSymbol}`);
-
-    // IMPORTANT: Add the first card to memory immediately
-    memory.revealedCards.set(firstCard.index, firstCardSymbol);
 
     // Delay before checking memory and making decision
     const decisionDelay = this.calculateDecisionDelay(memory);
@@ -228,12 +246,11 @@ class NaturalBotLogic {
         logger.info(`🤖 Bot flipping second random card at position ${secondCard.index}`);
         await selectCardCallback(gameId, botId, secondCard.index);
         
-        // Add second card to memory for future use
-        const secondCardSymbol = gameState.board[secondCard.index].symbol;
-        memory.revealedCards.set(secondCard.index, secondCardSymbol);
+        // CRITICAL FIX: Bot can only learn the second card's symbol after it's revealed
+        // The symbol will be added to memory by the game system when the card is flipped
+        // We don't add it here since the bot shouldn't know unrevealed symbols
         
-        logger.info(`🧠 Added both cards to memory. Memory now has ${memory.revealedCards.size} cards`);
-        this.logMemoryContents(memory);
+        logger.info(`🧠 Bot will learn second card symbol when it's revealed by the game system`);
       }
     }
   }

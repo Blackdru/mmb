@@ -587,31 +587,70 @@ class BotService {
   }
 
   // Ensure minimum bots with proper distribution
-  async ensureMinimumBots(minCount = 10) {
+  async ensureMinimumBots(minCount = 15) {
     try {
+      // Get total available bots (not in queue, not in active games)
       const availableCount = await this.getAvailableBotsCount();
-      logger.info(`🤖 Available bots: ${availableCount}, minimum required: ${minCount}`);
       
+      // Also check total bots in system
+      const totalBots = await prisma.user.count({
+        where: { isBot: true }
+      });
+      
+      logger.info(`🤖 Bot Status - Available: ${availableCount}, Total: ${totalBots}, Minimum Required: ${minCount}`);
+      
+      // If we don't have enough available bots, create more
       if (availableCount < minCount) {
         const botsToCreate = minCount - availableCount;
-        logger.info(`🤖 Creating ${botsToCreate} additional bots with proper distribution`);
+        logger.info(`🤖 Creating ${botsToCreate} additional bots to meet minimum requirement`);
         
-        const promises = [];
+        const createdBots = [];
+        
+        // Create bots one by one to handle any errors gracefully
         for (let i = 0; i < botsToCreate; i++) {
-          // Maintain 7:3 ratio for winning:normal bots
-          const shouldCreateWinningBot = (i % 10) < 7;
-          const botType = shouldCreateWinningBot ? 
-            this.botTypeDistribution.winning[Math.floor(Math.random() * this.botTypeDistribution.winning.length)] :
-            this.botTypeDistribution.normal[Math.floor(Math.random() * this.botTypeDistribution.normal.length)];
-          
-          promises.push(this.createBotUser(botType));
+          try {
+            // Maintain 7:3 ratio for winning:normal bots
+            const shouldCreateWinningBot = (i % 10) < 7;
+            const botType = shouldCreateWinningBot ? 
+              this.botTypeDistribution.winning[Math.floor(Math.random() * this.botTypeDistribution.winning.length)] :
+              this.botTypeDistribution.normal[Math.floor(Math.random() * this.botTypeDistribution.normal.length)];
+            
+            const bot = await this.createBotUser(botType);
+            createdBots.push(bot);
+            
+            // Small delay to prevent overwhelming the database
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+          } catch (createError) {
+            logger.error(`🤖 Failed to create bot ${i + 1}/${botsToCreate}:`, createError);
+            // Continue creating other bots even if one fails
+          }
         }
         
-        await Promise.all(promises);
-        logger.info(`🤖 Successfully created ${botsToCreate} new bots`);
+        logger.info(`🤖 Successfully created ${createdBots.length}/${botsToCreate} new bots`);
+        
+        // Log the final count
+        const finalAvailableCount = await this.getAvailableBotsCount();
+        logger.info(`🤖 Final available bot count: ${finalAvailableCount}`);
+        
+        return createdBots;
+      } else {
+        logger.info(`🤖 Sufficient bots available (${availableCount}/${minCount})`);
+        return [];
       }
     } catch (error) {
-      logger.error('Ensure minimum bots error:', error);
+      logger.error('🤖 Ensure minimum bots error:', error);
+      
+      // Try to create at least one bot if the system is completely broken
+      try {
+        logger.info('🤖 Attempting emergency bot creation...');
+        const emergencyBot = await this.createBotUser();
+        logger.info(`🤖 Emergency bot created: ${emergencyBot.name}`);
+        return [emergencyBot];
+      } catch (emergencyError) {
+        logger.error('🤖 Emergency bot creation failed:', emergencyError);
+        return [];
+      }
     }
   }
 

@@ -464,7 +464,9 @@ class MemoryGameService {
         cardId: card.id
       });
 
-      // Bot memory update would go here if implemented
+      // CRITICAL: Update bot memory immediately when card is revealed
+      // This ensures bots can only see cards that have been properly revealed
+      this.updateAllBotMemories(gameId, [{ position, symbol: card.symbol }], false);
 
       // Emit card opened with minimal data to reduce lag
       this.io.to(`game:${gameId}`).emit('MEMORY_CARD_OPENED', {

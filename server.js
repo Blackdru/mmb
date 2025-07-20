@@ -770,7 +770,7 @@ app.get('/debug/bots', async (req, res) => {
       }
     });
     
-    const botTimers = matchmakingService.botDeploymentTimers.size;
+    const botTimers = 0; // FastMatchmaking doesn't use botDeploymentTimers
     
     // Get advanced bot statistics
     const recentGameCount = await prisma.game.count({
@@ -898,7 +898,7 @@ async function startServer() {
     logger.info('Game state manager initialized');
     
     // Ensure minimum bots are available
-    await botService.ensureMinimumBots(10);
+    await botService.ensureMinimumBots(15);
     logger.info('Bot service initialized with minimum bots');
     
     // Initialize advanced bot performance tracking
@@ -1017,16 +1017,41 @@ setInterval(() => {
   }
 }, 5 * 60 * 1000); // Every 5 minutes
 
-// Bot maintenance intervals
+// Bot maintenance intervals - More frequent checks
 setInterval(() => {
   try {
     botService.cleanupInactiveBots();
-    botService.ensureMinimumBots(10);
-    logger.debug('Bot maintenance completed');
+    logger.debug('Bot cleanup completed');
   } catch (error) {
-    logger.error('Bot maintenance error:', error);
+    logger.error('Bot cleanup error:', error);
   }
 }, 2 * 60 * 1000); // Every 2 minutes
+
+// Ensure minimum bots more frequently
+setInterval(() => {
+  try {
+    botService.ensureMinimumBots(10);
+    logger.debug('Bot minimum check completed');
+  } catch (error) {
+    logger.error('Bot minimum check error:', error);
+  }
+}, 30 * 1000); // Every 30 seconds
+
+// Comprehensive bot health check every 5 minutes
+setInterval(async () => {
+  try {
+    const stats = await botService.getBotStatistics();
+    logger.info(`🤖 Bot Health Check - Total: ${stats.totalBots}, Available: ${stats.availableBots}, Tracked: ${stats.trackedBots}`);
+    
+    // If available bots are critically low, create more immediately
+    if (stats.availableBots < 5) {
+      logger.warn(`🤖 Critical bot shortage detected (${stats.availableBots}/10), creating emergency bots`);
+      await botService.ensureMinimumBots(15); // Create extra bots when critically low
+    }
+  } catch (error) {
+    logger.error('Bot health check error:', error);
+  }
+}, 5 * 60 * 1000); // Every 5 minutes
 
 // Start the server
 startServer();

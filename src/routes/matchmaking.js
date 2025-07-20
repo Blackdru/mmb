@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const matchmakingService = require('../services/matchmakingService');
+const matchmakingService = require('../services/FastMatchmaking');
 const { gameSchemas } = require('../validation/schemas');
 const { authenticateToken } = require('../middleware/auth');
 const { rateLimitMiddleware } = require('../middleware/rateLimitMiddleware');
@@ -59,6 +59,17 @@ router.post('/deploy-bot', authenticateToken, async (req, res) => {
       const botUser = await botService.getBotForMatchmaking(gameType, entryFee);
       logger.info(`🤖 Force deployed bot ${botUser.name} (${botUser.id}) for testing`);
       
+      // Add bot to queue manually
+      const prisma = require('../config/database');
+      await prisma.matchmakingQueue.create({
+        data: {
+          userId: botUser.id,
+          gameType,
+          maxPlayers,
+          entryFee
+        }
+      });
+      
       // Trigger immediate matchmaking
       setTimeout(() => matchmakingService.processMatchmaking(), 500);
       
@@ -69,12 +80,12 @@ router.post('/deploy-bot', authenticateToken, async (req, res) => {
         botName: botUser.name
       });
     } else {
-      // Normal bot deployment logic
-      await matchmakingService.deployBotIfNeeded(gameType, maxPlayers, entryFee);
+      // Normal bot deployment logic - trigger matchmaking process
+      await matchmakingService.processMatchmaking();
       
       res.json({ 
         success: true, 
-        message: `Bot deployment triggered for ${gameType} ${maxPlayers}P ₹${entryFee}` 
+        message: `Matchmaking process triggered for ${gameType} ${maxPlayers}P ₹${entryFee}` 
       });
     }
   } catch (err) {
