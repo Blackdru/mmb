@@ -188,10 +188,10 @@ class MatchmakingService {
     this.isProcessingMatchmaking = true;
     
     try {
-      logger.info('Processing matchmaking cycle...');
+      logger.info(' Processing matchmaking cycle...');
       
       // PRIORITY 1: Check for real user matches first (within 30 seconds)
-      const realUserGamesCreated = await this.checkRealUserMatches();
+      const realUserGamesCreated = await this.matchRealUsersImmediately();
       
       if (realUserGamesCreated > 0) {
         logger.info(`✅ REAL USER PRIORITY: Created ${realUserGamesCreated} games with real users only!`);
@@ -201,7 +201,7 @@ class MatchmakingService {
       }
       
       // PRIORITY 2: Check for mixed matches (real users + bots) after 30 seconds
-      const mixedGamesCreated = await this.checkMixedMatches();
+      const mixedGamesCreated = await this.matchRealUsersWithBots();
       
       if (mixedGamesCreated > 0) {
         logger.info(`✅ MIXED MATCHING: Created ${mixedGamesCreated} games with real users and bots`);

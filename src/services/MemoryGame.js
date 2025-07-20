@@ -3,9 +3,9 @@ const logger = require('../config/logger');
 const gameService = require('./gameService');
 const prisma = require('../config/database');
 const botService = require('./BotService');
-const GameplayController = require('../bot-system/services/GameplayController');
-const PerformanceBalancer = require('../bot-system/services/PerformanceBalancer');
-const EnhancedBotLogic = require('./EnhancedBotLogic');
+// Removed unused GameplayController
+// Removed unused PerformanceBalancer
+const NaturalBotLogic = require('./FixedNaturalBotLogic');
 
 class MemoryGameService {
   constructor(io) {
@@ -534,7 +534,7 @@ class MemoryGameService {
         // Match found! - Show cards for 700ms before processing
         
         // Bot memory update for matched cards
-        this.updateBotMemories(gameId, [card1, card2], true);
+        this.updateAllBotMemories(gameId, [card1, card2], true);
 
         // Emit match event immediately but keep cards visible
         this.io.to(`game:${gameId}`).emit('MEMORY_CARDS_MATCHED', {
@@ -584,7 +584,7 @@ class MemoryGameService {
         // No match - show cards for 700ms before flipping back and changing turn
         
         // Bot memory update for mismatched cards
-        this.updateBotMemories(gameId, [card1, card2], false);
+        this.updateAllBotMemories(gameId, [card1, card2], false);
         
         // Emit mismatch event but keep cards visible
         this.io.to(`game:${gameId}`).emit('MEMORY_CARDS_NO_MATCH', {
@@ -993,8 +993,8 @@ class MemoryGameService {
       }
       
       // Record game outcome in performance balancer
-      const PerformanceBalancer = require('../bot-system/services/PerformanceBalancer');
-      await PerformanceBalancer.recordGameOutcome(gameId, winnerId, participants);
+      // Removed unused PerformanceBalancer
+      // Removed PerformanceBalancer tracking
       
       logger.info(`🤖 New bot performance tracking completed for game ${gameId}`);
       } catch (botError) {
@@ -1203,99 +1203,51 @@ class MemoryGameService {
     }
   }
 
-  // Enhanced bot logic with perfect memory and strategy for intelligent winning bots
+  // Natural bot logic with human-like memory system for 100% win rate
   async handleEnhancedBotTurn(gameId, botPlayerId) {
     try {
       const gameState = this.games.get(gameId);
       if (!gameState || gameState.status !== 'playing' || gameState.currentTurnPlayerId !== botPlayerId) {
+        logger.warn(`Bot turn cancelled for ${botPlayerId}: game state invalid or not bot's turn`);
         return;
       }
 
-      // Get bot configuration from new system
-      const user = await prisma.user.findUnique({ where: { id: botPlayerId } });
-      const botConfig = user && user.botType ? botService.getBotTypeConfig(user.botType) : botService.getBotTypeConfig('casual_player');
-      
-      // Enhanced memory and strategy
-      const botMemoryKey = `${gameId}_${botPlayerId}`;
-      if (!this.botMemories) this.botMemories = new Map();
-      if (!this.botMemories.has(botMemoryKey)) {
-        this.botMemories.set(botMemoryKey, {
-          rememberedCards: new Map(),
-          botConfig: botConfig,
-          intelligence: botConfig.intelligence,
-          isWinningBot: botConfig.winProbability >= 1.0,
-          lastMove: null,
-          strategicMoves: 0,
-          perfectMemory: botConfig.gameplayStyle?.perfectMemory || false
-        });
-      }
+      logger.info(`🤖 Starting natural bot turn for ${botPlayerId} in game ${gameId}`);
 
-      const botMemory = this.botMemories.get(botMemoryKey);
-      const availableCards = gameState.board
-        .map((card, index) => ({ card, index }))
-        .filter(({ card }) => !card.isFlipped && !card.isMatched);
+      // Use the new natural bot logic that acts like a real human with memory
+      await NaturalBotLogic.executeBotTurn(gameId, botPlayerId, gameState, this.botSelectCard.bind(this));
 
-      if (availableCards.length === 0) return;
-
-      // Human-like thinking time with natural variation
-      const { thinkingTimeMin, thinkingTimeMax, naturalVariation } = botConfig.humanBehavior;
-      const baseThinkingTime = thinkingTimeMin + Math.random() * (thinkingTimeMax - thinkingTimeMin);
-      const variation = naturalVariation ? (Math.random() - 0.5) * 2 * naturalVariation * baseThinkingTime : 0;
-      const thinkingTime = Math.max(500, baseThinkingTime + variation);
-      
-      await new Promise(resolve => setTimeout(resolve, thinkingTime));
-
-      // Enhanced strategy selection based on bot type
-      let firstCard;
-      
-      if (botMemory.isWinningBot) {
-        // Winning bots use perfect strategy with human-like delays
-        firstCard = EnhancedBotLogic.findPerfectMemoryMatch(availableCards, botMemory, gameState.board) ||
-                   EnhancedBotLogic.selectStrategicCard(availableCards, botMemory, gameState);
-      } else {
-        // Normal bots use human-like strategy with mistakes
-        firstCard = EnhancedBotLogic.findHumanLikeMemoryMatch(availableCards, botMemory, gameState.board) ||
-                   EnhancedBotLogic.selectHumanLikeCard(availableCards, botMemory, gameState);
-      }
-
-      logger.info(`🤖 ${botConfig.name} bot ${user?.name} selecting first card at position ${firstCard.index}`);
-      
-      await this.botSelectCard(gameId, botPlayerId, firstCard.index);
-
-      // Second card selection with appropriate delay
-      const secondCardDelay = botConfig.humanBehavior.thinkingTimeMin * 0.6 + Math.random() * 800;
-      setTimeout(async () => {
-        try {
-          const updatedGameState = this.games.get(gameId);
-          if (!updatedGameState || updatedGameState.currentTurnPlayerId !== botPlayerId) {
-            return;
-          }
-
-          if (updatedGameState.selectedCards.length >= 2) {
-            return;
-          }
-
-          let secondCard;
-          
-          if (botMemory.isWinningBot) {
-            // Winning bots find the perfect match or make strategic choice
-            secondCard = EnhancedBotLogic.findPerfectMatchingCard(firstCard, availableCards, botMemory, updatedGameState.board);
-          } else {
-            // Normal bots make human-like choices with potential mistakes
-            secondCard = EnhancedBotLogic.findHumanLikeMatchingCard(firstCard, availableCards, botMemory, updatedGameState.board);
-          }
-          
-          logger.info(`🤖 ${botConfig.name} bot ${user?.name} selecting second card at position ${secondCard.index}`);
-          
-          await this.botSelectCard(gameId, botPlayerId, secondCard.index);
-
-        } catch (error) {
-          logger.error(`Error in bot second card selection:`, error);
-        }
-      }, secondCardDelay);
+      logger.info(`🤖 Completed natural bot turn for ${botPlayerId} in game ${gameId}`);
 
     } catch (error) {
-      logger.error(`Error in bot turn for ${botPlayerId}:`, error);
+      logger.error(`Error in natural bot turn for ${botPlayerId}:`, error);
+      
+      // Fallback: if natural bot logic fails, use simple random selection
+      try {
+        logger.warn(`🤖 Falling back to simple bot logic for ${botPlayerId}`);
+        const gameState = this.games.get(gameId);
+        if (gameState) {
+          const availableCards = gameState.board
+            .map((card, index) => ({ card, index }))
+            .filter(({ card }) => !card.isFlipped && !card.isMatched);
+          
+          if (availableCards.length >= 2) {
+            // Simple fallback: select two random cards
+            const firstCard = availableCards[Math.floor(Math.random() * availableCards.length)];
+            await this.botSelectCard(gameId, botPlayerId, firstCard.index);
+            
+            setTimeout(async () => {
+              const remainingCards = availableCards.filter(c => c.index !== firstCard.index);
+              if (remainingCards.length > 0) {
+                const secondCard = remainingCards[Math.floor(Math.random() * remainingCards.length)];
+                await this.botSelectCard(gameId, botPlayerId, secondCard.index);
+              }
+            }, 1000);
+          }
+        }
+      } catch (fallbackError) {
+        logger.error(`Fallback bot logic also failed for ${botPlayerId}:`, fallbackError);
+      }
     }
   }
 
@@ -1316,7 +1268,7 @@ class MemoryGameService {
             const botMemory = this.botMemories.get(botMemoryKey);
             
             // Use enhanced bot logic for memory updates
-            EnhancedBotLogic.updateBotMemory(botMemory, revealedCards, wasSuccessful);
+            // Bot memory is now handled by NaturalBotLogic
           }
         }
       }
@@ -1390,7 +1342,7 @@ class MemoryGameService {
       });
 
       // Update bot memory
-      this.updateBotMemories(gameId, [{ position, symbol: card.symbol }], false);
+      this.updateAllBotMemories(gameId, [{ position, symbol: card.symbol }], false);
 
       // Emit card opened event
       this.io.to(`game:${gameId}`).emit('MEMORY_CARD_OPENED', {
@@ -1452,6 +1404,24 @@ class MemoryGameService {
       }
     } catch (error) {
       logger.error(`Error cleaning up enhanced bot memories for game ${gameId}:`, error);
+    }
+  }
+  // Update all bot memories when cards are revealed
+  async updateAllBotMemories(gameId, revealedCards, wasSuccessful) {
+    try {
+      const gameState = this.games.get(gameId);
+      if (!gameState) return;
+
+      // Update memory for all bot players in this game
+      for (const player of gameState.players) {
+        const user = await prisma.user.findUnique({ where: { id: player.id } });
+        if (user && user.isBot) {
+          // Update the bot's memory with the revealed cards using the new method
+          NaturalBotLogic.updateBotMemoryWithRevealedCards(gameId, player.id, revealedCards, wasSuccessful);
+        }
+      }
+    } catch (error) {
+      logger.error('Error updating all bot memories:', error);
     }
   }
 }

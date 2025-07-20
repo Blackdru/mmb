@@ -18,11 +18,11 @@ const prisma = require('./src/config/database');
 const logger = require('./src/config/logger');
 const socketManager = require('./src/services/socketManager');
 const gameStateManager = require('./src/services/gameStateManager');
-const matchmakingService = require('./src/services/matchmakingService');
+const matchmakingService = require('./src/services/FastMatchmaking');
 const gameService = require('./src/services/gameService');
 const botService = require('./src/services/BotService');
 const MemoryGameService = require('./src/services/MemoryGame');
-const PerformanceBalancer = require('./src/bot-system/services/PerformanceBalancer');
+// Removed unused PerformanceBalancer
 const { authenticateSocket } = require('./src/middleware/auth');
 const { gameSchemas } = require('./src/validation/schemas');
 
