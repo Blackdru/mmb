@@ -579,7 +579,7 @@ matchmakingService.setGameCreatedCallback(async (game, matchedUsers, eventData) 
       }
     }
 
-    // Auto-start game after delay
+    // Auto-start game after delay - IMPROVED VERSION
     setTimeout(async () => {
       try {
         if (!game || !game.id) {
@@ -596,14 +596,14 @@ matchmakingService.setGameCreatedCallback(async (game, matchedUsers, eventData) 
           logger.info(`Game ${game.id}: ${socketsInRoom.size} sockets in room, ${gameFromDb.participants.length} participants expected`);
           
           if (game.type === 'MEMORY') {
-            logger.info(`Starting Memory game ${game.id} with ${socketsInRoom.size} sockets in room`);
+            logger.info(`Starting Memory game ${game.id} - forcing start regardless of socket connections`);
             try {
               await memoryGameService.startGame({ roomId: game.id });
+              logger.info(`✅ Successfully force-started game ${game.id}`);
             } catch (error) {
-              logger.error(`Error starting memory game ${game.id}:`, error);
+              logger.error(`❌ Error starting memory game ${game.id}:`, error);
             }
           }
-          logger.info(`Successfully auto-started game ${game.id}`);
         } else {
           logger.warn(`Game ${game.id} not in WAITING status: ${gameFromDb?.status}`);
         }

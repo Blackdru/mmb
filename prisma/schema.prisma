@@ -366,6 +366,20 @@ enum BotGameResult {
   DRAW
 }
 
+// Admin model for admin panel access
+model Admin {
+  id          String   @id @default(cuid())
+  username    String   @unique
+  email       String   @unique
+  password    String
+  role        String   @default("admin") // admin, superadmin, etc.
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("admins")
+}
+
+
 // Website-specific models
 model ContactSubmission {
   id          String    @id @default(cuid())

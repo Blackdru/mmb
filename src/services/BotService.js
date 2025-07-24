@@ -371,7 +371,7 @@ class BotService {
     }
   }
 
-  // Get bot for matchmaking with intelligent selection
+  // Get bot for matchmaking with intelligent selection - FIXED VERSION
   async getBotForMatchmaking(gameType, entryFee, maxPlayers = 2) {
     try {
       logger.info(`🤖 Looking for available bot for ${gameType} with entry fee ₹${entryFee}, maxPlayers: ${maxPlayers}`);
@@ -455,17 +455,7 @@ class BotService {
         }
       }
 
-      // Add bot to matchmaking queue
-      const queueEntry = await prisma.matchmakingQueue.create({
-        data: {
-          userId: bot.id,
-          gameType,
-          maxPlayers: maxPlayers,
-          entryFee
-        }
-      });
-
-      logger.info(`🤖 Bot ${bot.name} successfully added to matchmaking queue for ${gameType} ${maxPlayers}P ₹${entryFee}`);
+      logger.info(`🤖 Bot ${bot.name} ready for deployment (will be added to queue by caller)`);
       return bot;
     } catch (error) {
       logger.error('Get bot for matchmaking error:', error);

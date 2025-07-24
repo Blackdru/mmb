@@ -23,10 +23,15 @@ class NaturalBotLogic {
       baseThinkingTime: botConfig.humanBehavior?.thinkingTimeMin || 1500,
       variationFactor: botConfig.humanBehavior?.naturalVariation || 0.3,
       
-      // Mistake system (1-2 mistakes per entire game)
-      mistakesAllowed: Math.random() < 0.7 ? 1 : 2, // 70% chance of 1 mistake, 30% chance of 2
+      // Enhanced mistake system (3 mistakes per game, up to 5 if opponent makes 5+ mistakes)
+      mistakesAllowed: 3, // Default 3 mistakes per game
       mistakesMade: 0,
       lastMistakeTurn: 0,
+      
+      // Opponent mistake tracking
+      opponentMistakes: 0,
+      opponentTurns: 0,
+      lastOpponentMistakeTurn: 0,
       
       // Configuration
       botConfig: botConfig,
@@ -113,10 +118,23 @@ class NaturalBotLogic {
         memory.revealedCards.delete(cardInfo.position);
       });
       logger.info(`🧠 Bot ${botId} removed matched cards from memory`);
+    } else if (!wasSuccessful && revealedCards.length === 2) {
+      // Track opponent mistake when they fail to match
+      const opponentId = this.getOpponentIdFromReveal(gameId, botId, revealedCards);
+      if (opponentId) {
+        this.trackOpponentMistake(gameId, opponentId);
+      }
     }
 
     logger.info(`🧠 Bot ${botId} memory now contains ${memory.revealedCards.size} known cards`);
     this.logMemoryContents(memory);
+  }
+
+  // Helper method to identify opponent from card reveal
+  getOpponentIdFromReveal(gameId, botId, revealedCards) {
+    // This would need to be implemented based on game state tracking
+    // For now, we'll track mistakes when processMatch is called
+    return null;
   }
 
   // NEW: Log memory contents for debugging
@@ -360,7 +378,80 @@ class NaturalBotLogic {
       turnCount: memory.turnCount,
       gamePhase: memory.gamePhase,
       mistakesMade: memory.mistakesMade,
-      mistakesAllowed: memory.mistakesAllowed
+      mistakesAllowed: memory.mistakesAllowed,
+      opponentMistakes: memory.opponentMistakes,
+      opponentTurns: memory.opponentTurns
+    };
+  }
+
+  // NEW: Track opponent mistake when they fail to match cards
+  trackOpponentMistake(gameId, opponentId) {
+    try {
+      // Find all bot memories for this game and update opponent mistake count
+      for (const [memoryKey, memory] of this.botMemories.entries()) {
+        if (memoryKey.startsWith(`${gameId}_`) && !memoryKey.endsWith(`_${opponentId}`)) {
+          memory.opponentMistakes++;
+          memory.opponentTurns++;
+          memory.lastOpponentMistakeTurn = memory.opponentTurns;
+          
+          // Adjust bot mistake allowance based on opponent performance
+          this.adjustBotMistakeAllowance(memory);
+          
+          logger.info(`🎭 Opponent mistake tracked: ${memory.opponentMistakes} mistakes in ${memory.opponentTurns} turns. Bot mistakes allowed: ${memory.mistakesAllowed}`);
+        }
+      }
+    } catch (error) {
+      logger.error('Error tracking opponent mistake:', error);
+    }
+  }
+
+  // NEW: Track opponent successful turn (no mistake)
+  trackOpponentSuccess(gameId, opponentId) {
+    try {
+      // Find all bot memories for this game and update opponent turn count
+      for (const [memoryKey, memory] of this.botMemories.entries()) {
+        if (memoryKey.startsWith(`${gameId}_`) && !memoryKey.endsWith(`_${opponentId}`)) {
+          memory.opponentTurns++;
+          
+          // Adjust bot mistake allowance based on opponent performance
+          this.adjustBotMistakeAllowance(memory);
+          
+          logger.info(`🎯 Opponent success tracked: ${memory.opponentMistakes} mistakes in ${memory.opponentTurns} turns. Bot mistakes allowed: ${memory.mistakesAllowed}`);
+        }
+      }
+    } catch (error) {
+      logger.error('Error tracking opponent success:', error);
+    }
+  }
+
+  // NEW: Adjust bot mistake allowance based on opponent performance
+  adjustBotMistakeAllowance(memory) {
+    // If opponent has made 5 or more mistakes, increase bot mistakes to 5
+    if (memory.opponentMistakes >= 5) {
+      memory.mistakesAllowed = Math.max(memory.mistakesAllowed, 5);
+      logger.info(`🎭 Opponent made ${memory.opponentMistakes} mistakes - increasing bot mistakes to ${memory.mistakesAllowed}`);
+    }
+    // If opponent has made 3-4 mistakes, increase bot mistakes to 4
+    else if (memory.opponentMistakes >= 3) {
+      memory.mistakesAllowed = Math.max(memory.mistakesAllowed, 4);
+      logger.info(`🎭 Opponent made ${memory.opponentMistakes} mistakes - increasing bot mistakes to ${memory.mistakesAllowed}`);
+    }
+    // Default is 3 mistakes (already set in initialization)
+  }
+
+  // NEW: Get opponent mistake statistics for a game
+  getOpponentStats(gameId, botId) {
+    const memoryKey = `${gameId}_${botId}`;
+    const memory = this.botMemories.get(memoryKey);
+    
+    if (!memory) return null;
+    
+    return {
+      opponentMistakes: memory.opponentMistakes,
+      opponentTurns: memory.opponentTurns,
+      opponentMistakeRate: memory.opponentTurns > 0 ? (memory.opponentMistakes / memory.opponentTurns) : 0,
+      botMistakesAllowed: memory.mistakesAllowed,
+      botMistakesMade: memory.mistakesMade
     };
   }
 }

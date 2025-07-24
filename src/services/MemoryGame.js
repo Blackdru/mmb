@@ -537,6 +537,13 @@ class MemoryGameService {
         
         // Bot memory update for matched cards
         this.updateAllBotMemories(gameId, [card1, card2], true);
+        // Track opponent mistake for bot intelligence
+          const currentPlayerId = gameState.currentTurnPlayerId;
+          const user = await prisma.user.findUnique({ where: { id: currentPlayerId } });
+          if (user && !user.isBot) {
+            // Human player made a mistake, track it for bot adjustment
+            NaturalBotLogic.trackOpponentMistake(gameId, currentPlayerId);
+          }
 
         // Emit match event immediately but keep cards visible
         this.io.to(`game:${gameId}`).emit('MEMORY_CARDS_MATCHED', {

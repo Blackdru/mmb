@@ -74,6 +74,16 @@ class FastMatchmakingService {
       });
       this.clearAllTimeoutTimersForUser(userId);
 
+      // Deduct entry fee immediately when joining queue (not when game is created)
+      if (entryFee > 0) {
+        const deductionResult = await walletService.deductGameEntry(userId, entryFee, `queue_${userId}_${Date.now()}`);
+        if (!deductionResult.success) {
+          logger.error(`Failed to deduct entry fee from user ${userId}: ${deductionResult.message}`);
+          throw new Error(deductionResult.message || 'Failed to deduct entry fee');
+        }
+        logger.info(`✅ Entry fee ₹${entryFee} deducted from user ${userId} for joining queue`);
+      }
+
       // Add to new queue
       const queueEntry = await prisma.matchmakingQueue.create({
         data: {
@@ -105,11 +115,34 @@ class FastMatchmakingService {
 
   async leaveQueue(userId) {
     try {
+      // Get queue entries before deleting to check for refunds
+      const queueEntries = await prisma.matchmakingQueue.findMany({
+        where: { userId }
+      });
+      
       const deletedCount = await prisma.matchmakingQueue.deleteMany({
         where: { userId }
       });
       
       this.clearAllTimeoutTimersForUser(userId);
+      
+      // Refund entry fees for manually leaving queue
+      for (const queueEntry of queueEntries) {
+        if (queueEntry.entryFee > 0) {
+          try {
+            await walletService.creditWallet(
+              userId,
+              queueEntry.entryFee,
+              'REFUND',
+              null,
+              'Manual queue exit refund'
+            );
+            logger.info(`💰 Refunded ₹${queueEntry.entryFee} to user ${userId} for leaving queue`);
+          } catch (refundError) {
+            logger.error(`Failed to refund user ${userId} for leaving queue:`, refundError);
+          }
+        }
+      }
       
       logger.info(`User ${userId} left queue. Removed ${deletedCount.count} entries.`);
 
@@ -133,7 +166,7 @@ class FastMatchmakingService {
     try {
       logger.info('🔄 Processing fast matchmaking...');
       
-      // PRIORITY 1: INSTANT REAL USER MATCHING
+      // PRIORITY 1: INSTANT REAL USER MATCHING (0 seconds wait)
       const realUserGamesCreated = await this.matchRealUsersInstantly();
       
       if (realUserGamesCreated > 0) {
@@ -141,11 +174,27 @@ class FastMatchmakingService {
         return;
       }
       
-      // PRIORITY 2: MIXED MATCHING (30+ second wait)
-      const mixedGamesCreated = await this.matchWithBotsAfterWait();
+      // PRIORITY 2: BOT DEPLOYMENT AFTER 15 SECONDS
+      const botGamesAfter15s = await this.deployBotsAfter15Seconds();
       
-      if (mixedGamesCreated > 0) {
-        logger.info(`🤖 MIXED MATCH: Created ${mixedGamesCreated} games with bots`);
+      if (botGamesAfter15s > 0) {
+        logger.info(`🤖 15s BOT MATCH: Created ${botGamesAfter15s} games with bots after 15s wait`);
+        return;
+      }
+      
+      // PRIORITY 3: REAL USER MATCHING AGAIN (15-30 seconds)
+      const realUserGamesAfter15s = await this.matchRealUsersAfter15Seconds();
+      
+      if (realUserGamesAfter15s > 0) {
+        logger.info(`⚡ 15s+ REAL USER MATCH: Created ${realUserGamesAfter15s} games with real users!`);
+        return;
+      }
+      
+      // PRIORITY 4: GUARANTEED BOT DEPLOYMENT AFTER 30 SECONDS
+      const guaranteedBotGames = await this.guaranteedBotDeploymentAfter30Seconds();
+      
+      if (guaranteedBotGames > 0) {
+        logger.info(`🤖 30s GUARANTEED BOT: Created ${guaranteedBotGames} games with guaranteed bots`);
       }
       
     } catch (error) {
@@ -206,66 +255,270 @@ class FastMatchmakingService {
     }
   }
 
-  async matchWithBotsAfterWait() {
+  // NEW METHOD: Deploy bots after 15 seconds of waiting
+  async deployBotsAfter15Seconds() {
     try {
-      // Check for users waiting different time thresholds
-      const shortWaitUsers = await prisma.matchmakingQueue.findMany({
+      // Find users waiting exactly 14+ seconds but less than 30 seconds (slightly earlier to account for processing delays)
+      const usersWaiting15s = await prisma.matchmakingQueue.findMany({
         where: {
           user: { isBot: false },
           createdAt: {
-            lte: new Date(Date.now() - 15000), // 15 seconds
-            gte: new Date(Date.now() - 30000)  // but less than 30 seconds
+            lte: new Date(Date.now() - 14000), // 14 seconds ago (slightly earlier)
+            gte: new Date(Date.now() - 30000)  // but not more than 30 seconds
           }
         },
         include: { user: true },
         orderBy: { createdAt: 'asc' }
       });
 
-      const longWaitUsers = await prisma.matchmakingQueue.findMany({
-        where: {
-          user: { isBot: false },
-          createdAt: {
-            lte: new Date(Date.now() - 30000) // 30+ seconds
-          }
-        },
-        include: { user: true },
-        orderBy: { createdAt: 'asc' }
-      });
-
-      let gamesCreated = 0;
-
-      // PRIORITY: Handle long waiting users first (30+ seconds) - IMMEDIATE bot deployment
-      if (longWaitUsers.length > 0) {
-        logger.info(`🚨 URGENT: ${longWaitUsers.length} users waiting 30+ seconds - IMMEDIATE bot deployment`);
-        gamesCreated += await this.deployBotsForUsers(longWaitUsers, true);
+      if (usersWaiting15s.length === 0) {
+        return 0;
       }
 
-      // SECONDARY: Handle short waiting users (15-30 seconds) - Conditional bot deployment
-      if (shortWaitUsers.length > 0) {
-        logger.info(`⏰ ${shortWaitUsers.length} users waiting 15-30 seconds - checking for bot deployment`);
-        
-        // Group by game configuration
-        const usersByConfig = new Map();
-        shortWaitUsers.forEach(user => {
-          const key = `${user.gameType}_${user.maxPlayers}_${user.entryFee}`;
-          if (!usersByConfig.has(key)) {
-            usersByConfig.set(key, []);
-          }
-          usersByConfig.get(key).push(user);
-        });
+      // Double-check that users have actually been waiting at least 14 seconds
+      const validUsers = usersWaiting15s.filter(user => {
+        const waitTime = Date.now() - user.createdAt.getTime();
+        return waitTime >= 14000; // At least 14 seconds
+      });
 
-        // Only deploy bots if there are multiple users waiting for the same game type
-        for (const [configKey, users] of usersByConfig) {
-          if (users.length >= 1) { // Deploy bot even for single user after 15 seconds
-            logger.info(`🤖 Deploying bots for ${users.length} users waiting 15+ seconds for ${configKey}`);
-            gamesCreated += await this.deployBotsForUsers(users, false);
+      if (validUsers.length === 0) {
+        return 0;
+      }
+
+      logger.info(`🤖 Found ${validUsers.length} users waiting 14+ seconds - deploying bots`);
+
+      let gamesCreated = 0;
+      const usersByConfig = new Map();
+      
+      // Group users by game configuration
+      usersWaiting15s.forEach(user => {
+        const key = `${user.gameType}_${user.maxPlayers}_${user.entryFee}`;
+        if (!usersByConfig.has(key)) {
+          usersByConfig.set(key, []);
+        }
+        usersByConfig.get(key).push(user);
+      });
+
+      // Deploy bots for each configuration
+      for (const [configKey, users] of usersByConfig) {
+        const [gameType, maxPlayers, entryFee] = configKey.split('_');
+        const maxPlayersNum = parseInt(maxPlayers);
+        const entryFeeNum = parseFloat(entryFee);
+
+        // Check if bots are available for deployment
+        const availableBotsCount = await botService.getAvailableBotsCount();
+        if (availableBotsCount === 0) {
+          logger.info(`🤖 No available bots for ${configKey}, creating new bots`);
+          await botService.ensureMinimumBots(5);
+        }
+
+        // Deploy bots for this configuration
+        const botsNeeded = maxPlayersNum - users.length;
+        if (botsNeeded > 0) {
+          logger.info(`🤖 Deploying ${botsNeeded} bots for ${users.length} users waiting 15s for ${configKey}`);
+          
+          for (let i = 0; i < botsNeeded; i++) {
+            try {
+              await this.deploySingleBot(users[0].userId, gameType, entryFeeNum, maxPlayersNum);
+            } catch (error) {
+              logger.error(`Failed to deploy bot ${i + 1}/${botsNeeded}:`, error);
+            }
+          }
+
+          // Try to create game after bot deployment
+          const finalQueueCount = await prisma.matchmakingQueue.count({
+            where: {
+              gameType,
+              maxPlayers: maxPlayersNum,
+              entryFee: entryFeeNum
+            }
+          });
+
+          if (finalQueueCount >= maxPlayersNum) {
+            try {
+              const game = await this.createGameFast(gameType, maxPlayersNum, entryFeeNum);
+              if (game) {
+                gamesCreated++;
+                logger.info(`🎮 15s BOT GAME CREATED: ${game.id} with ${finalQueueCount} players`);
+              }
+            } catch (error) {
+              logger.error(`Failed to create 15s bot game:`, error);
+            }
           }
         }
       }
 
       return gamesCreated;
     } catch (error) {
-      logger.error('Error in bot matching:', error);
+      logger.error('Error in 15s bot deployment:', error);
+      return 0;
+    }
+  }
+
+  // NEW METHOD: Match real users again after 15 seconds (15-30 second window)
+  async matchRealUsersAfter15Seconds() {
+    try {
+      // Find real users waiting 15-30 seconds
+      const realUsersWaiting = await prisma.matchmakingQueue.findMany({
+        where: {
+          user: { isBot: false },
+          createdAt: {
+            lte: new Date(Date.now() - 15000), // 15 seconds ago
+            gte: new Date(Date.now() - 30000)  // but not more than 30 seconds
+          }
+        },
+        include: { user: true },
+        orderBy: { createdAt: 'asc' }
+      });
+
+      if (realUsersWaiting.length < 2) {
+        return 0;
+      }
+
+      logger.info(`⚡ Found ${realUsersWaiting.length} real users waiting 15-30s - attempting real user matching`);
+
+      // Group by game configuration and check if we can match real users
+      const realUserGroups = await prisma.matchmakingQueue.groupBy({
+        by: ['gameType', 'maxPlayers', 'entryFee'],
+        _count: { id: true },
+        where: {
+          user: { isBot: false },
+          createdAt: {
+            lte: new Date(Date.now() - 15000),
+            gte: new Date(Date.now() - 30000)
+          }
+        },
+        having: {
+          id: { _count: { gte: 2 } }
+        },
+        orderBy: {
+          _count: { id: 'desc' }
+        }
+      });
+
+      let gamesCreated = 0;
+      
+      for (const group of realUserGroups) {
+        const { gameType, maxPlayers, entryFee } = group;
+        const realUsersCount = group._count.id;
+
+        if (realUsersCount >= maxPlayers) {
+          logger.info(`⚡ 15s+ REAL USER MATCH: ${realUsersCount} real users for ${gameType} ${maxPlayers}P`);
+          
+          const possibleGames = Math.floor(realUsersCount / maxPlayers);
+          
+          for (let i = 0; i < possibleGames; i++) {
+            try {
+              const game = await this.createGameFast(gameType, maxPlayers, entryFee);
+              if (game) {
+                gamesCreated++;
+                logger.info(`⚡ CREATED 15s+ REAL USER GAME: ${game.id} with ${maxPlayers} real players!`);
+              } else {
+                break;
+              }
+            } catch (error) {
+              logger.error(`Failed to create 15s+ real user game:`, error);
+              break;
+            }
+          }
+        }
+      }
+      
+      return gamesCreated;
+    } catch (error) {
+      logger.error('Error in 15s+ real user matching:', error);
+      return 0;
+    }
+  }
+
+  // NEW METHOD: Guaranteed bot deployment after 30 seconds
+  async guaranteedBotDeploymentAfter30Seconds() {
+    try {
+      // Find users waiting 30+ seconds
+      const usersWaiting30s = await prisma.matchmakingQueue.findMany({
+        where: {
+          user: { isBot: false },
+          createdAt: {
+            lte: new Date(Date.now() - 30000) // 30+ seconds ago
+          }
+        },
+        include: { user: true },
+        orderBy: { createdAt: 'asc' }
+      });
+
+      if (usersWaiting30s.length === 0) {
+        return 0;
+      }
+
+      logger.info(`🚨 GUARANTEED BOT DEPLOYMENT: ${usersWaiting30s.length} users waiting 30+ seconds`);
+
+      let gamesCreated = 0;
+      const usersByConfig = new Map();
+      
+      // Group users by game configuration
+      usersWaiting30s.forEach(user => {
+        const key = `${user.gameType}_${user.maxPlayers}_${user.entryFee}`;
+        if (!usersByConfig.has(key)) {
+          usersByConfig.set(key, []);
+        }
+        usersByConfig.get(key).push(user);
+      });
+
+      // GUARANTEED bot deployment for each configuration
+      for (const [configKey, users] of usersByConfig) {
+        const [gameType, maxPlayers, entryFee] = configKey.split('_');
+        const maxPlayersNum = parseInt(maxPlayers);
+        const entryFeeNum = parseFloat(entryFee);
+
+        logger.info(`🚨 GUARANTEED: Processing ${users.length} users waiting 30+ seconds for ${configKey}`);
+
+        // Ensure we have enough bots available
+        await botService.ensureMinimumBots(10);
+
+        // Deploy bots to fill the game - GUARANTEED
+        const botsNeeded = maxPlayersNum - users.length;
+        if (botsNeeded > 0) {
+          logger.info(`🚨 GUARANTEED: Deploying ${botsNeeded} bots immediately for ${configKey}`);
+          
+          // Deploy bots in parallel for fastest deployment
+          const botPromises = [];
+          for (let i = 0; i < botsNeeded; i++) {
+            botPromises.push(this.deploySingleBot(users[0].userId, gameType, entryFeeNum, maxPlayersNum));
+          }
+
+          try {
+            await Promise.all(botPromises);
+            logger.info(`🚨 GUARANTEED: Successfully deployed ${botsNeeded} bots`);
+          } catch (error) {
+            logger.error(`🚨 GUARANTEED: Error deploying bots:`, error);
+            // Try individual deployment as fallback
+            for (let i = 0; i < botsNeeded; i++) {
+              try {
+                await this.deploySingleBot(users[0].userId, gameType, entryFeeNum, maxPlayersNum);
+              } catch (individualError) {
+                logger.error(`🚨 GUARANTEED: Individual bot deployment failed:`, individualError);
+              }
+            }
+          }
+        }
+
+        // GUARANTEED game creation after 30 seconds
+        try {
+          const game = await this.createGameFast(gameType, maxPlayersNum, entryFeeNum);
+          if (game) {
+            gamesCreated++;
+            logger.info(`🚨 GUARANTEED GAME CREATED: ${game.id} after 30s wait`);
+          } else {
+            logger.error(`🚨 GUARANTEED: Failed to create game for ${configKey} - this should never happen!`);
+          }
+        } catch (error) {
+          logger.error(`🚨 GUARANTEED: Critical error creating game for ${configKey}:`, error);
+        }
+      }
+
+      return gamesCreated;
+    } catch (error) {
+      logger.error('🚨 GUARANTEED: Critical error in 30s bot deployment:', error);
       return 0;
     }
   }
@@ -448,23 +701,8 @@ class FastMatchmakingService {
         timeout: 10000, // 10 second timeout
       });
 
-      // Step 2: Process wallet deductions (outside transaction)
-      if (entryFee > 0) {
-        for (const queueEntry of queueEntries) {
-          if (queueEntry.user.isBot) continue;
-          
-          try {
-            const deductionResult = await walletService.deductGameEntry(queueEntry.userId, entryFee, gameId);
-            if (!deductionResult.success) {
-              logger.error(`Failed to deduct entry fee from user ${queueEntry.userId}`);
-            }
-          } catch (deductionError) {
-            logger.error(`Wallet deduction error for user ${queueEntry.userId}:`, deductionError);
-          }
-        }
-      }
-
-      // Step 3: Create participations and update game data (separate transaction)
+      // Step 2: Create participations and update game data (separate transaction)
+      // Note: Wallet deduction already happened when users joined the queue
       const finalGame = await prisma.$transaction(async (tx) => {
         // Create participations in batch
         const participationData = [];
