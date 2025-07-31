@@ -21,6 +21,16 @@ class BotService {
       'Sunil', 'Ashok', 'Pradeep', 'Manoj', 'Rohit', 'Vikram'
     ];
 
+    this.botSurnames = [
+      'Kumar', 'Reddy', 'Singh', 'Sharma', 'Patel', 'Gupta',
+      'Verma', 'Yadav', 'Choudhary', 'Mehta', 'Jain', 'Kaur', 'Das',
+      'Bhat', 'Nair', 'Menon', 'Iyer', 'Shekhar', 'Chopra', 'Mishra',
+      'Shetty', 'Joshi', 'Rao', 'Kumar', 'Chauhan', 'Shah', 'Mudiraj', 'Raj'
+    ];
+
+    // Track used name combinations to ensure uniqueness
+    this.usedNameCombinations = new Set();
+
     // 10 Bot Types: 7 Intelligent Winning Bots (100% win rate) + 3 Normal/Random Bots
     this.botTypes = {
       // 7 Intelligent Winning Bot Types (Human-like behavior with 100% win probability)
@@ -268,6 +278,39 @@ class BotService {
     this.botPerformanceTracking = new Map();
   }
 
+  // Generate unique bot name using first name + surname combination
+  generateUniqueBotName() {
+    let attempts = 0;
+    const maxAttempts = 100; // Prevent infinite loop
+    
+    while (attempts < maxAttempts) {
+      const randomFirstName = this.botProfileNames[Math.floor(Math.random() * this.botProfileNames.length)];
+      const randomSurname = this.botSurnames[Math.floor(Math.random() * this.botSurnames.length)];
+      const fullName = `${randomFirstName} ${randomSurname}`;
+      
+      // Check if this combination has been used recently
+      if (!this.usedNameCombinations.has(fullName)) {
+        this.usedNameCombinations.add(fullName);
+        
+        // Clean up old combinations if we have too many (keep last 1000)
+        if (this.usedNameCombinations.size > 1000) {
+          const oldCombinations = Array.from(this.usedNameCombinations).slice(0, 500);
+          oldCombinations.forEach(name => this.usedNameCombinations.delete(name));
+        }
+        
+        return fullName;
+      }
+      
+      attempts++;
+    }
+    
+    // Fallback: if we can't find a unique combination, add a small number
+    const randomFirstName = this.botProfileNames[Math.floor(Math.random() * this.botProfileNames.length)];
+    const randomSurname = this.botSurnames[Math.floor(Math.random() * this.botSurnames.length)];
+    const uniqueId = Math.floor(Math.random() * 99) + 1;
+    return `${randomFirstName} ${randomSurname}${uniqueId}`;
+  }
+
   // Fisher-Yates shuffle algorithm for true randomness
   shuffleArray(array) {
     const shuffled = [...array];
@@ -329,10 +372,8 @@ class BotService {
 
       const botConfig = this.getBotTypeConfig(botTypeId);
       
-      // Select random name from profile names
-      const randomName = this.botProfileNames[Math.floor(Math.random() * this.botProfileNames.length)];
-      const uniqueId = Math.floor(Math.random() * 999) + 1;
-      const botName = `${randomName}${uniqueId}`;
+      // Generate unique bot name using surname
+      const botName = this.generateUniqueBotName();
       const botPhone = `+91${Math.floor(Math.random() * 9000000000) + 1000000000}`;
       
       const bot = await prisma.user.create({

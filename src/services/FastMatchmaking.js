@@ -255,15 +255,15 @@ class FastMatchmakingService {
     }
   }
 
-  // NEW METHOD: Deploy bots after 15 seconds of waiting
+  // NEW METHOD: Deploy bots after 5 seconds of waiting (reduced for testing)
   async deployBotsAfter15Seconds() {
     try {
-      // Find users waiting exactly 14+ seconds but less than 30 seconds (slightly earlier to account for processing delays)
+      // Find users waiting exactly 4+ seconds but less than 30 seconds (reduced for testing)
       const usersWaiting15s = await prisma.matchmakingQueue.findMany({
         where: {
           user: { isBot: false },
           createdAt: {
-            lte: new Date(Date.now() - 14000), // 14 seconds ago (slightly earlier)
+            lte: new Date(Date.now() - 4000), // 4 seconds ago (reduced for testing)
             gte: new Date(Date.now() - 30000)  // but not more than 30 seconds
           }
         },
@@ -275,17 +275,21 @@ class FastMatchmakingService {
         return 0;
       }
 
-      // Double-check that users have actually been waiting at least 14 seconds
+      // Double-check that users have actually been waiting at least 4 seconds
       const validUsers = usersWaiting15s.filter(user => {
         const waitTime = Date.now() - user.createdAt.getTime();
-        return waitTime >= 14000; // At least 14 seconds
+        return waitTime >= 4000; // At least 4 seconds (reduced for testing)
       });
 
       if (validUsers.length === 0) {
         return 0;
       }
 
-      logger.info(`🤖 Found ${validUsers.length} users waiting 14+ seconds - deploying bots`);
+      logger.info(`🤖 BOT DEPLOYMENT: Found ${validUsers.length} users waiting 4+ seconds - INITIATING BOT DEPLOYMENT`);
+      validUsers.forEach(user => {
+        const waitTime = Math.floor((Date.now() - user.createdAt.getTime()) / 1000);
+        logger.info(`🤖 BOT DEPLOYMENT: User ${user.user.name} waiting ${waitTime}s for ${user.gameType} ${user.maxPlayers}P ₹${user.entryFee}`);
+      });
 
       let gamesCreated = 0;
       const usersByConfig = new Map();
@@ -315,13 +319,15 @@ class FastMatchmakingService {
         // Deploy bots for this configuration
         const botsNeeded = maxPlayersNum - users.length;
         if (botsNeeded > 0) {
-          logger.info(`🤖 Deploying ${botsNeeded} bots for ${users.length} users waiting 15s for ${configKey}`);
+          logger.info(`🤖 BOT DEPLOYMENT: DEPLOYING ${botsNeeded} bots for ${users.length} users waiting 5s for ${configKey}`);
           
           for (let i = 0; i < botsNeeded; i++) {
             try {
-              await this.deploySingleBot(users[0].userId, gameType, entryFeeNum, maxPlayersNum);
+              logger.info(`🤖 BOT DEPLOYMENT: Deploying bot ${i + 1}/${botsNeeded}...`);
+              const deployedBot = await this.deploySingleBot(users[0].userId, gameType, entryFeeNum, maxPlayersNum);
+              logger.info(`🤖 BOT DEPLOYMENT: Successfully deployed bot ${deployedBot.name} (${deployedBot.id})`);
             } catch (error) {
-              logger.error(`Failed to deploy bot ${i + 1}/${botsNeeded}:`, error);
+              logger.error(`🤖 BOT DEPLOYMENT: Failed to deploy bot ${i + 1}/${botsNeeded}:`, error);
             }
           }
 
@@ -339,7 +345,7 @@ class FastMatchmakingService {
               const game = await this.createGameFast(gameType, maxPlayersNum, entryFeeNum);
               if (game) {
                 gamesCreated++;
-                logger.info(`🎮 15s BOT GAME CREATED: ${game.id} with ${finalQueueCount} players`);
+                logger.info(`🎮 BOT DEPLOYMENT: ✅ GAME CREATED SUCCESSFULLY: ${game.id} with ${finalQueueCount} players`);
               }
             } catch (error) {
               logger.error(`Failed to create 15s bot game:`, error);
@@ -605,7 +611,10 @@ class FastMatchmakingService {
 
   async deploySingleBot(userId, gameType, entryFee, maxPlayers) {
     try {
+      logger.info(`🤖 SINGLE BOT DEPLOY: Starting deployment for user ${userId}, game: ${gameType} ${maxPlayers}P ₹${entryFee}`);
+      
       const botUser = await this.getOptimalBot(userId, gameType, entryFee, maxPlayers);
+      logger.info(`🤖 SINGLE BOT DEPLOY: Got optimal bot ${botUser.name} (${botUser.id})`);
       
       // Check if bot is already in this specific queue
       const existingBotInQueue = await prisma.matchmakingQueue.findFirst({
@@ -627,12 +636,14 @@ class FastMatchmakingService {
           }
         });
         
-        logger.info(`✅ Bot ${botUser.name} (${botUser.id}) deployed to queue`);
+        logger.info(`✅ SINGLE BOT DEPLOY: Bot ${botUser.name} (${botUser.id}) successfully deployed to queue`);
         return botUser;
       } else {
-        logger.info(`⚠️ Bot ${botUser.name} already in queue, getting different bot`);
+        logger.info(`⚠️ SINGLE BOT DEPLOY: Bot ${botUser.name} already in queue, creating different bot...`);
         // Try to get a different bot
         const differentBot = await botService.createBotUser();
+        logger.info(`🤖 SINGLE BOT DEPLOY: Created new bot ${differentBot.name} (${differentBot.id})`);
+        
         await prisma.matchmakingQueue.create({
           data: {
             userId: differentBot.id,
@@ -641,11 +652,11 @@ class FastMatchmakingService {
             entryFee
           }
         });
-        logger.info(`✅ New bot ${differentBot.name} deployed to queue`);
+        logger.info(`✅ SINGLE BOT DEPLOY: New bot ${differentBot.name} successfully deployed to queue`);
         return differentBot;
       }
     } catch (error) {
-      logger.error(`❌ Failed to deploy single bot:`, error);
+      logger.error(`❌ SINGLE BOT DEPLOY: Failed to deploy single bot:`, error);
       throw error;
     }
   }

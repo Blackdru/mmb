@@ -96,53 +96,65 @@ io.on('connection', (socket) => {
   // Matchmaking events with enhanced rate limiting
   socket.on('joinMatchmaking', async (data) => {
     try {
+      logger.info(`🚀 [MATCHMAKING START] User ${userId} (${userName}) attempting to join matchmaking:`, data);
+      
       // Rate limit: max 3 requests per 10 seconds for matchmaking
       if (!checkRateLimit(userId, 'joinMatchmaking', 3, 10000)) {
-        logger.warn(`Rate limit exceeded for joinMatchmaking by user ${userId}`);
+        logger.warn(`❌ [RATE LIMIT] Rate limit exceeded for joinMatchmaking by user ${userId}`);
         return socket.emit('matchmakingError', { 
           message: 'Too many requests. Please wait before trying again.',
           code: 'RATE_LIMIT_EXCEEDED'
         });
       }
+      logger.info(`✅ [RATE LIMIT] Rate limit check passed for user ${userId}`);
 
-      logger.info(`🎯 User ${userId} (${userName}) attempting to join matchmaking:`, data);
+      logger.info(`🎯 [VALIDATION] User ${userId} (${userName}) data received:`, data);
+      
+      logger.info(`🔍 [VALIDATION] Starting validation for user ${userId}`);
       
       const { error, value } = gameSchemas.joinMatchmaking.validate(data);
       if (error) {
-        logger.warn(`Matchmaking validation error for user ${userId}:`, error.details[0].message);
+        logger.warn(`❌ [VALIDATION] Schema validation error for user ${userId}:`, error.details[0].message);
         return socket.emit('matchmakingError', { message: error.details[0].message });
       }
+      logger.info(`✅ [VALIDATION] Schema validation passed for user ${userId}`);
 
       const { gameType, maxPlayers, entryFee } = value;
+      logger.info(`📊 [VALIDATION] Extracted values - gameType: ${gameType}, maxPlayers: ${maxPlayers}, entryFee: ${entryFee}`);
       
       // Validate game type enum - Only MEMORY is supported
       const validGameTypes = ['MEMORY'];
       if (!validGameTypes.includes(gameType)) {
-        logger.warn(`Invalid game type ${gameType} for user ${userId}`);
+        logger.warn(`❌ [VALIDATION] Invalid game type ${gameType} for user ${userId}`);
         return socket.emit('matchmakingError', { message: 'Only Memory Game is available' });
       }
+      logger.info(`✅ [VALIDATION] Game type validation passed: ${gameType}`);
 
       // Validate maxPlayers - Memory game is 2 players only
       if (maxPlayers !== 2) {
-        logger.warn(`Invalid maxPlayers ${maxPlayers} for user ${userId}`);
+        logger.warn(`❌ [VALIDATION] Invalid maxPlayers ${maxPlayers} for user ${userId}`);
         return socket.emit('matchmakingError', { message: 'Memory Game supports 2 players only' });
       }
+      logger.info(`✅ [VALIDATION] Max players validation passed: ${maxPlayers}`);
 
       // Validate entryFee
       if (entryFee < 0) {
-        logger.warn(`Invalid entryFee ${entryFee} for user ${userId}`);
+        logger.warn(`❌ [VALIDATION] Invalid entryFee ${entryFee} for user ${userId}`);
         return socket.emit('matchmakingError', { message: 'Invalid entry fee' });
       }
+      logger.info(`✅ [VALIDATION] Entry fee validation passed: ₹${entryFee}`);
 
-      logger.info(`📝 Matchmaking request validated for user ${userId} (${userName}): ${gameType} ${maxPlayers}P ₹${entryFee}`);
+      logger.info(`✅ [VALIDATION] All validations passed for user ${userId} (${userName}): ${gameType} ${maxPlayers}P ₹${entryFee}`);
 
+      logger.info(`🔍 [QUEUE CHECK] Checking if user ${userId} is already in queue`);
+      
       // Check if user is already in queue to prevent duplicates
       const existingQueueEntry = await prisma.matchmakingQueue.findFirst({
         where: { userId }
       });
 
       if (existingQueueEntry) {
-        logger.info(`User ${userId} already in matchmaking queue, sending existing status`);
+        logger.info(`⚠️ [QUEUE CHECK] User ${userId} already in matchmaking queue, sending existing status`);
         return socket.emit('matchmakingStatus', { 
           status: 'waiting', 
           message: 'Already in matchmaking queue',
@@ -153,19 +165,31 @@ io.on('connection', (socket) => {
           playerId: userId
         });
       }
+      logger.info(`✅ [QUEUE CHECK] User ${userId} not in queue, proceeding with join`);
 
-      await matchmakingService.joinQueue(userId, gameType, maxPlayers, entryFee);
-      socket.emit('matchmakingStatus', { 
-        status: 'waiting', 
-        message: 'Waiting for players...',
-        gameType,
-        maxPlayers,
-        entryFee,
-        playerName: userName,
-        playerId: userId
-      });
+      logger.info(`🚀 [MATCHMAKING SERVICE] Calling joinQueue for user ${userId}`);
+      const joinResult = await matchmakingService.joinQueue(userId, gameType, maxPlayers, entryFee);
+      logger.info(`📊 [MATCHMAKING SERVICE] Join result for user ${userId}:`, joinResult);
       
-      logger.info(`✅ User ${userId} (${userName}) successfully joined matchmaking queue`);
+      if (joinResult.success) {
+        logger.info(`✅ [SUCCESS] User ${userId} successfully joined queue, sending waiting status`);
+        socket.emit('matchmakingStatus', { 
+          status: 'waiting', 
+          message: 'Waiting for players...',
+          gameType,
+          maxPlayers,
+          entryFee,
+          playerName: userName,
+          playerId: userId
+        });
+        
+        logger.info(`✅ [COMPLETE] User ${userId} (${userName}) matchmaking process completed successfully`);
+      } else {
+        logger.error(`❌ [FAILED] Failed to join queue for user ${userId}: ${joinResult.message}`);
+        return socket.emit('matchmakingError', { 
+          message: joinResult.message || 'Failed to join matchmaking queue'
+        });
+      }
     } catch (err) {
       logger.error(`❌ Matchmaking join error for user ${userId} (${userName}):`, err);
       const message = err.message === 'Insufficient balance' 

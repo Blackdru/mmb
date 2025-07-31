@@ -7,7 +7,7 @@ class NaturalBotLogic {
     this.botMemories = new Map();
   }
 
-  // Initialize bot memory system
+  // Initialize bot memory system with enhanced mistake distribution
   initializeBotMemory(gameId, botId, botConfig) {
     const memoryKey = `${gameId}_${botId}`;
     
@@ -18,15 +18,28 @@ class NaturalBotLogic {
       // Game tracking
       turnCount: 0,
       gamePhase: 'early',
+      totalGameTurns: 0, // Track total turns in game for mistake distribution
       
       // Human-like behavior
       baseThinkingTime: botConfig.humanBehavior?.thinkingTimeMin || 1500,
       variationFactor: botConfig.humanBehavior?.naturalVariation || 0.3,
       
-      // Enhanced mistake system (3 mistakes per game, up to 5 if opponent makes 5+ mistakes)
-      mistakesAllowed: 3, // Default 3 mistakes per game
+      // Enhanced mistake system with strategic distribution
+      mistakesAllowed: 5, // Increased from 3 to 5 for more human behavior
       mistakesMade: 0,
       lastMistakeTurn: 0,
+      
+      // Strategic mistake distribution plan
+      mistakeDistribution: {
+        early: 2,    // 2 mistakes in early game (first 30% of game)
+        middle: 2,   // 2 mistakes in middle game (30-70% of game)
+        late: 1      // 1 mistake in late game (70%+ of game)
+      },
+      mistakesByPhase: {
+        early: 0,
+        middle: 0,
+        late: 0
+      },
       
       // Opponent mistake tracking
       opponentMistakes: 0,
@@ -39,7 +52,7 @@ class NaturalBotLogic {
     };
     
     this.botMemories.set(memoryKey, memory);
-    logger.info(`🧠 Initialized natural bot memory for ${botId} - Mistakes allowed: ${memory.mistakesAllowed}`);
+    logger.info(`🧠 Initialized enhanced bot memory for ${botId} - Mistakes allowed: ${memory.mistakesAllowed} (Early: ${memory.mistakeDistribution.early}, Middle: ${memory.mistakeDistribution.middle}, Late: ${memory.mistakeDistribution.late})`);
     return memory;
   }
 
@@ -289,28 +302,92 @@ class NaturalBotLogic {
     return null;
   }
 
-  // Determine if bot should use the match (or make a mistake)
+  // Enhanced strategic mistake distribution system
   shouldUseMatch(memory) {
-    // Always use matches in late game (no mistakes when close to winning)
-    if (memory.gamePhase === 'late') {
-      return true;
-    }
+    // Update mistake tracking by phase
+    this.updateMistakesByPhase(memory);
     
     // Check if bot has already made enough mistakes for this game
     if (memory.mistakesMade >= memory.mistakesAllowed) {
+      logger.info(`🎯 Bot has made maximum mistakes (${memory.mistakesMade}/${memory.mistakesAllowed}) - using all matches`);
       return true;
     }
     
-    // Don't make mistakes too frequently (at least 3 turns apart)
-    if (memory.turnCount - memory.lastMistakeTurn < 3) {
+    // Don't make mistakes too frequently (at least 2 turns apart for better distribution)
+    if (memory.turnCount - memory.lastMistakeTurn < 2) {
+      logger.info(`🎯 Too soon since last mistake (turn ${memory.lastMistakeTurn}) - using match`);
       return true;
     }
     
-    // Occasionally make mistakes to appear human
-    if (memory.gamePhase === 'early') {
-      return Math.random() > 0.12; // 12% chance of mistake in early game
-    } else {
-      return Math.random() > 0.06; // 6% chance of mistake in middle game
+    // Strategic mistake distribution based on game phase
+    const currentPhase = memory.gamePhase;
+    const mistakesInCurrentPhase = memory.mistakesByPhase[currentPhase];
+    const allowedMistakesInPhase = memory.mistakeDistribution[currentPhase];
+    
+    // If we've already made enough mistakes in this phase, use the match
+    if (mistakesInCurrentPhase >= allowedMistakesInPhase) {
+      logger.info(`🎯 Phase ${currentPhase}: Already made ${mistakesInCurrentPhase}/${allowedMistakesInPhase} mistakes - using match`);
+      return true;
+    }
+    
+    // Special handling for late game - be more careful about mistakes
+    if (memory.gamePhase === 'late') {
+      // Only make mistakes if we haven't made our late game mistake yet
+      if (mistakesInCurrentPhase === 0) {
+        // 15% chance of making the final mistake in late game
+        const shouldMakeMistake = Math.random() < 0.15;
+        if (shouldMakeMistake) {
+          logger.info(`🎭 Late game: Making strategic final mistake (${mistakesInCurrentPhase + 1}/${allowedMistakesInPhase})`);
+          memory.mistakesByPhase[currentPhase]++;
+          return false;
+        }
+      }
+      return true; // Use match in late game if we've already made our mistake
+    }
+    
+    // Calculate mistake probability based on phase and remaining mistakes
+    let mistakeProbability = 0;
+    
+    if (currentPhase === 'early') {
+      // Early game: Higher chance of mistakes (25% base chance)
+      mistakeProbability = 0.25;
+      
+      // Increase probability if we haven't made enough mistakes yet
+      if (mistakesInCurrentPhase < allowedMistakesInPhase) {
+        mistakeProbability += 0.1; // Boost to 35%
+      }
+    } else if (currentPhase === 'middle') {
+      // Middle game: Moderate chance of mistakes (20% base chance)
+      mistakeProbability = 0.20;
+      
+      // Increase probability if we haven't made enough mistakes yet
+      if (mistakesInCurrentPhase < allowedMistakesInPhase) {
+        mistakeProbability += 0.1; // Boost to 30%
+      }
+    }
+    
+    // Make the decision
+    const shouldMakeMistake = Math.random() < mistakeProbability;
+    
+    if (shouldMakeMistake) {
+      logger.info(`🎭 ${currentPhase} game: Making strategic mistake (${mistakesInCurrentPhase + 1}/${allowedMistakesInPhase}) - probability: ${(mistakeProbability * 100).toFixed(1)}%`);
+      memory.mistakesByPhase[currentPhase]++;
+      return false; // Don't use the match (make mistake)
+    }
+    
+    logger.info(`🎯 ${currentPhase} game: Using match - probability check passed (${(mistakeProbability * 100).toFixed(1)}% chance of mistake)`);
+    return true; // Use the match
+  }
+  
+  // Helper method to update mistakes by phase tracking
+  updateMistakesByPhase(memory) {
+    // This method ensures we're tracking mistakes correctly by phase
+    // The actual mistake counting is done in shouldUseMatch when a mistake is made
+    const currentPhase = memory.gamePhase;
+    
+    // Log current mistake distribution for debugging
+    if (memory.turnCount % 5 === 0) { // Log every 5 turns to avoid spam
+      logger.info(`🎭 Mistake distribution - Early: ${memory.mistakesByPhase.early}/${memory.mistakeDistribution.early}, Middle: ${memory.mistakesByPhase.middle}/${memory.mistakeDistribution.middle}, Late: ${memory.mistakesByPhase.late}/${memory.mistakeDistribution.late} (Current phase: ${currentPhase})`);
     }
   }
 
@@ -424,19 +501,47 @@ class NaturalBotLogic {
     }
   }
 
-  // NEW: Adjust bot mistake allowance based on opponent performance
+  // Enhanced bot mistake allowance adjustment based on opponent performance
   adjustBotMistakeAllowance(memory) {
-    // If opponent has made 5 or more mistakes, increase bot mistakes to 5
+    const oldMistakesAllowed = memory.mistakesAllowed;
+    
+    // Enhanced mistake scaling based on opponent performance
     if (memory.opponentMistakes >= 5) {
-      memory.mistakesAllowed = Math.max(memory.mistakesAllowed, 5);
-      logger.info(`🎭 Opponent made ${memory.opponentMistakes} mistakes - increasing bot mistakes to ${memory.mistakesAllowed}`);
+      // If opponent makes 5+ mistakes, increase bot mistakes to 7 for maximum human behavior
+      memory.mistakesAllowed = Math.max(memory.mistakesAllowed, 7);
+      
+      // Update mistake distribution for 7 mistakes: 3-3-1 pattern
+      if (memory.mistakesAllowed === 7) {
+        memory.mistakeDistribution = {
+          early: 3,    // 3 mistakes in early game
+          middle: 3,   // 3 mistakes in middle game  
+          late: 1      // 1 mistake in late game
+        };
+      }
+      
+      logger.info(`🎭 Opponent made ${memory.opponentMistakes} mistakes - increasing bot mistakes to ${memory.mistakesAllowed} with distribution (${memory.mistakeDistribution.early}-${memory.mistakeDistribution.middle}-${memory.mistakeDistribution.late})`);
     }
-    // If opponent has made 3-4 mistakes, increase bot mistakes to 4
+    // If opponent has made 3-4 mistakes, increase bot mistakes to 6
     else if (memory.opponentMistakes >= 3) {
-      memory.mistakesAllowed = Math.max(memory.mistakesAllowed, 4);
-      logger.info(`🎭 Opponent made ${memory.opponentMistakes} mistakes - increasing bot mistakes to ${memory.mistakesAllowed}`);
+      memory.mistakesAllowed = Math.max(memory.mistakesAllowed, 6);
+      
+      // Update mistake distribution for 6 mistakes: 2-3-1 pattern
+      if (memory.mistakesAllowed === 6) {
+        memory.mistakeDistribution = {
+          early: 2,    // 2 mistakes in early game
+          middle: 3,   // 3 mistakes in middle game
+          late: 1      // 1 mistake in late game
+        };
+      }
+      
+      logger.info(`🎭 Opponent made ${memory.opponentMistakes} mistakes - increasing bot mistakes to ${memory.mistakesAllowed} with distribution (${memory.mistakeDistribution.early}-${memory.mistakeDistribution.middle}-${memory.mistakeDistribution.late})`);
     }
-    // Default is 3 mistakes (already set in initialization)
+    // Default is 5 mistakes with 2-2-1 distribution (already set in initialization)
+    
+    // Log the adjustment if it changed
+    if (oldMistakesAllowed !== memory.mistakesAllowed) {
+      logger.info(`🔄 Bot mistake allowance adjusted from ${oldMistakesAllowed} to ${memory.mistakesAllowed} based on opponent performance`);
+    }
   }
 
   // NEW: Get opponent mistake statistics for a game
