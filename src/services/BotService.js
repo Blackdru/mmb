@@ -44,7 +44,7 @@ class BotService {
           thinkingTimeMax: 3500,
           mistakeProbability: 0.02, // Very low mistake rate
           adaptivePlay: true,
-          memoryAccuracy: 0.98, // Near perfect memory
+          memoryAccuracy: 0.91, // Near perfect memory
           patternRecognition: 0.95,
           humanLikeDelay: true,
           naturalVariation: 0.15
@@ -67,7 +67,7 @@ class BotService {
           thinkingTimeMax: 4000,
           mistakeProbability: 0.03,
           adaptivePlay: true,
-          memoryAccuracy: 0.97,
+          memoryAccuracy: 0.90,
           patternRecognition: 0.98,
           humanLikeDelay: true,
           naturalVariation: 0.18
@@ -90,7 +90,7 @@ class BotService {
           thinkingTimeMax: 2800,
           mistakeProbability: 0.04,
           adaptivePlay: true,
-          memoryAccuracy: 0.96,
+          memoryAccuracy: 0.89,
           patternRecognition: 0.92,
           humanLikeDelay: true,
           naturalVariation: 0.20
@@ -113,7 +113,7 @@ class BotService {
           thinkingTimeMax: 2500,
           mistakeProbability: 0.05,
           adaptivePlay: true,
-          memoryAccuracy: 0.95,
+          memoryAccuracy: 0.87,
           patternRecognition: 0.88,
           humanLikeDelay: true,
           naturalVariation: 0.22
@@ -136,7 +136,7 @@ class BotService {
           thinkingTimeMax: 2200,
           mistakeProbability: 0.06,
           adaptivePlay: true,
-          memoryAccuracy: 0.94,
+          memoryAccuracy: 0.89,
           patternRecognition: 0.85,
           humanLikeDelay: true,
           naturalVariation: 0.25
@@ -159,7 +159,7 @@ class BotService {
           thinkingTimeMax: 3000,
           mistakeProbability: 0.07,
           adaptivePlay: true,
-          memoryAccuracy: 0.93,
+          memoryAccuracy: 0.89,
           patternRecognition: 0.90,
           humanLikeDelay: true,
           naturalVariation: 0.20
@@ -182,7 +182,7 @@ class BotService {
           thinkingTimeMax: 2000,
           mistakeProbability: 0.08,
           adaptivePlay: true,
-          memoryAccuracy: 0.92,
+          memoryAccuracy: 0.88,
           patternRecognition: 0.82,
           humanLikeDelay: true,
           naturalVariation: 0.28
