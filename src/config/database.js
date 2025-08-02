@@ -3,6 +3,23 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient({
   log: process.env.NODE_ENV === 'development' ? ['query', 'info', 'warn', 'error'] : ['error'],
   errorFormat: 'pretty',
+  datasources: {
+    db: {
+      url: process.env.DATABASE_URL,
+    },
+  },
+  // Optimize connection pool
+  __internal: {
+    engine: {
+      connectTimeout: 60000,
+      pool: {
+        timeout: 60000,
+        idleTimeout: 300000,
+        maxUses: 1000,
+        size: 10,
+      },
+    },
+  },
 });
 
 // Test database connection

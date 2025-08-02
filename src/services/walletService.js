@@ -2,6 +2,7 @@ const Razorpay = require('razorpay');
 const crypto = require('crypto');
 const prisma = require('../config/database');
 const logger = require('../config/logger');
+const { safeNumber, validateAmount, toPaise } = require('../utils/numberUtils');
 
 class WalletService {
   constructor() {
@@ -50,10 +51,14 @@ class WalletService {
   async getWalletBalance(userId) {
     try {
       const wallet = await this.getWallet(userId);
+      const gameBalance = safeNumber(wallet.gameBalance, 0);
+      const withdrawableBalance = safeNumber(wallet.withdrawableBalance, 0);
+      const calculatedBalance = gameBalance + withdrawableBalance;
+      
       return {
-        balance: parseFloat(wallet.balance),
-        gameBalance: parseFloat(wallet.gameBalance),
-        withdrawableBalance: parseFloat(wallet.withdrawableBalance)
+        balance: calculatedBalance, // Always calculate as sum of game + withdrawable
+        gameBalance: gameBalance,
+        withdrawableBalance: withdrawableBalance
       };
     } catch (error) {
       logger.error(`Get wallet balance error for user ${userId}:`, error);
@@ -500,15 +505,6 @@ class WalletService {
           };
         }
 
-        const wallet = await this.getWallet(userId);
-
-        // Check if user has enough total balance (gameBalance + withdrawableBalance)
-        const totalAvailable = parseFloat(wallet.gameBalance) + parseFloat(wallet.withdrawableBalance);
-        if (totalAvailable < numericAmount) {
-          logger.warn(`Insufficient balance: User ${userId}, Has: ₹${totalAvailable} (Game: ₹${wallet.gameBalance} + Withdrawable: ₹${wallet.withdrawableBalance}), Wants: ₹${numericAmount}`);
-          return { success: false, message: 'Insufficient balance' };
-        }
-
         // Use serializable transaction isolation to prevent race conditions
         const result = await prisma.$transaction(async (tx) => {
           // Triple-check for existing transaction within the transaction
@@ -525,7 +521,53 @@ class WalletService {
             throw new Error(`Entry fee already deducted for game ${gameId} - found ${existingTxInTransaction.length} existing transactions`);
           }
 
-          // Create transaction with unique constraint check
+          // Get current wallet state within transaction for accurate balance check
+          const currentWallet = await tx.wallet.findUnique({ 
+            where: { userId }
+          });
+          
+          if (!currentWallet) {
+            throw new Error('Wallet not found');
+          }
+
+          const gameBalanceAvailable = safeNumber(currentWallet.gameBalance, 0);
+          const withdrawableBalanceAvailable = safeNumber(currentWallet.withdrawableBalance, 0);
+          const currentTotalAvailable = gameBalanceAvailable + withdrawableBalanceAvailable;
+          
+          // STRICT balance check within transaction - prevent any negative balances
+          if (currentTotalAvailable < numericAmount) {
+            logger.warn(`❌ Insufficient balance in transaction: User ${userId}, Has: ₹${currentTotalAvailable} (Game: ₹${gameBalanceAvailable} + Withdrawable: ₹${withdrawableBalanceAvailable}), Wants: ₹${numericAmount}`);
+            throw new Error(`Insufficient balance: You have ₹${currentTotalAvailable.toFixed(2)} but need ₹${numericAmount.toFixed(2)}`);
+          }
+
+          // Additional safety check - ensure no balance will go negative
+          let gameBalanceDeduction = 0;
+          let withdrawableBalanceDeduction = 0;
+          
+          if (gameBalanceAvailable >= numericAmount) {
+            // Deduct entirely from game balance
+            gameBalanceDeduction = numericAmount;
+            withdrawableBalanceDeduction = 0;
+          } else if (gameBalanceAvailable > 0) {
+            // Deduct what we can from game balance, rest from withdrawable balance
+            gameBalanceDeduction = gameBalanceAvailable;
+            withdrawableBalanceDeduction = numericAmount - gameBalanceAvailable;
+          } else {
+            // Deduct entirely from withdrawable balance
+            gameBalanceDeduction = 0;
+            withdrawableBalanceDeduction = numericAmount;
+          }
+
+          // Final safety check - ensure no negative balances after deduction
+          const finalGameBalance = gameBalanceAvailable - gameBalanceDeduction;
+          const finalWithdrawableBalance = withdrawableBalanceAvailable - withdrawableBalanceDeduction;
+          
+          if (finalGameBalance < 0 || finalWithdrawableBalance < 0) {
+            logger.error(`❌ Deduction would result in negative balance: User ${userId}, Final Game: ₹${finalGameBalance}, Final Withdrawable: ₹${finalWithdrawableBalance}`);
+            throw new Error('Transaction would result in negative balance');
+          }
+
+          // Create transaction record
           const transaction = await tx.transaction.create({
             data: {
               userId,
@@ -537,41 +579,14 @@ class WalletService {
               metadata: {
                 deductionTimestamp: new Date().toISOString(),
                 preventDuplicateKey: `${userId}_${gameId}_${Date.now()}`,
-                deductionAttemptId: deductionKey
+                deductionAttemptId: deductionKey,
+                gameBalanceDeduction: gameBalanceDeduction,
+                withdrawableBalanceDeduction: withdrawableBalanceDeduction
               }
             }
           });
 
-          // Get current wallet state within transaction
-          const currentWallet = await tx.wallet.findUnique({ 
-            where: { userId }
-          });
-          
-          if (!currentWallet) {
-            throw new Error('Wallet not found');
-          }
-
-          const gameBalanceAvailable = parseFloat(currentWallet.gameBalance);
-          const withdrawableBalanceAvailable = parseFloat(currentWallet.withdrawableBalance);
-          const currentTotalAvailable = gameBalanceAvailable + withdrawableBalanceAvailable;
-          
-          // Re-check balance within transaction
-          if (currentTotalAvailable < numericAmount) {
-            throw new Error(`Insufficient balance in transaction: Has ₹${currentTotalAvailable}, Needs ₹${numericAmount}`);
-          }
-          
-          let gameBalanceDeduction = 0;
-          let withdrawableBalanceDeduction = 0;
-          
-          if (gameBalanceAvailable >= numericAmount) {
-            // Deduct entirely from game balance
-            gameBalanceDeduction = numericAmount;
-          } else {
-            // Deduct what we can from game balance, rest from withdrawable balance
-            gameBalanceDeduction = gameBalanceAvailable;
-            withdrawableBalanceDeduction = numericAmount - gameBalanceAvailable;
-          }
-          
+          // Update wallet balances with calculated deductions
           const updatedWallet = await tx.wallet.update({
             where: { userId },
             data: {
@@ -580,6 +595,16 @@ class WalletService {
               withdrawableBalance: { decrement: withdrawableBalanceDeduction }
             }
           });
+
+          // Verify final balances are not negative (additional safety check)
+          const finalBalance = safeNumber(updatedWallet.balance, 0);
+          const finalGameBal = safeNumber(updatedWallet.gameBalance, 0);
+          const finalWithdrawableBal = safeNumber(updatedWallet.withdrawableBalance, 0);
+          
+          if (finalBalance < 0 || finalGameBal < 0 || finalWithdrawableBal < 0) {
+            logger.error(`❌ CRITICAL: Negative balance detected after update: User ${userId}, Balance: ₹${finalBalance}, Game: ₹${finalGameBal}, Withdrawable: ₹${finalWithdrawableBal}`);
+            throw new Error('Critical error: Negative balance detected after transaction');
+          }
 
           return { transaction, wallet: updatedWallet };
         }, {

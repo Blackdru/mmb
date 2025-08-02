@@ -136,7 +136,7 @@ class BotService {
           thinkingTimeMax: 2200,
           mistakeProbability: 0.06,
           adaptivePlay: true,
-          memoryAccuracy: 0.89,
+          memoryAccuracy: 0.85,
           patternRecognition: 0.85,
           humanLikeDelay: true,
           naturalVariation: 0.25

@@ -1030,16 +1030,30 @@ setInterval(() => {
   }
 }, 60000); // Check every minute
 
-// Cleanup intervals
-setInterval(() => {
+// Cleanup intervals with memory monitoring
+const cleanupInterval = setInterval(() => {
   try {
     socketManager.cleanup();
     gameStateManager.cleanup();
-    logger.debug('Cleanup completed');
+    
+    // Force garbage collection if available
+    if (global.gc) {
+      global.gc();
+    }
+    
+    const memUsage = process.memoryUsage();
+    const memUsedMB = Math.round(memUsage.heapUsed / 1024 / 1024);
+    
+    logger.debug(`Cleanup completed - Memory: ${memUsedMB}MB`);
+    
+    // Alert if memory usage is too high
+    if (memUsedMB > 1500) {
+      logger.warn(`High memory usage detected: ${memUsedMB}MB`);
+    }
   } catch (error) {
     logger.error('Cleanup error:', error);
   }
-}, 5 * 60 * 1000); // Every 5 minutes
+}, 3 * 60 * 1000); // Every 3 minutes (more frequent)
 
 // Bot maintenance intervals - More frequent checks
 setInterval(() => {
