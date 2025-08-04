@@ -1,0 +1,439 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String   @id @default(cuid())
+  phoneNumber String   @unique
+  name        String?
+  email       String?  @unique
+  avatar      String?
+  isVerified  Boolean  @default(false)
+  isBot       Boolean  @default(false) @map("is_bot") // Flag to identify bot users
+  botType     String?  @map("bot_type") // Type of bot (strategic_master, casual_player, etc.)
+  
+  // Referral system
+  referralCode String?  @unique @map("referral_code")
+  referredBy   String?  @map("referred_by")
+  referralBonusGiven Boolean @default(false) @map("referral_bonus_given")
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Wallet and transactions
+  wallet      Wallet?
+  transactions Transaction[]
+  walletTransactions WalletTransaction[]
+  withdrawalRequests WithdrawalRequest[]
+
+  // Gaming
+  gameParticipations GameParticipation[]
+  matchmakingQueues  MatchmakingQueue[]
+  
+  // Feedback
+  feedback    Feedback[]
+
+  // Bot statistics (only for bot users)
+  botStatistics      BotStatistics?
+  botGamePerformances BotGamePerformance[] @relation("BotPerformance")
+  opponentGamePerformances BotGamePerformance[] @relation("OpponentPerformance")
+  botAdjustmentHistory BotAdjustmentHistory[]
+  botGameSessions    BotGameSession[]
+
+  @@map("users")
+}
+
+model Wallet {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  balance           Decimal  @default(0) @db.Decimal(10, 2) // Total balance (for backward compatibility)
+  gameBalance       Decimal  @default(0) @db.Decimal(10, 2) @map("game_balance") // For playing games (deposits + referral bonus)
+  withdrawableBalance Decimal @default(0) @db.Decimal(10, 2) @map("withdrawable_balance") // For withdrawals (winnings only)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("wallets")
+}
+
+model Transaction {
+  id          String            @id @default(cuid())
+  userId      String
+  type        TransactionType
+  amount      Decimal           @db.Decimal(10, 2)
+  status      TransactionStatus @default(PENDING)
+  description String?
+  
+  // Payment gateway details
+  razorpayOrderId   String?
+  razorpayPaymentId String?
+  razorpaySignature String?
+  
+  // Game related
+  gameId      String?
+  
+  // Additional metadata for bank details, etc.
+  metadata    Json?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("transactions")
+}
+
+model WalletTransaction {
+  id          String            @id @default(cuid())
+  userId      String            @map("user_id")
+  amount      Decimal           @db.Decimal(10, 2)
+  type        String
+  description String?
+  status      String            @default("COMPLETED")
+  createdAt   DateTime          @default(now()) @map("created_at")
+  updatedAt   DateTime          @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("wallet_transactions")
+}
+
+model WithdrawalRequest {
+  id              String            @id @default(cuid())
+  userId          String            @map("user_id")
+  amount          Decimal           @db.Decimal(10, 2)
+  method          WithdrawalMethod
+  status          WithdrawalStatus  @default(PENDING)
+  
+  // Bank details
+  bankAccountNumber   String?       @map("bank_account_number")
+  bankIfscCode        String?       @map("bank_ifsc_code")
+  bankAccountHolder   String?       @map("bank_account_holder")
+  bankFullName        String?       @map("bank_full_name")
+  
+  // UPI details
+  upiId               String?       @map("upi_id")
+  upiFullName         String?       @map("upi_full_name")
+  
+  // Processing details
+  processedAt         DateTime?     @map("processed_at")
+  processedBy         String?       @map("processed_by")
+  rejectionReason     String?       @map("rejection_reason")
+  transactionId       String?       @map("transaction_id") // Bank/UPI transaction ID
+  
+  // Metadata
+  notes               String?
+  adminNotes          String?       @map("admin_notes")
+  
+  createdAt           DateTime      @default(now()) @map("created_at")
+  updatedAt           DateTime      @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("withdrawal_requests")
+}
+
+model Game {
+  id          String     @id @default(cuid())
+  type        GameType   @default(LUDO)
+  maxPlayers  Int
+  entryFee    Decimal    @db.Decimal(10, 2)
+  prizePool   Decimal    @db.Decimal(10, 2)
+  status      GameStatus @default(WAITING)
+  
+  // Game state
+  currentTurn Int        @default(0)
+  gameData    Json?      // Store game board state
+  winner      String?
+  
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  startedAt   DateTime?
+  finishedAt  DateTime?
+
+  participants GameParticipation[]
+  botGamePerformances BotGamePerformance[]
+  botGameSessions    BotGameSession[]
+
+  @@map("games")
+}
+
+model GameParticipation {
+  id       String @id @default(cuid())
+  userId   String
+  gameId   String
+  position Int    // Player position (0, 1, 2, 3)
+  color    String // red, blue, green, yellow
+  score    Int    @default(0)
+  rank     Int?   // Final ranking when game ends
+  
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  game Game @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, gameId])
+  @@map("game_participations")
+}
+
+model MatchmakingQueue {
+  id         String   @id @default(cuid())
+  userId     String
+  gameType   GameType @default(LUDO)
+  maxPlayers Int
+  entryFee   Decimal  @db.Decimal(10, 2)
+  
+  createdAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("matchmaking_queues")
+}
+
+model OTPVerification {
+  id          String   @id @default(cuid())
+  phoneNumber String
+  otp         String
+  expiresAt   DateTime
+  verified    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  @@map("otp_verifications")
+}
+
+enum TransactionType {
+  DEPOSIT
+  WITHDRAWAL
+  GAME_ENTRY
+  GAME_WINNING
+  REFUND
+  REFERRAL_BONUS
+  REFERRAL_SIGNUP_BONUS
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+enum GameType {
+  LUDO
+  FAST_LUDO
+  CLASSIC_LUDO
+  MEMORY
+  SNAKES_LADDERS
+  // Future games can be added here
+}
+
+enum GameStatus {
+  WAITING
+  PLAYING
+  FINISHED
+  CANCELLED
+}
+
+enum WithdrawalMethod {
+  BANK
+  UPI
+}
+
+enum WithdrawalStatus {
+  PENDING
+  APPROVED
+  PROCESSING
+  COMPLETED
+  REJECTED
+  CANCELLED
+}
+
+model Feedback {
+  id        String        @id @default(cuid())
+  userId    String        @map("user_id")
+  message   String
+  type      FeedbackType  @default(GENERAL)
+  status    FeedbackStatus @default(PENDING)
+  response  String?
+  createdAt DateTime      @default(now()) @map("created_at")
+  updatedAt DateTime      @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("feedback")
+}
+
+enum FeedbackType {
+  GENERAL
+  BUG_REPORT
+  FEATURE_REQUEST
+  COMPLAINT
+  SUGGESTION
+}
+
+enum FeedbackStatus {
+  PENDING
+  REVIEWED
+  RESOLVED
+  CLOSED
+}
+
+// Bot statistics and performance tracking models
+model BotStatistics {
+  id                        String   @id @default(cuid())
+  botId                     String   @unique @map("bot_id")
+  gamesPlayed              Int      @default(0) @map("games_played")
+  gamesWon                 Int      @default(0) @map("games_won")
+  gamesLost                Int      @default(0) @map("games_lost")
+  totalEarnings            Decimal  @default(0) @db.Decimal(10, 2) @map("total_earnings")
+  avgReactionTime          Int      @default(0) @map("avg_reaction_time")
+  memoryAccuracy           Decimal  @default(0.50) @db.Decimal(3, 2) @map("memory_accuracy")
+  lastPerformanceAdjustment Decimal @default(1.00) @db.Decimal(3, 2) @map("last_performance_adjustment")
+  lastGameAt               DateTime? @map("last_game_at")
+  createdAt                DateTime @default(now()) @map("created_at")
+  updatedAt                DateTime @updatedAt @map("updated_at")
+
+  bot User @relation(fields: [botId], references: [id], onDelete: Cascade)
+
+  @@map("bot_statistics")
+}
+
+model BotGamePerformance {
+  id                 String   @id @default(cuid())
+  botId              String   @map("bot_id")
+  gameId             String   @map("game_id")
+  opponentId         String   @map("opponent_id")
+  result             BotGameResult
+  movesMade          Int      @default(0) @map("moves_made")
+  successfulMatches  Int      @default(0) @map("successful_matches")
+  avgMoveTime        Int      @default(0) @map("avg_move_time")
+  memoryUtilization  Decimal  @default(0.00) @db.Decimal(3, 2) @map("memory_utilization")
+  performanceFactor  Decimal  @default(1.00) @db.Decimal(3, 2) @map("performance_factor")
+  behaviorProfile    String?  @map("behavior_profile")
+  createdAt          DateTime @default(now()) @map("created_at")
+
+  bot      User @relation("BotPerformance", fields: [botId], references: [id], onDelete: Cascade)
+  game     Game @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  opponent User @relation("OpponentPerformance", fields: [opponentId], references: [id], onDelete: Cascade)
+
+  @@map("bot_game_performance")
+}
+
+model BotAdjustmentHistory {
+  id               String   @id @default(cuid())
+  botId            String   @map("bot_id")
+  adjustmentFactor Decimal  @db.Decimal(3, 2) @map("adjustment_factor")
+  reason           String?
+  winRateBefore    Decimal? @db.Decimal(3, 2) @map("win_rate_before")
+  winRateTarget    Decimal  @default(0.50) @db.Decimal(3, 2) @map("win_rate_target")
+  gamesAnalyzed    Int      @default(0) @map("games_analyzed")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  bot User @relation(fields: [botId], references: [id], onDelete: Cascade)
+
+  @@map("bot_adjustment_history")
+}
+
+model BotGameSession {
+  id                 String   @id @default(cuid())
+  botId              String   @map("bot_id")
+  gameId             String   @map("game_id")
+  sessionData        Json?    @map("session_data")
+  behaviorProfile    String?  @map("behavior_profile")
+  memoryState        Json?    @map("memory_state")
+  performanceMetrics Json?    @map("performance_metrics")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  bot  User @relation(fields: [botId], references: [id], onDelete: Cascade)
+  game Game @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  @@map("bot_game_sessions")
+}
+
+enum BotGameResult {
+  WIN
+  LOSS
+  DRAW
+}
+
+// Admin model for admin panel access
+model Admin {
+  id          String   @id @default(cuid())
+  username    String   @unique
+  email       String   @unique
+  password    String
+  role        String   @default("admin") // admin, superadmin, etc.
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("admins")
+}
+
+
+// Website-specific models
+model ContactSubmission {
+  id          String    @id @default(cuid())
+  name        String
+  email       String
+  issueType   String    @map("issue_type")
+  description String
+  app         String    @default("budzee")
+  status      String    @default("PENDING")
+  source      String    @default("WEBSITE")
+  response    String?
+  respondedAt DateTime? @map("responded_at")
+  respondedBy String?   @map("responded_by")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  @@map("contact_submissions")
+}
+
+model WebsiteFeedback {
+  id          String    @id @default(cuid())
+  message     String
+  rating      Int
+  category    String
+  app         String    @default("budzee")
+  status      String    @default("PENDING")
+  source      String    @default("WEBSITE")
+  response    String?
+  respondedAt DateTime? @map("responded_at")
+  respondedBy String?   @map("responded_by")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  @@map("website_feedback")
+}
+
+model NewsletterSubscription {
+  id             String    @id @default(cuid())
+  email          String    @unique
+  source         String    @default("WEBSITE")
+  status         String    @default("ACTIVE")
+  unsubscribedAt DateTime? @map("unsubscribed_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  @@map("newsletter_subscriptions")
+}
+
+model DownloadTracking {
+  id        String   @id @default(cuid())
+  source    String   @default("website")
+  userAgent String?  @map("user_agent")
+  ipAddress String?  @map("ip_address")
+  timestamp DateTime @default(now())
+
+  @@map("download_tracking")
+}
