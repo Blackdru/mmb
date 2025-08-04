@@ -179,6 +179,14 @@ class FastMatchmakingService {
     try {
       logger.info('🔄 Processing fast matchmaking...');
       
+      // Check database connection before processing
+      try {
+        await prisma.$queryRaw`SELECT 1`;
+      } catch (dbError) {
+        logger.error('Database connection failed during matchmaking:', dbError.message);
+        return;
+      }
+      
       // Priority 1: Human vs Human matching (0-15 seconds)
       const humanMatches = await this.matchHumansInPriorityWindow();
       if (humanMatches > 0) {
@@ -201,6 +209,17 @@ class FastMatchmakingService {
       
     } catch (error) {
       logger.error('Matchmaking error:', error);
+      // If it's a database connection error, try to reconnect
+      if (error.code === 'P1001' || error.code === 'P2024') {
+        logger.warn('Database connection issue detected, attempting reconnection...');
+        try {
+          await prisma.$disconnect();
+          await prisma.$connect();
+          logger.info('Database reconnection successful');
+        } catch (reconnectError) {
+          logger.error('Database reconnection failed:', reconnectError.message);
+        }
+      }
     } finally {
       this.isProcessingMatchmaking = false;
     }

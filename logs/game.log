@@ -1,0 +1,357 @@
+{"level":"info","message":"Razorpay instance initialized.","service":"budzee-gaming","timestamp":"2025-08-04 21:55:38"}
+{"level":"info","message":"Database configuration loaded","service":"budzee-gaming","timestamp":"2025-08-04 21:55:39"}
+{"level":"info","message":"🚀 Fast matchmaking started - checking every 5000ms","service":"budzee-gaming","timestamp":"2025-08-04 21:55:39"}
+{"level":"info","message":"✅ FastMatchmakingService initialized successfully","service":"budzee-gaming","timestamp":"2025-08-04 21:55:39"}
+{"level":"info","message":"Matchmaking service initialized","service":"budzee-gaming","timestamp":"2025-08-04 21:55:39"}
+{"level":"info","message":"GameStateManager initialized successfully with 7 active games","service":"budzee-gaming","timestamp":"2025-08-04 21:55:40"}
+{"level":"info","message":"Game state manager initialized","service":"budzee-gaming","timestamp":"2025-08-04 21:55:40"}
+{"level":"info","message":"Bot service will initialize on demand","service":"budzee-gaming","timestamp":"2025-08-04 21:55:40"}
+{"level":"info","message":"Advanced bot system initialized with 50% win rate balancing","service":"budzee-gaming","timestamp":"2025-08-04 21:55:40"}
+{"level":"info","message":"Server running on port 8080","service":"budzee-gaming","timestamp":"2025-08-04 21:55:40"}
+{"level":"info","message":"Health check: http://localhost:8080/health","service":"budzee-gaming","timestamp":"2025-08-04 21:55:40"}
+{"level":"info","message":"Environment: production","service":"budzee-gaming","timestamp":"2025-08-04 21:55:40"}
+{"level":"info","message":"Rate limiting enabled for socket events","service":"budzee-gaming","timestamp":"2025-08-04 21:55:40"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-04 21:55:44"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-04 21:55:49"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-04 21:55:54"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-04 21:55:59"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-04 21:56:04"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-04 21:56:09"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-04 21:56:14"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-04 21:56:19"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-04 21:56:24"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-04 21:56:29"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-04 21:56:34"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-04 21:56:39"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-04 21:56:44"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-04 21:56:49"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-04 21:56:54"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-04 21:56:59"}
+{"level":"info","message":"🔐 SOCKET AUTH: Authenticating socket psqbJhLVQX1dT-vGAAAB","service":"budzee-gaming","timestamp":"2025-08-04 21:57:02"}
+{"level":"info","message":"👤 SOCKET AUTH: User authenticated - Ganesh Mudiraj (+919133263911) (ID: cmdu7azrv000cqxui6b1am8oi)","service":"budzee-gaming","timestamp":"2025-08-04 21:57:02"}
+{"level":"info","message":"Socket connected: psqbJhLVQX1dT-vGAAAB for user cmdu7azrv000cqxui6b1am8oi","service":"budzee-gaming","timestamp":"2025-08-04 21:57:02"}
+{"level":"info","message":"User connected: Ganesh Mudiraj (cmdu7azrv000cqxui6b1am8oi)","service":"budzee-gaming","timestamp":"2025-08-04 21:57:02"}
+{"level":"info","message":"📤 Sent connection confirmation to user cmdu7azrv000cqxui6b1am8oi with name: Ganesh Mudiraj","service":"budzee-gaming","timestamp":"2025-08-04 21:57:02"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-04 21:57:04"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-04 21:57:09"}
+{"level":"info","message":"User cmdu7azrv000cqxui6b1am8oi leaving matchmaking queue","service":"budzee-gaming","timestamp":"2025-08-04 21:57:11"}
+{"level":"info","message":"User cmdu7azrv000cqxui6b1am8oi left queue. Removed 0 entries.","service":"budzee-gaming","timestamp":"2025-08-04 21:57:11"}
+{"level":"info","message":"User cmdu7azrv000cqxui6b1am8oi successfully left matchmaking queue","service":"budzee-gaming","timestamp":"2025-08-04 21:57:11"}
+{"entryFee":5,"gameType":"MEMORY","level":"info","maxPlayers":2,"message":"🚀 [MATCHMAKING START] User cmdu7azrv000cqxui6b1am8oi (Ganesh Mudiraj) attempting to join matchmaking:","service":"budzee-gaming","timestamp":"2025-08-04 21:57:11"}
+{"level":"info","message":"✅ [RATE LIMIT] Rate limit check passed for user cmdu7azrv000cqxui6b1am8oi","service":"budzee-gaming","timestamp":"2025-08-04 21:57:11"}
+{"entryFee":5,"gameType":"MEMORY","level":"info","maxPlayers":2,"message":"🎯 [VALIDATION] User cmdu7azrv000cqxui6b1am8oi (Ganesh Mudiraj) data received:","service":"budzee-gaming","timestamp":"2025-08-04 21:57:11"}
+{"level":"info","message":"🔍 [VALIDATION] Starting validation for user cmdu7azrv000cqxui6b1am8oi","service":"budzee-gaming","timestamp":"2025-08-04 21:57:11"}
+{"level":"info","message":"✅ [VALIDATION] Schema validation passed for user cmdu7azrv000cqxui6b1am8oi","service":"budzee-gaming","timestamp":"2025-08-04 21:57:11"}
+{"level":"info","message":"📊 [VALIDATION] Extracted values - gameType: MEMORY, maxPlayers: 2, entryFee: 5","service":"budzee-gaming","timestamp":"2025-08-04 21:57:11"}
+{"level":"info","message":"✅ [VALIDATION] Game type validation passed: MEMORY","service":"budzee-gaming","timestamp":"2025-08-04 21:57:11"}
+{"level":"info","message":"✅ [VALIDATION] Max players validation passed: 2","service":"budzee-gaming","timestamp":"2025-08-04 21:57:11"}
+{"level":"info","message":"✅ [VALIDATION] Entry fee validation passed: ₹5","service":"budzee-gaming","timestamp":"2025-08-04 21:57:11"}
+{"level":"info","message":"✅ [VALIDATION] All validations passed for user cmdu7azrv000cqxui6b1am8oi (Ganesh Mudiraj): MEMORY 2P ₹5","service":"budzee-gaming","timestamp":"2025-08-04 21:57:11"}
+{"level":"info","message":"🔍 [QUEUE CHECK] Checking if user cmdu7azrv000cqxui6b1am8oi is already in queue","service":"budzee-gaming","timestamp":"2025-08-04 21:57:11"}
+{"level":"info","message":"✅ [QUEUE CHECK] User cmdu7azrv000cqxui6b1am8oi not in queue, proceeding with join","service":"budzee-gaming","timestamp":"2025-08-04 21:57:11"}
+{"level":"info","message":"🚀 [MATCHMAKING SERVICE] Calling joinQueue for user cmdu7azrv000cqxui6b1am8oi","service":"budzee-gaming","timestamp":"2025-08-04 21:57:11"}
+{"level":"info","message":"👤 User cmdu7azrv000cqxui6b1am8oi joining queue: MEMORY 2P ₹5","service":"budzee-gaming","timestamp":"2025-08-04 21:57:11"}
+{"level":"info","message":"✅ Game entry deducted: User cmdu7azrv000cqxui6b1am8oi, Amount: 5, Game: queue_cmdu7azrv000cqxui6b1am8oi_1754324832153, TransId: cmdxbpkao0001hszknriamwtx","service":"budzee-gaming","timestamp":"2025-08-04 21:57:13"}
+{"level":"info","message":"✅ Entry fee ₹5 deducted from user cmdu7azrv000cqxui6b1am8oi","service":"budzee-gaming","timestamp":"2025-08-04 21:57:13"}
+{"level":"info","message":"✅ User cmdu7azrv000cqxui6b1am8oi joined queue successfully","service":"budzee-gaming","timestamp":"2025-08-04 21:57:13"}
+{"level":"info","message":"📊 [MATCHMAKING SERVICE] Join result for user cmdu7azrv000cqxui6b1am8oi: Joined matchmaking queue","queueId":"cmdxbpkx00003hszkelktsesb","service":"budzee-gaming","success":true,"timestamp":"2025-08-04 21:57:13"}
+{"level":"info","message":"✅ [SUCCESS] User cmdu7azrv000cqxui6b1am8oi successfully joined queue, sending waiting status","service":"budzee-gaming","timestamp":"2025-08-04 21:57:13"}
+{"level":"info","message":"✅ [COMPLETE] User cmdu7azrv000cqxui6b1am8oi (Ganesh Mudiraj) matchmaking process completed successfully","service":"budzee-gaming","timestamp":"2025-08-04 21:57:13"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-04 21:57:14"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-04 21:57:19"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-04 21:57:24"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-04 21:57:29"}
+{"level":"info","message":"🤖 15s BOT DEPLOYMENT: Found 1 users waiting 15+ seconds","service":"budzee-gaming","timestamp":"2025-08-04 21:57:29"}
+{"level":"info","message":"🤖 STANDARD: Deploying 1 bots","service":"budzee-gaming","timestamp":"2025-08-04 21:57:29"}
+{"level":"info","message":"🤖 Bot Status - Available: 15, Total: 15, Minimum Required: 15","service":"budzee-gaming","timestamp":"2025-08-04 21:57:29"}
+{"level":"info","message":"🤖 Sufficient bots available (15/15)","service":"budzee-gaming","timestamp":"2025-08-04 21:57:29"}
+{"level":"info","message":"🤖 Selected existing bot: Praveen Mehta from 12 available","service":"budzee-gaming","timestamp":"2025-08-04 21:57:30"}
+{"level":"info","message":"✅ Bot Praveen Mehta (cmdxavxjt0004hseck60yxvbr) deployed to queue","service":"budzee-gaming","timestamp":"2025-08-04 21:57:31"}
+{"level":"info","message":"🎮 Creating game: MEMORY 2P ₹5","service":"budzee-gaming","timestamp":"2025-08-04 21:57:31"}
+{"level":"info","message":"Memory game board initialized with 30 cards (15 pairs).","service":"budzee-gaming","timestamp":"2025-08-04 21:57:31"}
+{"level":"info","message":"Game created: cmdxbpynd0006hszktl5woqv4 (MEMORY) with 2 players","service":"budzee-gaming","timestamp":"2025-08-04 21:57:32"}
+{"level":"info","message":"📤 Sent matchFound to user cmdu7azrv000cqxui6b1am8oi (Ganesh Mudiraj) for game cmdxbpynd0006hszktl5woqv4","service":"budzee-gaming","timestamp":"2025-08-04 21:57:32"}
+{"level":"info","message":"🎮 STANDARD: GAME CREATED: cmdxbpynd0006hszktl5woqv4","service":"budzee-gaming","timestamp":"2025-08-04 21:57:32"}
+{"level":"info","message":"🤖 15s BOT MATCH: Created 1 games with bots","service":"budzee-gaming","timestamp":"2025-08-04 21:57:32"}
+{"level":"info","message":"Memory Game: Player Ganesh Mudiraj joined room cmdxbpynd0006hszktl5woqv4","service":"budzee-gaming","timestamp":"2025-08-04 21:57:33"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-04 21:57:34"}
+{"level":"info","message":"Auto-starting game cmdxbpynd0006hszktl5woqv4 of type MEMORY","service":"budzee-gaming","timestamp":"2025-08-04 21:57:36"}
+{"level":"info","message":"Game cmdxbpynd0006hszktl5woqv4: 1 sockets in room, 2 participants expected","service":"budzee-gaming","timestamp":"2025-08-04 21:57:36"}
+{"level":"info","message":"Starting Memory game cmdxbpynd0006hszktl5woqv4 - forcing start regardless of socket connections","service":"budzee-gaming","timestamp":"2025-08-04 21:57:36"}
+{"level":"info","message":"Memory Game: Starting game cmdxbpynd0006hszktl5woqv4","service":"budzee-gaming","timestamp":"2025-08-04 21:57:36"}
+{"level":"info","message":"🤖 Bot player Praveen Mehta (cmdxavxjt0004hseck60yxvbr) detected in game cmdxbpynd0006hszktl5woqv4","service":"budzee-gaming","timestamp":"2025-08-04 21:57:37"}
+{"level":"info","message":"🎮 Emitting MEMORY_GAME_STARTED for game cmdxbpynd0006hszktl5woqv4","service":"budzee-gaming","timestamp":"2025-08-04 21:57:37"}
+{"level":"info","message":"🎮 Game board has 30 cards","service":"budzee-gaming","timestamp":"2025-08-04 21:57:37"}
+{"level":"info","message":"🎮 Players: [{\"id\":\"cmdu7azrv000cqxui6b1am8oi\",\"name\":\"Ganesh Mudiraj\"},{\"id\":\"cmdxavxjt0004hseck60yxvbr\",\"name\":\"Praveen Mehta\"}]","service":"budzee-gaming","timestamp":"2025-08-04 21:57:37"}
+{"level":"info","message":"🎮 MEMORY_GAME_STARTED emitted successfully","service":"budzee-gaming","timestamp":"2025-08-04 21:57:37"}
+{"level":"info","message":"🎮 Emitting MEMORY_GAME_CURRENT_TURN for game cmdxbpynd0006hszktl5woqv4","service":"budzee-gaming","timestamp":"2025-08-04 21:57:37"}
+{"level":"info","message":"🎮 MEMORY_GAME_CURRENT_TURN emitted successfully","service":"budzee-gaming","timestamp":"2025-08-04 21:57:37"}
+{"level":"info","message":"🎮 Checking if first player Ganesh Mudiraj (cmdu7azrv000cqxui6b1am8oi) is a bot for game cmdxbpynd0006hszktl5woqv4","service":"budzee-gaming","timestamp":"2025-08-04 21:57:37"}
+{"level":"info","message":"Memory Game: Game cmdxbpynd0006hszktl5woqv4 started successfully with 2 players","service":"budzee-gaming","timestamp":"2025-08-04 21:57:37"}
+{"level":"info","message":"✅ Successfully force-started game cmdxbpynd0006hszktl5woqv4","service":"budzee-gaming","timestamp":"2025-08-04 21:57:37"}
+{"level":"info","message":"Memory Game: Player Ganesh Mudiraj joined room cmdxbpynd0006hszktl5woqv4","service":"budzee-gaming","timestamp":"2025-08-04 21:57:38"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-04 21:57:39"}
+{"level":"info","message":"Cleaned up 0 inactive bots","service":"budzee-gaming","timestamp":"2025-08-04 21:57:39"}
+{"level":"info","message":"🤖 Bot Status - Available: 13, Total: 15, Minimum Required: 10","service":"budzee-gaming","timestamp":"2025-08-04 21:57:39"}
+{"level":"info","message":"🤖 Sufficient bots available (13/10)","service":"budzee-gaming","timestamp":"2025-08-04 21:57:39"}
+{"level":"warn","message":"No memory found for bot cmdxavxjt0004hseck60yxvbr in game cmdxbpynd0006hszktl5woqv4 - creating new memory","service":"budzee-gaming","timestamp":"2025-08-04 21:57:44"}
+{"level":"info","message":"🧠 Initialized enhanced bot memory for cmdxavxjt0004hseck60yxvbr - Mistakes allowed: 5 (Early: 2, Middle: 2, Late: 1)","service":"budzee-gaming","timestamp":"2025-08-04 21:57:44"}
+{"level":"info","message":"🧠 Bot cmdxavxjt0004hseck60yxvbr learned from other player: Position 13 = 🧨","service":"budzee-gaming","timestamp":"2025-08-04 21:57:44"}
+{"level":"info","message":"🧠 Bot cmdxavxjt0004hseck60yxvbr memory now contains 1 known cards","service":"budzee-gaming","timestamp":"2025-08-04 21:57:44"}
+{"level":"info","message":"🧠 Memory contents: [13:🧨]","service":"budzee-gaming","timestamp":"2025-08-04 21:57:44"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-04 21:57:44"}
+{"level":"info","message":"🧠 Bot cmdxavxjt0004hseck60yxvbr learned from other player: Position 16 = 🎧","service":"budzee-gaming","timestamp":"2025-08-04 21:57:47"}
+{"level":"info","message":"🧠 Bot cmdxavxjt0004hseck60yxvbr memory now contains 2 known cards","service":"budzee-gaming","timestamp":"2025-08-04 21:57:47"}
+{"level":"info","message":"🧠 Memory contents: [13:🧨, 16:🎧]","service":"budzee-gaming","timestamp":"2025-08-04 21:57:47"}
+{"level":"info","message":"🧠 Bot cmdxavxjt0004hseck60yxvbr memory now contains 2 known cards","service":"budzee-gaming","timestamp":"2025-08-04 21:57:47"}
+{"level":"info","message":"🧠 Memory contents: [13:🧨, 16:🎧]","service":"budzee-gaming","timestamp":"2025-08-04 21:57:47"}
+{"level":"info","message":"🤖 Bot turn for Praveen Mehta in game cmdxbpynd0006hszktl5woqv4","service":"budzee-gaming","timestamp":"2025-08-04 21:57:47"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-04 21:57:49"}
+{"level":"info","message":"🤖 Starting natural bot turn for cmdxavxjt0004hseck60yxvbr in game cmdxbpynd0006hszktl5woqv4","service":"budzee-gaming","timestamp":"2025-08-04 21:57:50"}
+{"level":"info","message":"🤖 Bot randomly flipping first card at position 9","service":"budzee-gaming","timestamp":"2025-08-04 21:57:51"}
+{"level":"info","message":"🤖 Bot cmdxavxjt0004hseck60yxvbr selected card at position 9 (🎸) in game cmdxbpynd0006hszktl5woqv4","service":"budzee-gaming","timestamp":"2025-08-04 21:57:51"}
+{"level":"info","message":"🧠 Bot cmdxavxjt0004hseck60yxvbr learned from other player: Position 9 = 🎸","service":"budzee-gaming","timestamp":"2025-08-04 21:57:52"}
+{"level":"info","message":"🧠 Bot cmdxavxjt0004hseck60yxvbr memory now contains 3 known cards","service":"budzee-gaming","timestamp":"2025-08-04 21:57:52"}
+{"level":"info","message":"🧠 Memory contents: [13:🧨, 16:🎧, 9:🎸]","service":"budzee-gaming","timestamp":"2025-08-04 21:57:52"}
+{"level":"info","message":"🧠 First card revealed: 🎸","service":"budzee-gaming","timestamp":"2025-08-04 21:57:52"}
+{"level":"info","message":"🤖 Bot flipping second random card at position 19","service":"budzee-gaming","timestamp":"2025-08-04 21:57:52"}
+{"level":"info","message":"🤖 Bot cmdxavxjt0004hseck60yxvbr selected card at position 19 (🧬) in game cmdxbpynd0006hszktl5woqv4","service":"budzee-gaming","timestamp":"2025-08-04 21:57:52"}
+{"level":"info","message":"🧠 Bot will learn second card symbol when it's revealed by the game system","service":"budzee-gaming","timestamp":"2025-08-04 21:57:52"}
+{"level":"info","message":"🤖 Completed natural bot turn for cmdxavxjt0004hseck60yxvbr in game cmdxbpynd0006hszktl5woqv4","service":"budzee-gaming","timestamp":"2025-08-04 21:57:52"}
+{"level":"info","message":"🧠 Bot cmdxavxjt0004hseck60yxvbr learned from other player: Position 19 = 🧬","service":"budzee-gaming","timestamp":"2025-08-04 21:57:53"}
+{"level":"info","message":"🧠 Bot cmdxavxjt0004hseck60yxvbr memory now contains 4 known cards","service":"budzee-gaming","timestamp":"2025-08-04 21:57:53"}
+{"level":"info","message":"🧠 Memory contents: [13:🧨, 16:🎧, 9:🎸, 19:🧬]","service":"budzee-gaming","timestamp":"2025-08-04 21:57:53"}
+{"level":"info","message":"🧠 Bot cmdxavxjt0004hseck60yxvbr memory now contains 4 known cards","service":"budzee-gaming","timestamp":"2025-08-04 21:57:53"}
+{"level":"info","message":"🧠 Memory contents: [13:🧨, 16:🎧, 9:🎸, 19:🧬]","service":"budzee-gaming","timestamp":"2025-08-04 21:57:53"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-04 21:57:54"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-04 21:57:59"}
+{"level":"info","message":"User cmdu7azrv000cqxui6b1am8oi leaving matchmaking queue","service":"budzee-gaming","timestamp":"2025-08-04 21:58:03"}
+{"level":"info","message":"User cmdu7azrv000cqxui6b1am8oi left queue. Removed 0 entries.","service":"budzee-gaming","timestamp":"2025-08-04 21:58:03"}
+{"level":"info","message":"User cmdu7azrv000cqxui6b1am8oi successfully left matchmaking queue","service":"budzee-gaming","timestamp":"2025-08-04 21:58:03"}
+{"level":"info","message":"Processing winnings for opponent_quit: cmdxbpynd0006hszktl5woqv4, winner: cmdxavxjt0004hseck60yxvbr","service":"budzee-gaming","timestamp":"2025-08-04 21:58:03"}
+{"level":"info","message":"Wallet credited: User cmdxavxjt0004hseck60yxvbr, Amount: 8, Type: GAME_WINNING, TransId: cmdxbqnn1000ahszkp8vg3tm4","service":"budzee-gaming","timestamp":"2025-08-04 21:58:04"}
+{"level":"info","message":"Successfully credited ₹8 to winner cmdxavxjt0004hseck60yxvbr for game cmdxbpynd0006hszktl5woqv4","service":"budzee-gaming","timestamp":"2025-08-04 21:58:04"}
+{"amount":"8","level":"info","message":"Winnings processing result for game cmdxbpynd0006hszktl5woqv4:","reason":"winner_credited","service":"budzee-gaming","success":true,"timestamp":"2025-08-04 21:58:04"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-04 21:58:04"}
+{"level":"info","message":"🤖 Bot cmdxavxjt0004hseck60yxvbr (Tactical Expert) performance: 1/1 (100.0%)","service":"budzee-gaming","timestamp":"2025-08-04 21:58:04"}
+{"level":"info","message":"🤖 New bot performance tracking completed for game cmdxbpynd0006hszktl5woqv4","service":"budzee-gaming","timestamp":"2025-08-04 21:58:04"}
+{"level":"info","message":"Memory Game: Game cmdxbpynd0006hszktl5woqv4 ended with reason: opponent_quit. Winner: cmdxavxjt0004hseck60yxvbr with score: 0","service":"budzee-gaming","timestamp":"2025-08-04 21:58:04"}
+{"level":"info","message":"Memory Game: Game cmdxbpynd0006hszktl5woqv4 ended due to player left. Winner: cmdxavxjt0004hseck60yxvbr","service":"budzee-gaming","timestamp":"2025-08-04 21:58:04"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-04 21:58:09"}
+{"clientVersion":"6.13.0","code":"P2024","level":"error","message":"Error in human priority matching: \n\u001b[31mInvalid \u001b[1m`prisma.matchmakingQueue.groupBy()`\u001b[22m invocation:\u001b[39m\n\n\nTimed out fetching a new connection from the connection pool. More info: http://pris.ly/d/connection-pool (Current connection pool timeout: 10, connection limit: 17)","meta":{"connection_limit":17,"modelName":"MatchmakingQueue","timeout":10},"name":"PrismaClientKnownRequestError","service":"budzee-gaming","stack":"PrismaClientKnownRequestError: \n\u001b[31mInvalid \u001b[1m`prisma.matchmakingQueue.groupBy()`\u001b[22m invocation:\u001b[39m\n\n\nTimed out fetching a new connection from the connection pool. More info: http://pris.ly/d/connection-pool (Current connection pool timeout: 10, connection limit: 17)\n    at ri.handleRequestError (C:\\Users\\HOME\\Desktop\\test\\mmb\\node_modules\\@prisma\\client\\runtime\\library.js:121:7459)\n    at ri.handleAndLogRequestError (C:\\Users\\HOME\\Desktop\\test\\mmb\\node_modules\\@prisma\\client\\runtime\\library.js:121:6784)\n    at ri.request (C:\\Users\\HOME\\Desktop\\test\\mmb\\node_modules\\@prisma\\client\\runtime\\library.js:121:6491)\n    at async l (C:\\Users\\HOME\\Desktop\\test\\mmb\\node_modules\\@prisma\\client\\runtime\\library.js:130:9812)\n    at async FastMatchmakingService.getRealUserGroups (C:\\Users\\HOME\\Desktop\\test\\mmb\\src\\services\\FastMatchmaking.js:456:12)\n    at async FastMatchmakingService.matchHumansInPriorityWindow (C:\\Users\\HOME\\Desktop\\test\\mmb\\src\\services\\FastMatchmaking.js:214:30)\n    at async FastMatchmakingService.processMatchmaking (C:\\Users\\HOME\\Desktop\\test\\mmb\\src\\services\\FastMatchmaking.js:183:28)","timestamp":"2025-08-04 21:58:19"}
+{"level":"info","message":"User cmdu7azrv000cqxui6b1am8oi leaving matchmaking queue","service":"budzee-gaming","timestamp":"2025-08-04 21:58:23"}
+{"clientVersion":"6.13.0","code":"P2024","level":"error","message":"Error in 15s bot deployment: \n\u001b[31mInvalid \u001b[1m`prisma.matchmakingQueue.findMany()`\u001b[22m invocation:\u001b[39m\n\n\nTimed out fetching a new connection from the connection pool. More info: http://pris.ly/d/connection-pool (Current connection pool timeout: 10, connection limit: 17)","meta":{"connection_limit":17,"modelName":"MatchmakingQueue","timeout":10},"name":"PrismaClientKnownRequestError","service":"budzee-gaming","stack":"PrismaClientKnownRequestError: \n\u001b[31mInvalid \u001b[1m`prisma.matchmakingQueue.findMany()`\u001b[22m invocation:\u001b[39m\n\n\nTimed out fetching a new connection from the connection pool. More info: http://pris.ly/d/connection-pool (Current connection pool timeout: 10, connection limit: 17)\n    at ri.handleRequestError (C:\\Users\\HOME\\Desktop\\test\\mmb\\node_modules\\@prisma\\client\\runtime\\library.js:121:7459)\n    at ri.handleAndLogRequestError (C:\\Users\\HOME\\Desktop\\test\\mmb\\node_modules\\@prisma\\client\\runtime\\library.js:121:6784)\n    at ri.request (C:\\Users\\HOME\\Desktop\\test\\mmb\\node_modules\\@prisma\\client\\runtime\\library.js:121:6491)\n    at async l (C:\\Users\\HOME\\Desktop\\test\\mmb\\node_modules\\@prisma\\client\\runtime\\library.js:130:9812)\n    at async FastMatchmakingService.getUsersWaitingForTime (C:\\Users\\HOME\\Desktop\\test\\mmb\\src\\services\\FastMatchmaking.js:486:12)\n    at async FastMatchmakingService.deployBotsAfter15Seconds (C:\\Users\\HOME\\Desktop\\test\\mmb\\src\\services\\FastMatchmaking.js:241:28)\n    at async FastMatchmakingService.processMatchmaking (C:\\Users\\HOME\\Desktop\\test\\mmb\\src\\services\\FastMatchmaking.js:190:26)","timestamp":"2025-08-04 21:58:29"}
+{"clientVersion":"6.13.0","code":"P1001","level":"error","message":"🚨 GUARANTEED: Critical error in 30s bot deployment: \n\u001b[31mInvalid \u001b[1m`prisma.matchmakingQueue.findMany()`\u001b[22m invocation:\u001b[39m\n\n\nCan't reach database server at `ep-green-shape-a18kuokp-pooler.ap-southeast-1.aws.neon.tech:5432`\n\nPlease make sure your database server is running at `ep-green-shape-a18kuokp-pooler.ap-southeast-1.aws.neon.tech:5432`.","meta":{"database_location":"ep-green-shape-a18kuokp-pooler.ap-southeast-1.aws.neon.tech:5432","modelName":"MatchmakingQueue"},"name":"PrismaClientKnownRequestError","service":"budzee-gaming","stack":"PrismaClientKnownRequestError: \n\u001b[31mInvalid \u001b[1m`prisma.matchmakingQueue.findMany()`\u001b[22m invocation:\u001b[39m\n\n\nCan't reach database server at `ep-green-shape-a18kuokp-pooler.ap-southeast-1.aws.neon.tech:5432`\n\nPlease make sure your database server is running at `ep-green-shape-a18kuokp-pooler.ap-southeast-1.aws.neon.tech:5432`.\n    at ri.handleRequestError (C:\\Users\\HOME\\Desktop\\test\\mmb\\node_modules\\@prisma\\client\\runtime\\library.js:121:7459)\n    at ri.handleAndLogRequestError (C:\\Users\\HOME\\Desktop\\test\\mmb\\node_modules\\@prisma\\client\\runtime\\library.js:121:6784)\n    at ri.request (C:\\Users\\HOME\\Desktop\\test\\mmb\\node_modules\\@prisma\\client\\runtime\\library.js:121:6491)\n    at async l (C:\\Users\\HOME\\Desktop\\test\\mmb\\node_modules\\@prisma\\client\\runtime\\library.js:130:9812)\n    at async FastMatchmakingService.getUsersWaitingForTime (C:\\Users\\HOME\\Desktop\\test\\mmb\\src\\services\\FastMatchmaking.js:486:12)\n    at async FastMatchmakingService.guaranteedBotDeployment (C:\\Users\\HOME\\Desktop\\test\\mmb\\src\\services\\FastMatchmaking.js:267:28)\n    at async FastMatchmakingService.processMatchmaking (C:\\Users\\HOME\\Desktop\\test\\mmb\\src\\services\\FastMatchmaking.js:197:33)","timestamp":"2025-08-04 21:58:29"}
+{"clientVersion":"6.13.0","code":"P2024","level":"error","message":"Leave queue error for user cmdu7azrv000cqxui6b1am8oi: \n\u001b[31mInvalid \u001b[1m`prisma.matchmakingQueue.findMany()`\u001b[22m invocation:\u001b[39m\n\n\nTimed out fetching a new connection from the connection pool. More info: http://pris.ly/d/connection-pool (Current connection pool timeout: 10, connection limit: 17)","meta":{"connection_limit":17,"modelName":"MatchmakingQueue","timeout":10},"name":"PrismaClientKnownRequestError","service":"budzee-gaming","stack":"PrismaClientKnownRequestError: \n\u001b[31mInvalid \u001b[1m`prisma.matchmakingQueue.findMany()`\u001b[22m invocation:\u001b[39m\n\n\nTimed out fetching a new connection from the connection pool. More info: http://pris.ly/d/connection-pool (Current connection pool timeout: 10, connection limit: 17)\n    at ri.handleRequestError (C:\\Users\\HOME\\Desktop\\test\\mmb\\node_modules\\@prisma\\client\\runtime\\library.js:121:7459)\n    at ri.handleAndLogRequestError (C:\\Users\\HOME\\Desktop\\test\\mmb\\node_modules\\@prisma\\client\\runtime\\library.js:121:6784)\n    at ri.request (C:\\Users\\HOME\\Desktop\\test\\mmb\\node_modules\\@prisma\\client\\runtime\\library.js:121:6491)\n    at async l (C:\\Users\\HOME\\Desktop\\test\\mmb\\node_modules\\@prisma\\client\\runtime\\library.js:130:9812)\n    at async FastMatchmakingService.leaveQueue (C:\\Users\\HOME\\Desktop\\test\\mmb\\src\\services\\FastMatchmaking.js:145:28)\n    at async Socket.<anonymous> (C:\\Users\\HOME\\Desktop\\test\\mmb\\server.js:232:7)","timestamp":"2025-08-04 21:58:33"}
+{"clientVersion":"6.13.0","code":"P2024","level":"error","message":"Leave matchmaking error for user cmdu7azrv000cqxui6b1am8oi: \n\u001b[31mInvalid \u001b[1m`prisma.matchmakingQueue.findMany()`\u001b[22m invocation:\u001b[39m\n\n\nTimed out fetching a new connection from the connection pool. More info: http://pris.ly/d/connection-pool (Current connection pool timeout: 10, connection limit: 17)","meta":{"connection_limit":17,"modelName":"MatchmakingQueue","timeout":10},"name":"PrismaClientKnownRequestError","service":"budzee-gaming","stack":"PrismaClientKnownRequestError: \n\u001b[31mInvalid \u001b[1m`prisma.matchmakingQueue.findMany()`\u001b[22m invocation:\u001b[39m\n\n\nTimed out fetching a new connection from the connection pool. More info: http://pris.ly/d/connection-pool (Current connection pool timeout: 10, connection limit: 17)\n    at ri.handleRequestError (C:\\Users\\HOME\\Desktop\\test\\mmb\\node_modules\\@prisma\\client\\runtime\\library.js:121:7459)\n    at ri.handleAndLogRequestError (C:\\Users\\HOME\\Desktop\\test\\mmb\\node_modules\\@prisma\\client\\runtime\\library.js:121:6784)\n    at ri.request (C:\\Users\\HOME\\Desktop\\test\\mmb\\node_modules\\@prisma\\client\\runtime\\library.js:121:6491)\n    at async l (C:\\Users\\HOME\\Desktop\\test\\mmb\\node_modules\\@prisma\\client\\runtime\\library.js:130:9812)\n    at async FastMatchmakingService.leaveQueue (C:\\Users\\HOME\\Desktop\\test\\mmb\\src\\services\\FastMatchmaking.js:145:28)\n    at async Socket.<anonymous> (C:\\Users\\HOME\\Desktop\\test\\mmb\\server.js:232:7)","timestamp":"2025-08-04 21:58:33"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-04 21:58:34"}
+{"clientVersion":"6.13.0","code":"P1001","level":"error","message":"Error in human priority matching: \n\u001b[31mInvalid \u001b[1m`prisma.matchmakingQueue.groupBy()`\u001b[22m invocation:\u001b[39m\n\n\nCan't reach database server at `ep-green-shape-a18kuokp-pooler.ap-southeast-1.aws.neon.tech:5432`\n\nPlease make sure your database server is running at `ep-green-shape-a18kuokp-pooler.ap-southeast-1.aws.neon.tech:5432`.","meta":{"database_location":"ep-green-shape-a18kuokp-pooler.ap-southeast-1.aws.neon.tech:5432","modelName":"MatchmakingQueue"},"name":"PrismaClientKnownRequestError","service":"budzee-gaming","stack":"PrismaClientKnownRequestError: \n\u001b[31mInvalid \u001b[1m`prisma.matchmakingQueue.groupBy()`\u001b[22m invocation:\u001b[39m\n\n\nCan't reach database server at `ep-green-shape-a18kuokp-pooler.ap-southeast-1.aws.neon.tech:5432`\n\nPlease make sure your database server is running at `ep-green-shape-a18kuokp-pooler.ap-southeast-1.aws.neon.tech:5432`.\n    at ri.handleRequestError (C:\\Users\\HOME\\Desktop\\test\\mmb\\node_modules\\@prisma\\client\\runtime\\library.js:121:7459)\n    at ri.handleAndLogRequestError (C:\\Users\\HOME\\Desktop\\test\\mmb\\node_modules\\@prisma\\client\\runtime\\library.js:121:6784)\n    at ri.request (C:\\Users\\HOME\\Desktop\\test\\mmb\\node_modules\\@prisma\\client\\runtime\\library.js:121:6491)\n    at async l (C:\\Users\\HOME\\Desktop\\test\\mmb\\node_modules\\@prisma\\client\\runtime\\library.js:130:9812)\n    at async FastMatchmakingService.getRealUserGroups (C:\\Users\\HOME\\Desktop\\test\\mmb\\src\\services\\FastMatchmaking.js:456:12)\n    at async FastMatchmakingService.matchHumansInPriorityWindow (C:\\Users\\HOME\\Desktop\\test\\mmb\\src\\services\\FastMatchmaking.js:214:30)\n    at async FastMatchmakingService.processMatchmaking (C:\\Users\\HOME\\Desktop\\test\\mmb\\src\\services\\FastMatchmaking.js:183:28)","timestamp":"2025-08-04 21:58:34"}
+{"clientVersion":"6.13.0","code":"P1001","level":"error","message":"Error in 15s bot deployment: \n\u001b[31mInvalid \u001b[1m`prisma.matchmakingQueue.findMany()`\u001b[22m invocation:\u001b[39m\n\n\nCan't reach database server at `ep-green-shape-a18kuokp-pooler.ap-southeast-1.aws.neon.tech:5432`\n\nPlease make sure your database server is running at `ep-green-shape-a18kuokp-pooler.ap-southeast-1.aws.neon.tech:5432`.","meta":{"database_location":"ep-green-shape-a18kuokp-pooler.ap-southeast-1.aws.neon.tech:5432","modelName":"MatchmakingQueue"},"name":"PrismaClientKnownRequestError","service":"budzee-gaming","stack":"PrismaClientKnownRequestError: \n\u001b[31mInvalid \u001b[1m`prisma.matchmakingQueue.findMany()`\u001b[22m invocation:\u001b[39m\n\n\nCan't reach database server at `ep-green-shape-a18kuokp-pooler.ap-southeast-1.aws.neon.tech:5432`\n\nPlease make sure your database server is running at `ep-green-shape-a18kuokp-pooler.ap-southeast-1.aws.neon.tech:5432`.\n    at ri.handleRequestError (C:\\Users\\HOME\\Desktop\\test\\mmb\\node_modules\\@prisma\\client\\runtime\\library.js:121:7459)\n    at ri.handleAndLogRequestError (C:\\Users\\HOME\\Desktop\\test\\mmb\\node_modules\\@prisma\\client\\runtime\\library.js:121:6784)\n    at ri.request (C:\\Users\\HOME\\Desktop\\test\\mmb\\node_modules\\@prisma\\client\\runtime\\library.js:121:6491)\n    at async l (C:\\Users\\HOME\\Desktop\\test\\mmb\\node_modules\\@prisma\\client\\runtime\\library.js:130:9812)\n    at async FastMatchmakingService.getUsersWaitingForTime (C:\\Users\\HOME\\Desktop\\test\\mmb\\src\\services\\FastMatchmaking.js:486:12)\n    at async FastMatchmakingService.deployBotsAfter15Seconds (C:\\Users\\HOME\\Desktop\\test\\mmb\\src\\services\\FastMatchmaking.js:241:28)\n    at async FastMatchmakingService.processMatchmaking (C:\\Users\\HOME\\Desktop\\test\\mmb\\src\\services\\FastMatchmaking.js:190:26)","timestamp":"2025-08-04 21:58:34"}
+{"clientVersion":"6.13.0","code":"P1001","level":"error","message":"🚨 GUARANTEED: Critical error in 30s bot deployment: \n\u001b[31mInvalid \u001b[1m`prisma.matchmakingQueue.findMany()`\u001b[22m invocation:\u001b[39m\n\n\nCan't reach database server at `ep-green-shape-a18kuokp-pooler.ap-southeast-1.aws.neon.tech:5432`\n\nPlease make sure your database server is running at `ep-green-shape-a18kuokp-pooler.ap-southeast-1.aws.neon.tech:5432`.","meta":{"database_location":"ep-green-shape-a18kuokp-pooler.ap-southeast-1.aws.neon.tech:5432","modelName":"MatchmakingQueue"},"name":"PrismaClientKnownRequestError","service":"budzee-gaming","stack":"PrismaClientKnownRequestError: \n\u001b[31mInvalid \u001b[1m`prisma.matchmakingQueue.findMany()`\u001b[22m invocation:\u001b[39m\n\n\nCan't reach database server at `ep-green-shape-a18kuokp-pooler.ap-southeast-1.aws.neon.tech:5432`\n\nPlease make sure your database server is running at `ep-green-shape-a18kuokp-pooler.ap-southeast-1.aws.neon.tech:5432`.\n    at ri.handleRequestError (C:\\Users\\HOME\\Desktop\\test\\mmb\\node_modules\\@prisma\\client\\runtime\\library.js:121:7459)\n    at ri.handleAndLogRequestError (C:\\Users\\HOME\\Desktop\\test\\mmb\\node_modules\\@prisma\\client\\runtime\\library.js:121:6784)\n    at ri.request (C:\\Users\\HOME\\Desktop\\test\\mmb\\node_modules\\@prisma\\client\\runtime\\library.js:121:6491)\n    at async l (C:\\Users\\HOME\\Desktop\\test\\mmb\\node_modules\\@prisma\\client\\runtime\\library.js:130:9812)\n    at async FastMatchmakingService.getUsersWaitingForTime (C:\\Users\\HOME\\Desktop\\test\\mmb\\src\\services\\FastMatchmaking.js:486:12)\n    at async FastMatchmakingService.guaranteedBotDeployment (C:\\Users\\HOME\\Desktop\\test\\mmb\\src\\services\\FastMatchmaking.js:267:28)\n    at async FastMatchmakingService.processMatchmaking (C:\\Users\\HOME\\Desktop\\test\\mmb\\src\\services\\FastMatchmaking.js:197:33)","timestamp":"2025-08-04 21:58:34"}
+{"level":"info","message":"Received SIGINT. Shutting down gracefully...","service":"budzee-gaming","timestamp":"2025-08-04 21:58:38"}
+{"level":"info","message":"Razorpay instance initialized.","service":"budzee-gaming","timestamp":"2025-08-04 22:03:55"}
+{"level":"info","message":"Database configuration loaded","service":"budzee-gaming","timestamp":"2025-08-04 22:03:55"}
+{"level":"info","message":"🚀 Fast matchmaking started - checking every 5000ms","service":"budzee-gaming","timestamp":"2025-08-04 22:03:55"}
+{"level":"info","message":"✅ FastMatchmakingService initialized successfully","service":"budzee-gaming","timestamp":"2025-08-04 22:03:55"}
+{"level":"info","message":"Matchmaking service initialized","service":"budzee-gaming","timestamp":"2025-08-04 22:03:55"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-04 22:04:00"}
+{"level":"info","message":"GameStateManager initialized successfully with 7 active games","service":"budzee-gaming","timestamp":"2025-08-04 22:04:02"}
+{"level":"info","message":"Game state manager initialized","service":"budzee-gaming","timestamp":"2025-08-04 22:04:02"}
+{"level":"info","message":"Bot service will initialize on demand","service":"budzee-gaming","timestamp":"2025-08-04 22:04:02"}
+{"level":"info","message":"Advanced bot system initialized with 50% win rate balancing","service":"budzee-gaming","timestamp":"2025-08-04 22:04:02"}
+{"level":"info","message":"Server running on port 8080","service":"budzee-gaming","timestamp":"2025-08-04 22:04:02"}
+{"level":"info","message":"Health check: http://localhost:8080/health","service":"budzee-gaming","timestamp":"2025-08-04 22:04:02"}
+{"level":"info","message":"Environment: production","service":"budzee-gaming","timestamp":"2025-08-04 22:04:02"}
+{"level":"info","message":"Rate limiting enabled for socket events","service":"budzee-gaming","timestamp":"2025-08-04 22:04:02"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-04 22:04:10"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-04 22:04:15"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-04 22:04:20"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-04 22:04:25"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-04 22:04:30"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-04 22:04:35"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-04 22:04:40"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-04 22:04:45"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-04 22:04:50"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-04 22:04:55"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-04 22:05:00"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-04 22:05:05"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-04 22:05:10"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-04 22:05:15"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-04 22:05:20"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-04 22:05:25"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-04 22:05:30"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-04 22:05:35"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-04 22:05:40"}
+{"level":"info","message":"Razorpay instance initialized.","service":"budzee-gaming","timestamp":"2025-08-04 22:05:42"}
+{"level":"info","message":"Database configuration loaded","service":"budzee-gaming","timestamp":"2025-08-04 22:05:43"}
+{"level":"info","message":"🚀 Fast matchmaking started - checking every 5000ms","service":"budzee-gaming","timestamp":"2025-08-04 22:05:43"}
+{"level":"info","message":"✅ FastMatchmakingService initialized successfully","service":"budzee-gaming","timestamp":"2025-08-04 22:05:43"}
+{"level":"info","message":"Matchmaking service initialized","service":"budzee-gaming","timestamp":"2025-08-04 22:05:43"}
+{"level":"info","message":"GameStateManager initialized successfully with 6 active games","service":"budzee-gaming","timestamp":"2025-08-04 22:05:45"}
+{"level":"info","message":"Game state manager initialized","service":"budzee-gaming","timestamp":"2025-08-04 22:05:45"}
+{"level":"info","message":"Bot service will initialize on demand","service":"budzee-gaming","timestamp":"2025-08-04 22:05:45"}
+{"level":"info","message":"Advanced bot system initialized with 50% win rate balancing","service":"budzee-gaming","timestamp":"2025-08-04 22:05:45"}
+{"level":"info","message":"Server running on port 8080","service":"budzee-gaming","timestamp":"2025-08-04 22:05:45"}
+{"level":"info","message":"Health check: http://localhost:8080/health","service":"budzee-gaming","timestamp":"2025-08-04 22:05:45"}
+{"level":"info","message":"Environment: production","service":"budzee-gaming","timestamp":"2025-08-04 22:05:45"}
+{"level":"info","message":"Rate limiting enabled for socket events","service":"budzee-gaming","timestamp":"2025-08-04 22:05:45"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-04 22:05:48"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-04 22:05:53"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-04 22:05:58"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-04 22:06:03"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-04 22:06:08"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-04 22:06:13"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-04 22:06:18"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-04 22:06:23"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-04 22:06:28"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-04 22:06:33"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-04 22:06:38"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-04 22:06:43"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-04 22:06:48"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-04 22:06:53"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-04 22:06:58"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-04 22:07:03"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-04 22:07:08"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-04 22:07:13"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-04 22:07:18"}
+{"level":"info","message":"Razorpay instance initialized.","service":"budzee-gaming","timestamp":"2025-08-04 22:07:23"}
+{"level":"info","message":"Database configuration loaded","service":"budzee-gaming","timestamp":"2025-08-04 22:07:23"}
+{"level":"info","message":"🚀 Fast matchmaking started - checking every 5000ms","service":"budzee-gaming","timestamp":"2025-08-04 22:07:23"}
+{"level":"info","message":"✅ FastMatchmakingService initialized successfully","service":"budzee-gaming","timestamp":"2025-08-04 22:07:23"}
+{"level":"info","message":"Matchmaking service initialized","service":"budzee-gaming","timestamp":"2025-08-04 22:07:23"}
+{"level":"info","message":"GameStateManager initialized successfully with 6 active games","service":"budzee-gaming","timestamp":"2025-08-04 22:07:24"}
+{"level":"info","message":"Game state manager initialized","service":"budzee-gaming","timestamp":"2025-08-04 22:07:24"}
+{"level":"info","message":"Bot service will initialize on demand","service":"budzee-gaming","timestamp":"2025-08-04 22:07:24"}
+{"level":"info","message":"Advanced bot system initialized with 50% win rate balancing","service":"budzee-gaming","timestamp":"2025-08-04 22:07:24"}
+{"level":"info","message":"Server running on port 8080","service":"budzee-gaming","timestamp":"2025-08-04 22:07:24"}
+{"level":"info","message":"Health check: http://localhost:8080/health","service":"budzee-gaming","timestamp":"2025-08-04 22:07:24"}
+{"level":"info","message":"Environment: production","service":"budzee-gaming","timestamp":"2025-08-04 22:07:24"}
+{"level":"info","message":"Rate limiting enabled for socket events","service":"budzee-gaming","timestamp":"2025-08-04 22:07:24"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-04 22:07:28"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-04 22:07:33"}
+{"level":"info","message":"Razorpay instance initialized.","service":"budzee-gaming","timestamp":"2025-08-04 22:07:34"}
+{"level":"info","message":"Database configuration loaded","service":"budzee-gaming","timestamp":"2025-08-04 22:07:35"}
+{"level":"info","message":"🚀 Fast matchmaking started - checking every 5000ms","service":"budzee-gaming","timestamp":"2025-08-04 22:07:35"}
+{"level":"info","message":"✅ FastMatchmakingService initialized successfully","service":"budzee-gaming","timestamp":"2025-08-04 22:07:35"}
+{"level":"info","message":"Matchmaking service initialized","service":"budzee-gaming","timestamp":"2025-08-04 22:07:35"}
+{"level":"info","message":"GameStateManager initialized successfully with 6 active games","service":"budzee-gaming","timestamp":"2025-08-04 22:07:38"}
+{"level":"info","message":"Game state manager initialized","service":"budzee-gaming","timestamp":"2025-08-04 22:07:38"}
+{"level":"info","message":"Bot service will initialize on demand","service":"budzee-gaming","timestamp":"2025-08-04 22:07:38"}
+{"level":"info","message":"Advanced bot system initialized with 50% win rate balancing","service":"budzee-gaming","timestamp":"2025-08-04 22:07:38"}
+{"level":"info","message":"Server running on port 8080","service":"budzee-gaming","timestamp":"2025-08-04 22:07:38"}
+{"level":"info","message":"Health check: http://localhost:8080/health","service":"budzee-gaming","timestamp":"2025-08-04 22:07:38"}
+{"level":"info","message":"Environment: production","service":"budzee-gaming","timestamp":"2025-08-04 22:07:38"}
+{"level":"info","message":"Rate limiting enabled for socket events","service":"budzee-gaming","timestamp":"2025-08-04 22:07:38"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-04 22:07:40"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-04 22:07:45"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-04 22:07:50"}
+{"level":"info","message":"🔐 SOCKET AUTH: Authenticating socket XXSMG-1FYDVj6jTlAAAB","service":"budzee-gaming","timestamp":"2025-08-04 22:07:50"}
+{"level":"info","message":"👤 SOCKET AUTH: User authenticated - Ganesh Mudiraj (+919133263911) (ID: cmdu7azrv000cqxui6b1am8oi)","service":"budzee-gaming","timestamp":"2025-08-04 22:07:53"}
+{"level":"info","message":"Socket connected: XXSMG-1FYDVj6jTlAAAB for user cmdu7azrv000cqxui6b1am8oi","service":"budzee-gaming","timestamp":"2025-08-04 22:07:53"}
+{"level":"info","message":"User connected: Ganesh Mudiraj (cmdu7azrv000cqxui6b1am8oi)","service":"budzee-gaming","timestamp":"2025-08-04 22:07:53"}
+{"level":"info","message":"📤 Sent connection confirmation to user cmdu7azrv000cqxui6b1am8oi with name: Ganesh Mudiraj","service":"budzee-gaming","timestamp":"2025-08-04 22:07:53"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-04 22:07:55"}
+{"level":"info","message":"User cmdu7azrv000cqxui6b1am8oi leaving matchmaking queue","service":"budzee-gaming","timestamp":"2025-08-04 22:07:55"}
+{"level":"info","message":"User cmdu7azrv000cqxui6b1am8oi left queue. Removed 0 entries.","service":"budzee-gaming","timestamp":"2025-08-04 22:07:56"}
+{"level":"info","message":"User cmdu7azrv000cqxui6b1am8oi successfully left matchmaking queue","service":"budzee-gaming","timestamp":"2025-08-04 22:07:56"}
+{"entryFee":5,"gameType":"MEMORY","level":"info","maxPlayers":2,"message":"🚀 [MATCHMAKING START] User cmdu7azrv000cqxui6b1am8oi (Ganesh Mudiraj) attempting to join matchmaking:","service":"budzee-gaming","timestamp":"2025-08-04 22:07:56"}
+{"level":"info","message":"✅ [RATE LIMIT] Rate limit check passed for user cmdu7azrv000cqxui6b1am8oi","service":"budzee-gaming","timestamp":"2025-08-04 22:07:56"}
+{"entryFee":5,"gameType":"MEMORY","level":"info","maxPlayers":2,"message":"🎯 [VALIDATION] User cmdu7azrv000cqxui6b1am8oi (Ganesh Mudiraj) data received:","service":"budzee-gaming","timestamp":"2025-08-04 22:07:56"}
+{"level":"info","message":"🔍 [VALIDATION] Starting validation for user cmdu7azrv000cqxui6b1am8oi","service":"budzee-gaming","timestamp":"2025-08-04 22:07:56"}
+{"level":"info","message":"✅ [VALIDATION] Schema validation passed for user cmdu7azrv000cqxui6b1am8oi","service":"budzee-gaming","timestamp":"2025-08-04 22:07:56"}
+{"level":"info","message":"📊 [VALIDATION] Extracted values - gameType: MEMORY, maxPlayers: 2, entryFee: 5","service":"budzee-gaming","timestamp":"2025-08-04 22:07:56"}
+{"level":"info","message":"✅ [VALIDATION] Game type validation passed: MEMORY","service":"budzee-gaming","timestamp":"2025-08-04 22:07:56"}
+{"level":"info","message":"✅ [VALIDATION] Max players validation passed: 2","service":"budzee-gaming","timestamp":"2025-08-04 22:07:56"}
+{"level":"info","message":"✅ [VALIDATION] Entry fee validation passed: ₹5","service":"budzee-gaming","timestamp":"2025-08-04 22:07:56"}
+{"level":"info","message":"✅ [VALIDATION] All validations passed for user cmdu7azrv000cqxui6b1am8oi (Ganesh Mudiraj): MEMORY 2P ₹5","service":"budzee-gaming","timestamp":"2025-08-04 22:07:56"}
+{"level":"info","message":"🔍 [QUEUE CHECK] Checking if user cmdu7azrv000cqxui6b1am8oi is already in queue","service":"budzee-gaming","timestamp":"2025-08-04 22:07:56"}
+{"level":"info","message":"✅ [QUEUE CHECK] User cmdu7azrv000cqxui6b1am8oi not in queue, proceeding with join","service":"budzee-gaming","timestamp":"2025-08-04 22:07:56"}
+{"level":"info","message":"🚀 [MATCHMAKING SERVICE] Calling joinQueue for user cmdu7azrv000cqxui6b1am8oi","service":"budzee-gaming","timestamp":"2025-08-04 22:07:56"}
+{"level":"info","message":"👤 User cmdu7azrv000cqxui6b1am8oi joining queue: MEMORY 2P ₹5","service":"budzee-gaming","timestamp":"2025-08-04 22:07:56"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-04 22:08:00"}
+{"level":"info","message":"✅ Game entry deducted: User cmdu7azrv000cqxui6b1am8oi, Amount: 5, Game: queue_cmdu7azrv000cqxui6b1am8oi_1754325477048, TransId: cmdxc3fx00001hs0w0xomypr1","service":"budzee-gaming","timestamp":"2025-08-04 22:08:00"}
+{"level":"info","message":"✅ Entry fee ₹5 deducted from user cmdu7azrv000cqxui6b1am8oi","service":"budzee-gaming","timestamp":"2025-08-04 22:08:00"}
+{"level":"info","message":"✅ User cmdu7azrv000cqxui6b1am8oi joined queue successfully","service":"budzee-gaming","timestamp":"2025-08-04 22:08:00"}
+{"level":"info","message":"📊 [MATCHMAKING SERVICE] Join result for user cmdu7azrv000cqxui6b1am8oi: Joined matchmaking queue","queueId":"cmdxc3g850003hs0wg0redt9h","service":"budzee-gaming","success":true,"timestamp":"2025-08-04 22:08:00"}
+{"level":"info","message":"✅ [SUCCESS] User cmdu7azrv000cqxui6b1am8oi successfully joined queue, sending waiting status","service":"budzee-gaming","timestamp":"2025-08-04 22:08:00"}
+{"level":"info","message":"✅ [COMPLETE] User cmdu7azrv000cqxui6b1am8oi (Ganesh Mudiraj) matchmaking process completed successfully","service":"budzee-gaming","timestamp":"2025-08-04 22:08:00"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-04 22:08:01"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-04 22:08:05"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-04 22:08:10"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-04 22:08:15"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-04 22:08:20"}
+{"level":"info","message":"🤖 15s BOT DEPLOYMENT: Found 1 users waiting 15+ seconds","service":"budzee-gaming","timestamp":"2025-08-04 22:08:20"}
+{"level":"info","message":"🤖 STANDARD: Deploying 1 bots","service":"budzee-gaming","timestamp":"2025-08-04 22:08:20"}
+{"level":"info","message":"🤖 Bot Status - Available: 15, Total: 15, Minimum Required: 15","service":"budzee-gaming","timestamp":"2025-08-04 22:08:21"}
+{"level":"info","message":"🤖 Sufficient bots available (15/15)","service":"budzee-gaming","timestamp":"2025-08-04 22:08:21"}
+{"level":"info","message":"🤖 Selected existing bot: Arjun Das from 10 available","service":"budzee-gaming","timestamp":"2025-08-04 22:08:22"}
+{"level":"info","message":"✅ Bot Arjun Das (cmdxavzpc000ehsecx6uqv2og) deployed to queue","service":"budzee-gaming","timestamp":"2025-08-04 22:08:22"}
+{"level":"info","message":"🎮 Creating game: MEMORY 2P ₹5","service":"budzee-gaming","timestamp":"2025-08-04 22:08:22"}
+{"level":"info","message":"Memory game board initialized with 30 cards (15 pairs).","service":"budzee-gaming","timestamp":"2025-08-04 22:08:23"}
+{"level":"info","message":"Game created: cmdxc3xj60006hs0wekaelvet (MEMORY) with 2 players","service":"budzee-gaming","timestamp":"2025-08-04 22:08:24"}
+{"level":"info","message":"📤 Sent matchFound to user cmdu7azrv000cqxui6b1am8oi (Ganesh Mudiraj) for game cmdxc3xj60006hs0wekaelvet","service":"budzee-gaming","timestamp":"2025-08-04 22:08:24"}
+{"level":"info","message":"🎮 STANDARD: GAME CREATED: cmdxc3xj60006hs0wekaelvet","service":"budzee-gaming","timestamp":"2025-08-04 22:08:24"}
+{"level":"info","message":"🤖 15s BOT MATCH: Created 1 games with bots","service":"budzee-gaming","timestamp":"2025-08-04 22:08:24"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-04 22:08:25"}
+{"level":"info","message":"Memory Game: Player Ganesh Mudiraj joined room cmdxc3xj60006hs0wekaelvet","service":"budzee-gaming","timestamp":"2025-08-04 22:08:25"}
+{"level":"info","message":"Auto-starting game cmdxc3xj60006hs0wekaelvet of type MEMORY","service":"budzee-gaming","timestamp":"2025-08-04 22:08:28"}
+{"level":"info","message":"Game cmdxc3xj60006hs0wekaelvet: 1 sockets in room, 2 participants expected","service":"budzee-gaming","timestamp":"2025-08-04 22:08:28"}
+{"level":"info","message":"Starting Memory game cmdxc3xj60006hs0wekaelvet - forcing start regardless of socket connections","service":"budzee-gaming","timestamp":"2025-08-04 22:08:28"}
+{"level":"info","message":"Memory Game: Starting game cmdxc3xj60006hs0wekaelvet","service":"budzee-gaming","timestamp":"2025-08-04 22:08:28"}
+{"level":"info","message":"🤖 Bot player Arjun Das (cmdxavzpc000ehsecx6uqv2og) detected in game cmdxc3xj60006hs0wekaelvet","service":"budzee-gaming","timestamp":"2025-08-04 22:08:29"}
+{"level":"info","message":"🎮 Emitting MEMORY_GAME_STARTED for game cmdxc3xj60006hs0wekaelvet","service":"budzee-gaming","timestamp":"2025-08-04 22:08:29"}
+{"level":"info","message":"🎮 Game board has 30 cards","service":"budzee-gaming","timestamp":"2025-08-04 22:08:29"}
+{"level":"info","message":"🎮 Players: [{\"id\":\"cmdu7azrv000cqxui6b1am8oi\",\"name\":\"Ganesh Mudiraj\"},{\"id\":\"cmdxavzpc000ehsecx6uqv2og\",\"name\":\"Arjun Das\"}]","service":"budzee-gaming","timestamp":"2025-08-04 22:08:29"}
+{"level":"info","message":"🎮 MEMORY_GAME_STARTED emitted successfully","service":"budzee-gaming","timestamp":"2025-08-04 22:08:29"}
+{"level":"info","message":"🎮 Emitting MEMORY_GAME_CURRENT_TURN for game cmdxc3xj60006hs0wekaelvet","service":"budzee-gaming","timestamp":"2025-08-04 22:08:29"}
+{"level":"info","message":"🎮 MEMORY_GAME_CURRENT_TURN emitted successfully","service":"budzee-gaming","timestamp":"2025-08-04 22:08:29"}
+{"level":"info","message":"🎮 Checking if first player Ganesh Mudiraj (cmdu7azrv000cqxui6b1am8oi) is a bot for game cmdxc3xj60006hs0wekaelvet","service":"budzee-gaming","timestamp":"2025-08-04 22:08:29"}
+{"level":"info","message":"Memory Game: Game cmdxc3xj60006hs0wekaelvet started successfully with 2 players","service":"budzee-gaming","timestamp":"2025-08-04 22:08:29"}
+{"level":"info","message":"✅ Successfully force-started game cmdxc3xj60006hs0wekaelvet","service":"budzee-gaming","timestamp":"2025-08-04 22:08:29"}
+{"level":"info","message":"Memory Game: Player Ganesh Mudiraj joined room cmdxc3xj60006hs0wekaelvet","service":"budzee-gaming","timestamp":"2025-08-04 22:08:30"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-04 22:08:30"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-04 22:08:35"}
+{"level":"warn","message":"No memory found for bot cmdxavzpc000ehsecx6uqv2og in game cmdxc3xj60006hs0wekaelvet - creating new memory","service":"budzee-gaming","timestamp":"2025-08-04 22:08:37"}
+{"level":"info","message":"🧠 Initialized enhanced bot memory for cmdxavzpc000ehsecx6uqv2og - Mistakes allowed: 5 (Early: 2, Middle: 2, Late: 1)","service":"budzee-gaming","timestamp":"2025-08-04 22:08:37"}
+{"level":"info","message":"🧠 Bot cmdxavzpc000ehsecx6uqv2og learned from other player: Position 17 = 🧨","service":"budzee-gaming","timestamp":"2025-08-04 22:08:37"}
+{"level":"info","message":"🧠 Bot cmdxavzpc000ehsecx6uqv2og memory now contains 1 known cards","service":"budzee-gaming","timestamp":"2025-08-04 22:08:37"}
+{"level":"info","message":"🧠 Memory contents: [17:🧨]","service":"budzee-gaming","timestamp":"2025-08-04 22:08:37"}
+{"level":"info","message":"🧠 Bot cmdxavzpc000ehsecx6uqv2og learned from other player: Position 27 = 🦾","service":"budzee-gaming","timestamp":"2025-08-04 22:08:40"}
+{"level":"info","message":"🧠 Bot cmdxavzpc000ehsecx6uqv2og memory now contains 2 known cards","service":"budzee-gaming","timestamp":"2025-08-04 22:08:40"}
+{"level":"info","message":"🧠 Memory contents: [17:🧨, 27:🦾]","service":"budzee-gaming","timestamp":"2025-08-04 22:08:40"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-04 22:08:40"}
+{"level":"info","message":"🤖 Bot turn for Arjun Das in game cmdxc3xj60006hs0wekaelvet","service":"budzee-gaming","timestamp":"2025-08-04 22:08:41"}
+{"level":"info","message":"🧠 Bot cmdxavzpc000ehsecx6uqv2og memory now contains 2 known cards","service":"budzee-gaming","timestamp":"2025-08-04 22:08:41"}
+{"level":"info","message":"🧠 Memory contents: [17:🧨, 27:🦾]","service":"budzee-gaming","timestamp":"2025-08-04 22:08:41"}
+{"level":"info","message":"🤖 Starting natural bot turn for cmdxavzpc000ehsecx6uqv2og in game cmdxc3xj60006hs0wekaelvet","service":"budzee-gaming","timestamp":"2025-08-04 22:08:42"}
+{"level":"info","message":"🤖 Bot randomly flipping first card at position 2","service":"budzee-gaming","timestamp":"2025-08-04 22:08:44"}
+{"level":"info","message":"🤖 Bot cmdxavzpc000ehsecx6uqv2og selected card at position 2 (⚡) in game cmdxc3xj60006hs0wekaelvet","service":"budzee-gaming","timestamp":"2025-08-04 22:08:44"}
+{"level":"info","message":"🧠 Bot cmdxavzpc000ehsecx6uqv2og learned from other player: Position 2 = ⚡","service":"budzee-gaming","timestamp":"2025-08-04 22:08:44"}
+{"level":"info","message":"🧠 Bot cmdxavzpc000ehsecx6uqv2og memory now contains 3 known cards","service":"budzee-gaming","timestamp":"2025-08-04 22:08:44"}
+{"level":"info","message":"🧠 Memory contents: [17:🧨, 27:🦾, 2:⚡]","service":"budzee-gaming","timestamp":"2025-08-04 22:08:44"}
+{"level":"info","message":"🧠 First card revealed: ⚡","service":"budzee-gaming","timestamp":"2025-08-04 22:08:44"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-04 22:08:45"}
+{"level":"info","message":"🤖 Bot flipping second random card at position 0","service":"budzee-gaming","timestamp":"2025-08-04 22:08:45"}
+{"level":"info","message":"🤖 Bot cmdxavzpc000ehsecx6uqv2og selected card at position 0 (🚀) in game cmdxc3xj60006hs0wekaelvet","service":"budzee-gaming","timestamp":"2025-08-04 22:08:45"}
+{"level":"info","message":"🧠 Bot will learn second card symbol when it's revealed by the game system","service":"budzee-gaming","timestamp":"2025-08-04 22:08:45"}
+{"level":"info","message":"🤖 Completed natural bot turn for cmdxavzpc000ehsecx6uqv2og in game cmdxc3xj60006hs0wekaelvet","service":"budzee-gaming","timestamp":"2025-08-04 22:08:45"}
+{"level":"info","message":"🧠 Bot cmdxavzpc000ehsecx6uqv2og learned from other player: Position 0 = 🚀","service":"budzee-gaming","timestamp":"2025-08-04 22:08:45"}
+{"level":"info","message":"🧠 Bot cmdxavzpc000ehsecx6uqv2og memory now contains 4 known cards","service":"budzee-gaming","timestamp":"2025-08-04 22:08:45"}
+{"level":"info","message":"🧠 Memory contents: [17:🧨, 27:🦾, 2:⚡, 0:🚀]","service":"budzee-gaming","timestamp":"2025-08-04 22:08:45"}
+{"level":"info","message":"🧠 Bot cmdxavzpc000ehsecx6uqv2og memory now contains 4 known cards","service":"budzee-gaming","timestamp":"2025-08-04 22:08:45"}
+{"level":"info","message":"🧠 Memory contents: [17:🧨, 27:🦾, 2:⚡, 0:🚀]","service":"budzee-gaming","timestamp":"2025-08-04 22:08:45"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-04 22:08:50"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-04 22:08:55"}
+{"level":"info","message":"User cmdu7azrv000cqxui6b1am8oi leaving matchmaking queue","service":"budzee-gaming","timestamp":"2025-08-04 22:08:56"}
+{"level":"info","message":"User cmdu7azrv000cqxui6b1am8oi left queue. Removed 0 entries.","service":"budzee-gaming","timestamp":"2025-08-04 22:08:57"}
+{"level":"info","message":"User cmdu7azrv000cqxui6b1am8oi successfully left matchmaking queue","service":"budzee-gaming","timestamp":"2025-08-04 22:08:57"}
+{"level":"info","message":"Processing winnings for opponent_quit: cmdxc3xj60006hs0wekaelvet, winner: cmdxavzpc000ehsecx6uqv2og","service":"budzee-gaming","timestamp":"2025-08-04 22:08:58"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-04 22:09:00"}
+{"level":"info","message":"Wallet credited: User cmdxavzpc000ehsecx6uqv2og, Amount: 8, Type: GAME_WINNING, TransId: cmdxc4p4f000ahs0wsimr7vdy","service":"budzee-gaming","timestamp":"2025-08-04 22:09:00"}
+{"level":"info","message":"Successfully credited ₹8 to winner cmdxavzpc000ehsecx6uqv2og for game cmdxc3xj60006hs0wekaelvet","service":"budzee-gaming","timestamp":"2025-08-04 22:09:00"}
+{"amount":"8","level":"info","message":"Winnings processing result for game cmdxc3xj60006hs0wekaelvet:","reason":"winner_credited","service":"budzee-gaming","success":true,"timestamp":"2025-08-04 22:09:00"}
+{"level":"info","message":"🤖 Bot cmdxavzpc000ehsecx6uqv2og (Casual Player) performance: 1/1 (100.0%)","service":"budzee-gaming","timestamp":"2025-08-04 22:09:00"}
+{"level":"info","message":"🤖 New bot performance tracking completed for game cmdxc3xj60006hs0wekaelvet","service":"budzee-gaming","timestamp":"2025-08-04 22:09:00"}
+{"level":"info","message":"Memory Game: Game cmdxc3xj60006hs0wekaelvet ended with reason: opponent_quit. Winner: cmdxavzpc000ehsecx6uqv2og with score: 0","service":"budzee-gaming","timestamp":"2025-08-04 22:09:00"}
+{"level":"info","message":"Memory Game: Game cmdxc3xj60006hs0wekaelvet ended due to player left. Winner: cmdxavzpc000ehsecx6uqv2og","service":"budzee-gaming","timestamp":"2025-08-04 22:09:00"}
+{"level":"info","message":"Received SIGINT. Shutting down gracefully...","service":"budzee-gaming","timestamp":"2025-08-04 22:09:00"}
