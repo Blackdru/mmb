@@ -1,8 +1,8 @@
 {
-  "version": "1.0.1",
-  "apkUrl": "http://test.fivlog.space/apks/Budzee-v1.0.2.apk",
+  "version": "1.0.3",
+  "apkUrl": "http://test.fivlog.space/apks/Budzee-v1.0.3.apk",
   "type": "mandatory",
-  "notes": "🎉 Major Update v1.0.2 - Enhanced Security & Performance!, Added New Features, Improved User Experience" ,
+  "notes": "🎉 Major Update v1.0.3 - Enhanced Security & Performance!, Added New Features, Improved User Experience" ,
   "publishedAt": "2025-01-19T15:30:00.000Z",
   "fileSize": 47401288
 }

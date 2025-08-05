@@ -661,11 +661,23 @@ matchmakingService.setGameCreatedCallback(async (game, matchedUsers, eventData) 
 
 // Express middleware
 app.use(compression()); // Enable gzip compression
+
+// Simple CORS configuration - allow all origins for now
 app.use(cors({
-  origin: process.env.FRONTEND_URL || '*',
-  credentials: true,
-  optionsSuccessStatus: 200
+  origin: '*',
+  credentials: false,
+  optionsSuccessStatus: 200,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization']
 }));
+
+// Handle preflight requests
+app.options('*', (req, res) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  res.sendStatus(200);
+});
 app.use(helmet({
   crossOriginEmbedderPolicy: false,
   contentSecurityPolicy: false
@@ -687,6 +699,14 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 
 // Routes
+// Add CORS headers to all API routes
+app.use('/api/*', (req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  next();
+});
+
 app.use('/api/auth', require('./src/routes/auth'));
 app.use('/api/wallet', require('./src/routes/wallet')); // Use dedicated wallet routes
 app.use('/api/matchmaking', require('./src/routes/matchmaking'));
@@ -698,14 +718,29 @@ app.use('/api/website', require('./src/routes/website')); // Website-specific ro
 app.use('/api/admin', require('./src/routes/admin')); // Admin routes
 app.use('/api/admin-auth', require('./src/routes/admin-auth')); // Admin auth routes
 app.use('/api/push-notifications', require('./src/routes/pushNotifications')); // Push notification routes
-app.use('/updates', require('./src/routes/updates')); // App update routes
+app.use('/api/updates', require('./src/routes/updates')); // App update routes
 
 // Serve static files
 app.use('/apks', express.static('public/apks'));
 app.use('/updates', express.static('public/updates'));
 
-// Health check endpoint
+// Fix for path-to-regexp issue with Express 5.x
+app.use((err, req, res, next) => {
+  if (err.message && err.message.includes('Missing parameter name')) {
+    console.error('Path-to-regexp error:', err.message);
+    res.status(500).json({ error: 'Route configuration error' });
+  } else {
+    next(err);
+  }
+});
+
+// Health check endpoint with CORS headers
 app.get('/health', (req, res) => {
+  // Set CORS headers explicitly for health check
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  
   const memUsage = process.memoryUsage();
   
   res.json({
@@ -727,7 +762,11 @@ app.get('/health', (req, res) => {
     version: process.version,
     platform: process.platform,
     pid: process.pid,
-    nodeEnv: process.env.NODE_ENV
+    nodeEnv: process.env.NODE_ENV,
+    cors: {
+      origin: req.headers.origin || 'no-origin',
+      userAgent: req.headers['user-agent'] || 'unknown'
+    }
   });
 });
 
