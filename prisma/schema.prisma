@@ -41,6 +41,11 @@ model User {
   // Feedback
   feedback    Feedback[]
 
+  // Push notifications
+  deviceTokens PushNotificationToken[]
+  notificationsSent PushNotification[] @relation("NotificationSender")
+  notificationRecipients PushNotificationRecipient[]
+
   // Bot statistics (only for bot users)
   botStatistics      BotStatistics?
   botGamePerformances BotGamePerformance[] @relation("BotPerformance")
@@ -436,4 +441,103 @@ model DownloadTracking {
   timestamp DateTime @default(now())
 
   @@map("download_tracking")
+}
+
+// Push Notification Models
+model PushNotificationToken {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  token     String   @unique
+  platform  String   // android, ios
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("push_notification_tokens")
+}
+
+model PushNotification {
+  id          String                    @id @default(cuid())
+  title       String
+  body        String
+  data        Json?                     // Additional data payload
+  type        PushNotificationType      @default(GENERAL)
+  status      PushNotificationStatus    @default(PENDING)
+  
+  // Targeting
+  targetType  PushNotificationTarget    @default(ALL_USERS) @map("target_type")
+  targetUsers String[]                  @default([]) @map("target_users") // User IDs for specific targeting
+  
+  // Sender info
+  senderId    String?                   @map("sender_id")
+  senderType  String                    @default("admin") @map("sender_type") // admin, system
+  
+  // Delivery tracking
+  totalTargets    Int                   @default(0) @map("total_targets")
+  successCount    Int                   @default(0) @map("success_count")
+  failureCount    Int                   @default(0) @map("failure_count")
+  
+  // Scheduling
+  scheduledAt     DateTime?             @map("scheduled_at")
+  sentAt          DateTime?             @map("sent_at")
+  
+  createdAt   DateTime                  @default(now()) @map("created_at")
+  updatedAt   DateTime                  @updatedAt @map("updated_at")
+
+  sender      User?                     @relation("NotificationSender", fields: [senderId], references: [id])
+  recipients  PushNotificationRecipient[]
+
+  @@map("push_notifications")
+}
+
+model PushNotificationRecipient {
+  id             String                        @id @default(cuid())
+  notificationId String                        @map("notification_id")
+  userId         String                        @map("user_id")
+  status         PushNotificationDeliveryStatus @default(PENDING)
+  deliveredAt    DateTime?                     @map("delivered_at")
+  readAt         DateTime?                     @map("read_at")
+  errorMessage   String?                       @map("error_message")
+  createdAt      DateTime                      @default(now()) @map("created_at")
+
+  notification PushNotification @relation(fields: [notificationId], references: [id], onDelete: Cascade)
+  user         User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([notificationId, userId])
+  @@map("push_notification_recipients")
+}
+
+enum PushNotificationType {
+  GENERAL
+  GAME_INVITE
+  GAME_RESULT
+  WALLET_UPDATE
+  PROMOTIONAL
+  SYSTEM_UPDATE
+  MAINTENANCE
+}
+
+enum PushNotificationTarget {
+  ALL_USERS
+  ACTIVE_USERS
+  SPECIFIC_USERS
+  NEW_USERS
+  HIGH_VALUE_USERS
+}
+
+enum PushNotificationStatus {
+  PENDING
+  SENDING
+  SENT
+  FAILED
+  CANCELLED
+}
+
+enum PushNotificationDeliveryStatus {
+  PENDING
+  DELIVERED
+  FAILED
+  READ
 }

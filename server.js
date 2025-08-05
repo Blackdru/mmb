@@ -34,6 +34,7 @@ const matchmakingService = require('./src/services/FastMatchmaking');
 const gameService = require('./src/services/gameService');
 const botService = require('./src/services/BotService');
 const MemoryGameService = require('./src/services/MemoryGame');
+const pushNotificationService = require('./src/services/pushNotificationService');
 // Removed unused PerformanceBalancer
 const { authenticateSocket } = require('./src/middleware/auth');
 const { gameSchemas } = require('./src/validation/schemas');
@@ -696,6 +697,7 @@ app.use('/api/feedback', require('./src/routes/feedback'));
 app.use('/api/website', require('./src/routes/website')); // Website-specific routes
 app.use('/api/admin', require('./src/routes/admin')); // Admin routes
 app.use('/api/admin-auth', require('./src/routes/admin-auth')); // Admin auth routes
+app.use('/api/push-notifications', require('./src/routes/pushNotifications')); // Push notification routes
 app.use('/updates', require('./src/routes/updates')); // App update routes
 
 // Serve static files
@@ -957,6 +959,9 @@ async function startServer() {
     
     await gameStateManager.initialize();
     logger.info('Game state manager initialized');
+    
+    await pushNotificationService.initialize();
+    logger.info('Push notification service initialized');
     
     // Skip bot initialization to avoid database connections
     logger.info('Bot service will initialize on demand');

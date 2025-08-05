@@ -1,6 +1,7 @@
 const prisma = require('../config/database');
 const logger = require('../config/logger');
 const walletService = require('./walletService');
+const pushNotificationService = require('./pushNotificationService');
 
 class GameService {
   constructor() {
@@ -169,6 +170,31 @@ class GameService {
       // Prize pool is already 90% of entry fees, so winner gets the full prize pool
       const winnerAmount = game.prizePool;
       await walletService.creditWallet(game.winner, winnerAmount, 'GAME_WINNING', gameId);
+      
+      // Send push notification to winner
+      try {
+        await pushNotificationService.sendGameResult(game.winner, {
+          gameId: gameId,
+          won: true,
+          winnings: winnerAmount
+        });
+      } catch (notificationError) {
+        logger.warn(`Failed to send win notification for game ${gameId}:`, notificationError);
+      }
+      
+      // Send push notification to losers
+      try {
+        const losers = game.participants.filter(p => p.userId !== game.winner);
+        for (const loser of losers) {
+          await pushNotificationService.sendGameResult(loser.userId, {
+            gameId: gameId,
+            won: false,
+            winnings: 0
+          });
+        }
+      } catch (notificationError) {
+        logger.warn(`Failed to send loss notifications for game ${gameId}:`, notificationError);
+      }
       
       logger.info(`Game ${gameId} winnings processed: ₹${winnerAmount.toFixed(2)} credited to user ${game.winner}`);
     } catch (error) {

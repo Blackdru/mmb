@@ -3,6 +3,7 @@ const crypto = require('crypto');
 const prisma = require('../config/database');
 const logger = require('../config/logger');
 const { safeNumber, validateAmount, toPaise } = require('../utils/numberUtils');
+const pushNotificationService = require('./pushNotificationService');
 
 class WalletService {
   constructor() {
@@ -243,6 +244,17 @@ class WalletService {
       });
 
       logger.info(`Deposit completed: User ${userId}, Amount: ${amount}, Transaction ID: ${result.transaction.id}`);
+
+      // Send push notification for successful deposit
+      try {
+        await pushNotificationService.sendWalletUpdate(userId, {
+          id: result.transaction.id,
+          amount: parseFloat(amount),
+          type: 'DEPOSIT'
+        });
+      } catch (notificationError) {
+        logger.warn(`Failed to send deposit notification for user ${userId}:`, notificationError);
+      }
 
       return {
         success: true,

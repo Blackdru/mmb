@@ -834,12 +834,14 @@ class FastMatchmakingService {
       const totalEntryFees = entryFee * playersToMatch;
       const prizePool = totalEntryFees * 0.8;
 
+      logger.info(`Creating game with entry fee: ${entryFee}, players: ${playersToMatch}, total fees: ${totalEntryFees}, prize pool: ${prizePool}`);
+
       const game = await tx.game.create({
         data: {
           type: gameType,
           maxPlayers: playersToMatch,
-          entryFee,
-          prizePool,
+          entryFee: Number(entryFee),
+          prizePool: Number(prizePool),
           status: 'WAITING',
           gameData: {},
         }

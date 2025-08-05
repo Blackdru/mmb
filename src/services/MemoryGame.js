@@ -3,6 +3,7 @@ const logger = require('../config/logger');
 const gameService = require('./gameService');
 const prisma = require('../config/database');
 const botService = require('./BotService');
+const walletService = require('./walletService');
 // Removed unused GameplayController
 // Removed unused PerformanceBalancer
 const NaturalBotLogic = require('./FixedNaturalBotLogic');
@@ -265,17 +266,20 @@ class MemoryGameService {
       logger.info(`🎮 Emitting MEMORY_GAME_STARTED for game ${roomId}`);
       logger.info(`🎮 Game board has ${initialBoard.length} cards`);
       logger.info(`🎮 Players: ${JSON.stringify(players.map(p => ({id: p.id, name: p.name})))}`);
+      logger.info(`🎮 Prize pool being sent: ${game.prizePool}`);
       
       const gameStartData = {
         players: players,
         totalPairs: 15,
-        prizePool: game.prizePool || 0,
+        prizePool: Number(game.prizePool) || 0, // Ensure it's a number
         currentTurn: players[0].id,
         currentPlayerId: players[0].id,
         currentPlayerName: players[0].name,
         gameBoard: initialBoard,
         gameId: roomId,
-        status: 'playing'
+        status: 'playing',
+        scores: gameState.scores,
+        lifelines: gameState.lifelines
       };
       
       this.io.to(`game:${roomId}`).emit('MEMORY_GAME_STARTED', gameStartData);
@@ -1026,13 +1030,19 @@ class MemoryGameService {
 
   async joinRoom(socket, { roomId, playerId, playerName }) {
     try {
+      logger.info(`Memory Game: Player ${playerName} (${playerId}) attempting to join room ${roomId}`);
+      
       let gameState = this.games.get(roomId);
       
       if (!gameState) {
+        logger.info(`Memory Game: Game state not found in memory for ${roomId}, loading from database`);
         const gameFromDb = await gameService.getGameById(roomId);
         if (!gameFromDb) {
+          logger.error(`Memory Game: Game ${roomId} not found in database`);
           return socket.emit('MEMORY_GAME_ERROR', { message: 'Game not found.' });
         }
+
+        logger.info(`Memory Game: Found game ${roomId} in database with status: ${gameFromDb.status}`);
 
         // Recreate game state from database
         const players = gameFromDb.participants.map((p, index) => ({
@@ -1042,8 +1052,21 @@ class MemoryGameService {
           score: 0
         }));
 
+        logger.info(`Memory Game: Recreating game state for ${roomId} with ${players.length} players`);
+
+        // Initialize game board if not exists or empty
+        let gameBoard = gameFromDb.gameData;
+        if (!gameBoard || !Array.isArray(gameBoard) || gameBoard.length === 0) {
+          logger.info(`Memory Game: Initializing new game board for ${roomId}`);
+          const { cards } = this.createGameBoard(roomId);
+          gameBoard = cards;
+          
+          // Update database with new board
+          await gameService.updateGameState(roomId, gameBoard, 0, 'WAITING', null);
+        }
+
         gameState = {
-          board: gameFromDb.gameData || [],
+          board: gameBoard,
           players: players,
           currentTurnIndex: gameFromDb.currentTurn || 0,
           currentTurnPlayerId: players[gameFromDb.currentTurn || 0]?.id,
@@ -1053,7 +1076,7 @@ class MemoryGameService {
           missedTurns: {},
           matchedPairs: 0,
           totalPairs: 15,
-          status: gameFromDb.status,
+          status: gameFromDb.status === 'WAITING' ? 'waiting' : gameFromDb.status.toLowerCase(),
           processingCards: false
         };
 
@@ -1065,12 +1088,24 @@ class MemoryGameService {
         });
 
         this.games.set(roomId, gameState);
+        logger.info(`Memory Game: Game state created and stored for ${roomId}`);
+      }
+
+      // Verify player is a participant
+      const isParticipant = gameState.players.some(p => p.id === playerId);
+      if (!isParticipant) {
+        logger.error(`Memory Game: Player ${playerId} is not a participant in game ${roomId}`);
+        return socket.emit('MEMORY_GAME_ERROR', { message: 'You are not a participant in this game.' });
       }
 
       socket.join(`game:${roomId}`);
+      logger.info(`Memory Game: Player ${playerId} joined socket room game:${roomId}`);
 
-      // Send current state to joining player
-      socket.emit('MEMORY_CURRENT_STATE', {
+      // Get fresh game data from database for prize pool
+      const gameFromDb = await gameService.getGameById(roomId);
+
+      // Send current state to joining player with prize pool
+      const currentStateData = {
         board: gameState.board.map(card => ({
           id: card.id,
           isFlipped: card.isFlipped,
@@ -1083,7 +1118,21 @@ class MemoryGameService {
         lifelines: gameState.lifelines,
         matchedPairs: gameState.matchedPairs,
         status: gameState.status,
-      });
+        prizePool: Number(gameFromDb?.prizePool) || 0, // Include prize pool from database
+      };
+
+      socket.emit('MEMORY_CURRENT_STATE', currentStateData);
+      logger.info(`Memory Game: Sent current state to player ${playerId} with prize pool: ${currentStateData.prizePool}`);
+
+      // If game is waiting and we have enough players, start the game
+      if (gameState.status === 'waiting' && gameState.players.length >= 2) {
+        logger.info(`Memory Game: Game ${roomId} has enough players, starting game`);
+        setTimeout(() => {
+          this.startGame({ roomId }).catch(err => {
+            logger.error(`Error auto-starting game ${roomId}:`, err);
+          });
+        }, 1000);
+      }
 
       // If player is reconnecting and it's their turn, restart timer
       if (gameState.currentTurnPlayerId === playerId && gameState.status === 'playing') {
@@ -1093,9 +1142,9 @@ class MemoryGameService {
         }
       }
 
-      logger.info(`Memory Game: Player ${playerName} joined room ${roomId}`);
+      logger.info(`Memory Game: Player ${playerName} successfully joined room ${roomId}`);
     } catch (error) {
-      logger.error(`Memory Game: Join room error:`, error);
+      logger.error(`Memory Game: Join room error for player ${playerId} in room ${roomId}:`, error);
       socket.emit('MEMORY_GAME_ERROR', { message: 'Failed to join room.' });
     }
   }
