@@ -111,7 +111,6 @@ router.post('/send', authenticateAdmin, async (req, res) => {
       targetUsers,
       data,
       scheduledAt: scheduledAt ? new Date(scheduledAt) : undefined,
-      senderId: req.admin.id,
       senderType: 'admin'
     });
 
@@ -199,7 +198,6 @@ router.post('/test', authenticateAdmin, async (req, res) => {
       targetType: 'SPECIFIC_USERS',
       targetUsers: [userId],
       data: { test: true },
-      senderId: req.admin.id,
       senderType: 'admin'
     });
 

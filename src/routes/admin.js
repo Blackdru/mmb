@@ -587,15 +587,20 @@ router.put('/transactions/:id', adminAuth, async (req, res) => {
     const { id } = req.params;
     const { status, notes } = req.body;
 
-    const transaction = await prisma.transaction.update({
+    const existing = await prisma.transaction.findUnique({ where: { id } });
+    if (!existing) {
+      return res.status(404).json({ success: false, message: 'Transaction not found' });
+    }
+
+    const updated = await prisma.transaction.update({
       where: { id },
       data: { 
         status,
-        description: notes ? `${transaction.description || ''} - Admin note: ${notes}` : undefined
+        description: notes ? `${existing.description ? existing.description + ' | ' : ''}Admin note: ${notes}` : undefined
       }
     });
 
-    res.json({ success: true, message: 'Transaction updated successfully', transaction });
+    res.json({ success: true, message: 'Transaction updated successfully', transaction: updated });
   } catch (error) {
     logger.error('Transaction update error:', error);
     res.status(500).json({ success: false, message: 'Failed to update transaction' });
@@ -1369,14 +1374,12 @@ router.get('/analytics', adminAuth, async (req, res) => {
         prisma.game.count({
           where: { createdAt: { gte: startDate } }
         }),
-        prisma.game.aggregate({
+        prisma.game.findMany({
           where: { 
             status: 'FINISHED',
             finishedAt: { gte: startDate }
           },
-          _avg: {
-            // Calculate average duration in minutes
-          }
+          select: { createdAt: true, finishedAt: true }
         }),
         prisma.game.groupBy({
           by: ['type'],
@@ -1409,7 +1412,17 @@ router.get('/analytics', adminAuth, async (req, res) => {
 
     const [newUsers, activeUsers] = userGrowth;
     const [totalDeposits, totalWithdrawals] = revenueAnalytics;
-    const [gamesPlayed, avgDuration, popularGameType] = gameAnalytics;
+    const [gamesPlayed, finishedGames, popularGameType] = gameAnalytics;
+    const avgGameMinutes = (() => {
+      if (!Array.isArray(finishedGames) || finishedGames.length === 0) return 0;
+      const sumMs = finishedGames.reduce((acc, g) => {
+        const start = new Date(g.createdAt).getTime();
+        const end = g.finishedAt ? new Date(g.finishedAt).getTime() : start;
+        const diff = Math.max(0, end - start);
+        return acc + diff;
+      }, 0);
+      return Math.round((sumMs / finishedGames.length) / 60000);
+    })();
 
     // Calculate top users with their statistics
     const topUsersWithStats = await Promise.all(topUsers.map(async (user) => {
@@ -1452,7 +1465,7 @@ router.get('/analytics', adminAuth, async (req, res) => {
         },
         games: {
           gamesPlayed,
-          avgGameDuration: '15m', // Placeholder
+          avgGameDuration: `${avgGameMinutes}m`,
           popularGameType: popularGameType[0]?.type || 'LUDO'
         },
         topUsers: topUsersWithStats
