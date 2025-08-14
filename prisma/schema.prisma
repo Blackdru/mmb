@@ -20,6 +20,9 @@ model User {
   isBot       Boolean  @default(false) @map("is_bot") // Flag to identify bot users
   botType     String?  @map("bot_type") // Type of bot (strategic_master, casual_player, etc.)
   
+  // Device restriction
+  deviceId    String?  @map("device_id")
+  
   // Referral system
   referralCode String?  @unique @map("referral_code")
   referredBy   String?  @map("referred_by")

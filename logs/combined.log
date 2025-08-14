@@ -3043,3 +3043,231 @@
 {"level":"info","message":"🎮 Creating game: MEMORY 2P ₹5","service":"budzee-gaming","timestamp":"2025-08-08 20:47:38"}
 {"level":"error","message":"Create game error: Insufficient players: needed 2, found 1","service":"budzee-gaming","stack":"Error: Insufficient players: needed 2, found 1\n    at prisma.$transaction.timeout (C:\\Users\\HOME\\Desktop\\test\\mmb\\src\\services\\FastMatchmaking.js:831:15)\n    at async Proxy._transactionWithCallback (C:\\Users\\HOME\\Desktop\\test\\mmb\\node_modules\\@prisma\\client\\runtime\\library.js:130:8173)\n    at async FastMatchmakingService.createGameTransaction (C:\\Users\\HOME\\Desktop\\test\\mmb\\src\\services\\FastMatchmaking.js:817:12)\n    at async FastMatchmakingService.createGameFast (C:\\Users\\HOME\\Desktop\\test\\mmb\\src\\services\\FastMatchmaking.js:339:40)\n    at async FastMatchmakingService.deployBotsForWaitingUsers (C:\\Users\\HOME\\Desktop\\test\\mmb\\src\\services\\FastMatchmaking.js:317:22)\n    at async FastMatchmakingService.deployBotsAfter15Seconds (C:\\Users\\HOME\\Desktop\\test\\mmb\\src\\services\\FastMatchmaking.js:272:14)\n    at async FastMatchmakingService.processMatchmaking (C:\\Users\\HOME\\Desktop\\test\\mmb\\src\\services\\FastMatchmaking.js:198:26)","timestamp":"2025-08-08 20:47:38"}
 {"level":"info","message":"Received SIGINT. Shutting down gracefully...","service":"budzee-gaming","timestamp":"2025-08-08 20:47:43"}
+{"level":"info","message":"Razorpay instance initialized.","service":"budzee-gaming","timestamp":"2025-08-14 14:50:32"}
+{"level":"info","message":"Database configuration loaded","service":"budzee-gaming","timestamp":"2025-08-14 14:50:32"}
+{"level":"info","message":"🚀 Fast matchmaking started - checking every 5000ms","service":"budzee-gaming","timestamp":"2025-08-14 14:50:32"}
+{"level":"info","message":"✅ FastMatchmakingService initialized successfully","service":"budzee-gaming","timestamp":"2025-08-14 14:50:32"}
+{"level":"info","message":"Matchmaking service initialized","service":"budzee-gaming","timestamp":"2025-08-14 14:50:32"}
+{"level":"info","message":"GameStateManager initialized successfully with 17 active games","service":"budzee-gaming","timestamp":"2025-08-14 14:50:34"}
+{"level":"info","message":"Game state manager initialized","service":"budzee-gaming","timestamp":"2025-08-14 14:50:34"}
+{"level":"info","message":"Firebase Admin SDK initialized successfully","service":"budzee-gaming","timestamp":"2025-08-14 14:50:34"}
+{"level":"info","message":"Push Notification Service initialized","service":"budzee-gaming","timestamp":"2025-08-14 14:50:34"}
+{"level":"info","message":"Push notification service initialized","service":"budzee-gaming","timestamp":"2025-08-14 14:50:34"}
+{"level":"info","message":"Bot service will initialize on demand","service":"budzee-gaming","timestamp":"2025-08-14 14:50:34"}
+{"level":"info","message":"Advanced bot system initialized with 50% win rate balancing","service":"budzee-gaming","timestamp":"2025-08-14 14:50:34"}
+{"level":"info","message":"Server running on port 8080","service":"budzee-gaming","timestamp":"2025-08-14 14:50:34"}
+{"level":"info","message":"Health check: http://localhost:8080/health","service":"budzee-gaming","timestamp":"2025-08-14 14:50:34"}
+{"level":"info","message":"Environment: production","service":"budzee-gaming","timestamp":"2025-08-14 14:50:34"}
+{"level":"info","message":"Rate limiting enabled for socket events","service":"budzee-gaming","timestamp":"2025-08-14 14:50:34"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:50:37"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:50:42"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:50:47"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:50:52"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:50:57"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:51:02"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:51:07"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:51:12"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:51:17"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:51:22"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:51:27"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:51:32"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:51:37"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:51:42"}
+{"level":"info","message":"Generated OTP for +918688968075, expires at: 2025-08-14T09:36:45.174Z","service":"budzee-gaming","timestamp":"2025-08-14 14:51:45"}
+{"level":"info","message":"Current time: 2025-08-14T09:21:45.174Z","service":"budzee-gaming","timestamp":"2025-08-14 14:51:45"}
+{"level":"info","message":"Time difference: 900 seconds","service":"budzee-gaming","timestamp":"2025-08-14 14:51:45"}
+{"level":"info","message":"OTP record created for +918688968075: cmeb6wxqy0000hs1cqrbnvwsx","service":"budzee-gaming","timestamp":"2025-08-14 14:51:45"}
+{"level":"error","message":"Failed to send OTP to +918688968075 (Renflair response): SMS sent successfully.","request_id":"hAluEZWeMYfBGSv","return":true,"service":"budzee-gaming","status":"SUCCESS","timestamp":"2025-08-14 14:51:47"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:51:47"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:51:52"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:51:57"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:52:02"}
+{"level":"info","message":"Verifying OTP for +918688968075 with device 9c93673b5e241ff3","service":"budzee-gaming","timestamp":"2025-08-14 14:52:04"}
+{"level":"info","message":"Valid OTP found for +918688968075, creating/updating user","service":"budzee-gaming","timestamp":"2025-08-14 14:52:05"}
+{"level":"info","message":"Updating existing user: cmdv57qrs00sjqxi1qcv91lp4","service":"budzee-gaming","timestamp":"2025-08-14 14:52:07"}
+{"level":"info","message":"Linking device 9c93673b5e241ff3 to existing user cmdv57qrs00sjqxi1qcv91lp4","service":"budzee-gaming","timestamp":"2025-08-14 14:52:07"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:52:07"}
+{"level":"info","message":"Authentication successful and token generated for user: cmdv57qrs00sjqxi1qcv91lp4","service":"budzee-gaming","timestamp":"2025-08-14 14:52:08"}
+{"level":"info","message":"🔐 SOCKET AUTH: Authenticating socket DrY4e_lvgK-QRzVjAAAB","service":"budzee-gaming","timestamp":"2025-08-14 14:52:09"}
+{"level":"info","message":"👤 SOCKET AUTH: User authenticated - Ganesh (+918688968075) (ID: cmdv57qrs00sjqxi1qcv91lp4)","service":"budzee-gaming","timestamp":"2025-08-14 14:52:10"}
+{"level":"info","message":"Socket connected: DrY4e_lvgK-QRzVjAAAB for user cmdv57qrs00sjqxi1qcv91lp4","service":"budzee-gaming","timestamp":"2025-08-14 14:52:10"}
+{"level":"info","message":"User connected: Ganesh (cmdv57qrs00sjqxi1qcv91lp4)","service":"budzee-gaming","timestamp":"2025-08-14 14:52:10"}
+{"level":"info","message":"📤 Sent connection confirmation to user cmdv57qrs00sjqxi1qcv91lp4 with name: Ganesh","service":"budzee-gaming","timestamp":"2025-08-14 14:52:10"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:52:12"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:52:17"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:52:23"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:52:28"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:52:33"}
+{"level":"info","message":"Cleaned up 0 inactive bots","service":"budzee-gaming","timestamp":"2025-08-14 14:52:33"}
+{"level":"info","message":"🤖 Bot Status - Available: 16, Total: 24, Minimum Required: 10","service":"budzee-gaming","timestamp":"2025-08-14 14:52:33"}
+{"level":"info","message":"🤖 Sufficient bots available (16/10)","service":"budzee-gaming","timestamp":"2025-08-14 14:52:33"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:52:38"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:52:43"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:52:48"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:52:53"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:52:58"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:53:03"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:53:08"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:53:13"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:53:18"}
+{"level":"info","message":"User disconnected: cmdv57qrs00sjqxi1qcv91lp4 (transport close)","service":"budzee-gaming","timestamp":"2025-08-14 14:53:19"}
+{"level":"info","message":"Socket disconnected: DrY4e_lvgK-QRzVjAAAB for user cmdv57qrs00sjqxi1qcv91lp4","service":"budzee-gaming","timestamp":"2025-08-14 14:53:19"}
+{"level":"info","message":"User cmdv57qrs00sjqxi1qcv91lp4 left queue. Removed 0 entries.","service":"budzee-gaming","timestamp":"2025-08-14 14:53:20"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:53:23"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:53:28"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:53:33"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:53:38"}
+{"level":"info","message":"🔐 SOCKET AUTH: Authenticating socket Hkg3iVCQpKvSMkSgAAAD","service":"budzee-gaming","timestamp":"2025-08-14 14:53:40"}
+{"level":"info","message":"👤 SOCKET AUTH: User authenticated - Ganesh (+918688968075) (ID: cmdv57qrs00sjqxi1qcv91lp4)","service":"budzee-gaming","timestamp":"2025-08-14 14:53:40"}
+{"level":"info","message":"Socket connected: Hkg3iVCQpKvSMkSgAAAD for user cmdv57qrs00sjqxi1qcv91lp4","service":"budzee-gaming","timestamp":"2025-08-14 14:53:40"}
+{"level":"info","message":"User connected: Ganesh (cmdv57qrs00sjqxi1qcv91lp4)","service":"budzee-gaming","timestamp":"2025-08-14 14:53:40"}
+{"level":"info","message":"📤 Sent connection confirmation to user cmdv57qrs00sjqxi1qcv91lp4 with name: Ganesh","service":"budzee-gaming","timestamp":"2025-08-14 14:53:40"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:53:43"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:53:48"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:53:53"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:53:58"}
+{"level":"info","message":"User disconnected: cmdv57qrs00sjqxi1qcv91lp4 (client namespace disconnect)","service":"budzee-gaming","timestamp":"2025-08-14 14:54:01"}
+{"level":"info","message":"Socket disconnected: Hkg3iVCQpKvSMkSgAAAD for user cmdv57qrs00sjqxi1qcv91lp4","service":"budzee-gaming","timestamp":"2025-08-14 14:54:01"}
+{"level":"info","message":"User cmdv57qrs00sjqxi1qcv91lp4 left queue. Removed 0 entries.","service":"budzee-gaming","timestamp":"2025-08-14 14:54:01"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:54:03"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:54:08"}
+{"level":"info","message":"Generated OTP for +919133263911, expires at: 2025-08-14T09:39:11.937Z","service":"budzee-gaming","timestamp":"2025-08-14 14:54:11"}
+{"level":"info","message":"Current time: 2025-08-14T09:24:11.937Z","service":"budzee-gaming","timestamp":"2025-08-14 14:54:11"}
+{"level":"info","message":"Time difference: 900 seconds","service":"budzee-gaming","timestamp":"2025-08-14 14:54:11"}
+{"level":"info","message":"OTP record created for +919133263911: cmeb702zm0001hs1cqvxbivuv","service":"budzee-gaming","timestamp":"2025-08-14 14:54:12"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:54:13"}
+{"level":"error","message":"Failed to send OTP to +919133263911 (Renflair response): SMS sent successfully.","request_id":"MXZDNAzEr4FlWV5","return":true,"service":"budzee-gaming","status":"SUCCESS","timestamp":"2025-08-14 14:54:14"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:54:18"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:54:23"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:54:28"}
+{"level":"info","message":"Verifying OTP for +919133263911 with device 9c93673b5e241ff3","service":"budzee-gaming","timestamp":"2025-08-14 14:54:32"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:54:33"}
+{"level":"info","message":"Cleaned up 0 inactive bots","service":"budzee-gaming","timestamp":"2025-08-14 14:54:33"}
+{"level":"info","message":"🤖 Bot Status - Available: 16, Total: 24, Minimum Required: 10","service":"budzee-gaming","timestamp":"2025-08-14 14:54:33"}
+{"level":"info","message":"🤖 Sufficient bots available (16/10)","service":"budzee-gaming","timestamp":"2025-08-14 14:54:33"}
+{"level":"warn","message":"Device restriction failed for +919133263911: Device already registered. Please log in with the original mobile number +91xxxxxx8075","service":"budzee-gaming","timestamp":"2025-08-14 14:54:34"}
+{"level":"error","message":"Verify OTP error: Device already registered. Please log in with the original mobile number +91xxxxxx8075","service":"budzee-gaming","stack":"Error: Device already registered. Please log in with the original mobile number +91xxxxxx8075\n    at AuthService.verifyOTP (C:\\Users\\HOME\\Desktop\\Budzee\\mmb\\src\\services\\authService.js:265:15)\n    at async C:\\Users\\HOME\\Desktop\\Budzee\\mmb\\src\\routes\\auth.js:103:20","timestamp":"2025-08-14 14:54:34"}
+{"level":"error","message":"Verify OTP error: Device already registered. Please log in with the original mobile number +91xxxxxx8075","service":"budzee-gaming","stack":"Error: Device already registered. Please log in with the original mobile number +91xxxxxx8075\n    at AuthService.verifyOTP (C:\\Users\\HOME\\Desktop\\Budzee\\mmb\\src\\services\\authService.js:265:15)\n    at async C:\\Users\\HOME\\Desktop\\Budzee\\mmb\\src\\routes\\auth.js:103:20","timestamp":"2025-08-14 14:54:34"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:54:38"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:54:43"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:54:48"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:54:53"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:54:58"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:55:03"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:55:08"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:55:13"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:55:18"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:55:23"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:55:28"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:55:33"}
+{"level":"info","message":"🤖 Bot Health Check - Total: 24, Available: 16, Tracked: 0","service":"budzee-gaming","timestamp":"2025-08-14 14:55:33"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:55:38"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:55:43"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:55:48"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:55:53"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:55:58"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:56:03"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:56:08"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:56:13"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:56:18"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:56:23"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:56:28"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:56:33"}
+{"level":"info","message":"Cleaned up 0 inactive bots","service":"budzee-gaming","timestamp":"2025-08-14 14:56:33"}
+{"level":"info","message":"🤖 Bot Status - Available: 16, Total: 24, Minimum Required: 10","service":"budzee-gaming","timestamp":"2025-08-14 14:56:34"}
+{"level":"info","message":"🤖 Sufficient bots available (16/10)","service":"budzee-gaming","timestamp":"2025-08-14 14:56:34"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:56:38"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:56:43"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:56:48"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:56:53"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:56:58"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:57:03"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:57:08"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:57:13"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:57:18"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:57:23"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:57:28"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:57:33"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:57:38"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:57:43"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:57:48"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:57:53"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:57:58"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:58:03"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:58:08"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:58:13"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:58:18"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:58:23"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:58:28"}
+{"level":"info","message":"Generated OTP for +918688968075, expires at: 2025-08-14T09:43:31.993Z","service":"budzee-gaming","timestamp":"2025-08-14 14:58:31"}
+{"level":"info","message":"Current time: 2025-08-14T09:28:31.993Z","service":"budzee-gaming","timestamp":"2025-08-14 14:58:31"}
+{"level":"info","message":"Time difference: 900 seconds","service":"budzee-gaming","timestamp":"2025-08-14 14:58:31"}
+{"level":"info","message":"OTP record created for +918688968075: cmeb75nnf0002hs1cjd5ynyno","service":"budzee-gaming","timestamp":"2025-08-14 14:58:32"}
+{"level":"info","message":"Cleaned up 0 inactive bots","service":"budzee-gaming","timestamp":"2025-08-14 14:58:33"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:58:33"}
+{"level":"error","message":"Failed to send OTP to +918688968075 (Renflair response): SMS sent successfully.","request_id":"MKUSsXbIFwxZVQt","return":true,"service":"budzee-gaming","status":"SUCCESS","timestamp":"2025-08-14 14:58:33"}
+{"level":"info","message":"🤖 Bot Status - Available: 16, Total: 24, Minimum Required: 10","service":"budzee-gaming","timestamp":"2025-08-14 14:58:33"}
+{"level":"info","message":"🤖 Sufficient bots available (16/10)","service":"budzee-gaming","timestamp":"2025-08-14 14:58:33"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:58:38"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:58:43"}
+{"level":"info","message":"Verifying OTP for +918688968075 with device 9c93673b5e241ff3","service":"budzee-gaming","timestamp":"2025-08-14 14:58:47"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:58:48"}
+{"level":"info","message":"Valid OTP found for +918688968075, creating/updating user","service":"budzee-gaming","timestamp":"2025-08-14 14:58:48"}
+{"level":"info","message":"Updating existing user: cmdv57qrs00sjqxi1qcv91lp4","service":"budzee-gaming","timestamp":"2025-08-14 14:58:49"}
+{"level":"info","message":"Authentication successful and token generated for user: cmdv57qrs00sjqxi1qcv91lp4","service":"budzee-gaming","timestamp":"2025-08-14 14:58:50"}
+{"level":"info","message":"🔐 SOCKET AUTH: Authenticating socket Bqs4Z8rp73mDa3Y-AAAF","service":"budzee-gaming","timestamp":"2025-08-14 14:58:51"}
+{"level":"info","message":"👤 SOCKET AUTH: User authenticated - Ganesh (+918688968075) (ID: cmdv57qrs00sjqxi1qcv91lp4)","service":"budzee-gaming","timestamp":"2025-08-14 14:58:52"}
+{"level":"info","message":"Socket connected: Bqs4Z8rp73mDa3Y-AAAF for user cmdv57qrs00sjqxi1qcv91lp4","service":"budzee-gaming","timestamp":"2025-08-14 14:58:52"}
+{"level":"info","message":"User connected: Ganesh (cmdv57qrs00sjqxi1qcv91lp4)","service":"budzee-gaming","timestamp":"2025-08-14 14:58:52"}
+{"level":"info","message":"📤 Sent connection confirmation to user cmdv57qrs00sjqxi1qcv91lp4 with name: Ganesh","service":"budzee-gaming","timestamp":"2025-08-14 14:58:52"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:58:53"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:58:58"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:59:03"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:59:08"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:59:13"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:59:18"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:59:23"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:59:28"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:59:33"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:59:38"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:59:43"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:59:48"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:59:53"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 14:59:58"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 15:00:03"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 15:00:08"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 15:00:13"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 15:00:18"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 15:00:23"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 15:00:28"}
+{"level":"info","message":"Cleaned up 0 inactive bots","service":"budzee-gaming","timestamp":"2025-08-14 15:00:33"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 15:00:33"}
+{"level":"info","message":"🤖 Bot Health Check - Total: 24, Available: 16, Tracked: 0","service":"budzee-gaming","timestamp":"2025-08-14 15:00:33"}
+{"level":"info","message":"🤖 Bot Status - Available: 16, Total: 24, Minimum Required: 10","service":"budzee-gaming","timestamp":"2025-08-14 15:00:33"}
+{"level":"info","message":"🤖 Sufficient bots available (16/10)","service":"budzee-gaming","timestamp":"2025-08-14 15:00:33"}
+{"level":"info","message":"User disconnected: cmdv57qrs00sjqxi1qcv91lp4 (transport close)","service":"budzee-gaming","timestamp":"2025-08-14 15:00:36"}
+{"level":"info","message":"Socket disconnected: Bqs4Z8rp73mDa3Y-AAAF for user cmdv57qrs00sjqxi1qcv91lp4","service":"budzee-gaming","timestamp":"2025-08-14 15:00:36"}
+{"level":"info","message":"User cmdv57qrs00sjqxi1qcv91lp4 left queue. Removed 0 entries.","service":"budzee-gaming","timestamp":"2025-08-14 15:00:37"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 15:00:38"}
+{"level":"info","message":"🔐 SOCKET AUTH: Authenticating socket jfrc1dyJXZkuk-9nAAAH","service":"budzee-gaming","timestamp":"2025-08-14 15:00:40"}
+{"level":"info","message":"👤 SOCKET AUTH: User authenticated - Ganesh (+918688968075) (ID: cmdv57qrs00sjqxi1qcv91lp4)","service":"budzee-gaming","timestamp":"2025-08-14 15:00:41"}
+{"level":"info","message":"Socket connected: jfrc1dyJXZkuk-9nAAAH for user cmdv57qrs00sjqxi1qcv91lp4","service":"budzee-gaming","timestamp":"2025-08-14 15:00:41"}
+{"level":"info","message":"User connected: Ganesh (cmdv57qrs00sjqxi1qcv91lp4)","service":"budzee-gaming","timestamp":"2025-08-14 15:00:41"}
+{"level":"info","message":"📤 Sent connection confirmation to user cmdv57qrs00sjqxi1qcv91lp4 with name: Ganesh","service":"budzee-gaming","timestamp":"2025-08-14 15:00:41"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 15:00:43"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 15:00:48"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 15:00:53"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 15:00:58"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 15:01:03"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 15:01:08"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 15:01:13"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 15:01:18"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 15:01:23"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 15:01:28"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 15:01:33"}
+{"level":"info","message":"User disconnected: cmdv57qrs00sjqxi1qcv91lp4 (transport close)","service":"budzee-gaming","timestamp":"2025-08-14 15:01:33"}
+{"level":"info","message":"Socket disconnected: jfrc1dyJXZkuk-9nAAAH for user cmdv57qrs00sjqxi1qcv91lp4","service":"budzee-gaming","timestamp":"2025-08-14 15:01:33"}
+{"level":"info","message":"User cmdv57qrs00sjqxi1qcv91lp4 left queue. Removed 0 entries.","service":"budzee-gaming","timestamp":"2025-08-14 15:01:34"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 15:01:38"}
+{"level":"info","message":"🔄 Processing fast matchmaking...","service":"budzee-gaming","timestamp":"2025-08-14 15:01:43"}
+{"level":"info","message":"Received SIGINT. Shutting down gracefully...","service":"budzee-gaming","timestamp":"2025-08-14 15:01:47"}

@@ -194,7 +194,7 @@ class AuthService {
     }
   }
 
-  async verifyOTP(phoneNumber, otp, referralCode = null) {
+  async verifyOTP(phoneNumber, otp, referralCode = null, deviceId = null) {
     try {
       // Validate inputs
       if (!phoneNumber || !otp) {
@@ -212,6 +212,11 @@ class AuthService {
         throw new Error('OTP must be 6 digits');
       }
 
+      if (!deviceId) {
+        logger.warn(`Device ID missing for ${phoneNumber}`);
+        throw new Error('Device ID is required');
+      }
+
       // Validate referral code format if provided
       if (referralCode && referralCode.trim() !== '') {
         if (!referralCode.match(/^BZ[A-Z0-9]{4,8}$/)) {
@@ -220,7 +225,7 @@ class AuthService {
         }
       }
 
-      logger.info(`Verifying OTP for ${phoneNumber}`); // Removed OTP from log for security
+      logger.info(`Verifying OTP for ${phoneNumber} with device ${deviceId}`);
 
       // Find the most recent valid OTP
       const otpRecord = await prisma.oTPVerification.findFirst({
@@ -230,7 +235,7 @@ class AuthService {
           verified: false,
           expiresAt: { gt: new Date() }
         },
-        orderBy: { createdAt: 'desc' } // Crucial: ensure we get the latest unverified OTP
+        orderBy: { createdAt: 'desc' }
       });
 
       if (!otpRecord) {
@@ -251,6 +256,13 @@ class AuthService {
         }
         logger.warn(`Invalid OTP provided for ${phoneNumber}`);
         throw new Error('Invalid OTP');
+      }
+
+      // Check device restriction before proceeding
+      const deviceCheckResult = await this.checkDeviceRestriction(phoneNumber, deviceId);
+      if (!deviceCheckResult.allowed) {
+        logger.warn(`Device restriction failed for ${phoneNumber}: ${deviceCheckResult.message}`);
+        throw new Error(deviceCheckResult.message);
       }
 
       logger.info(`Valid OTP found for ${phoneNumber}, creating/updating user`);
@@ -293,13 +305,14 @@ class AuthService {
           throw new Error('Failed to generate unique referral code');
         }
         
-        // Create new user with wallet
+        // Create new user with wallet and deviceId
         user = await prisma.user.create({
           data: {
             phoneNumber,
             isVerified: true,
             referralCode: userReferralCode,
             name: `User_${phoneNumber.substring(phoneNumber.length - 4)}`,
+            deviceId: deviceId,
             wallet: {
               create: {
                 balance: 0,
@@ -310,17 +323,23 @@ class AuthService {
           },
           include: { wallet: true }
         });
-        logger.info(`New user created: ${user.id} with referral code: ${userReferralCode}`);
+        logger.info(`New user created: ${user.id} with referral code: ${userReferralCode} and device: ${deviceId}`);
       } else {
         logger.info(`Updating existing user: ${user.id}`);
-        // Update verification status if not already verified
-        if (!user.isVerified) {
-          user = await prisma.user.update({
-            where: { id: user.id },
-            data: { isVerified: true },
-            include: { wallet: true }
-          });
+        // Update verification status and deviceId for existing users
+        const updateData = { isVerified: true };
+        
+        // Update deviceId if it's "budzee" (existing user from migration)
+        if (user.deviceId === 'budzee') {
+          updateData.deviceId = deviceId;
+          logger.info(`Linking device ${deviceId} to existing user ${user.id}`);
         }
+        
+        user = await prisma.user.update({
+          where: { id: user.id },
+          data: updateData,
+          include: { wallet: true }
+        });
       }
 
       // Process referral code or welcome bonus for new users
@@ -384,6 +403,86 @@ class AuthService {
     } catch (error) {
       logger.error('Verify OTP error:', error);
       throw error; // Re-throw for higher-level error handling
+    }
+  }
+
+  async checkDeviceRestriction(phoneNumber, deviceId) {
+    try {
+      // Check if any user exists with this deviceId (excluding "budzee")
+      const existingDeviceUser = await prisma.user.findFirst({
+        where: { 
+          deviceId: deviceId,
+          deviceId: { not: 'budzee' }
+        }
+      });
+
+      if (existingDeviceUser) {
+        // Device is already registered to another user
+        if (existingDeviceUser.phoneNumber !== phoneNumber) {
+          const maskedPhone = this.maskPhoneNumber(existingDeviceUser.phoneNumber);
+          return {
+            allowed: false,
+            message: `Device already registered. Please log in with the original mobile number ${maskedPhone}`
+          };
+        }
+        // Same user trying to login - allowed
+        return { allowed: true };
+      }
+
+      // Check current user's device status
+      const currentUser = await prisma.user.findUnique({
+        where: { phoneNumber }
+      });
+
+      if (currentUser) {
+        // Existing user with "budzee" deviceId - allow and will update
+        if (currentUser.deviceId === 'budzee') {
+          return { allowed: true };
+        }
+        // Same device - allowed
+        if (currentUser.deviceId === deviceId) {
+          return { allowed: true };
+        }
+      }
+
+      // New user or existing user with "budzee" - allowed
+      return { allowed: true };
+    } catch (error) {
+      logger.error('Device restriction check error:', error);
+      throw new Error('Failed to verify device restriction');
+    }
+  }
+
+  maskPhoneNumber(phoneNumber) {
+    // Convert +91xxxxxxxxxx to +91xxxxxx8075 format
+    if (phoneNumber && phoneNumber.length >= 10) {
+      const lastFour = phoneNumber.slice(-4);
+      const prefix = phoneNumber.slice(0, 3); // +91
+      const masked = prefix + 'xxxxxx' + lastFour;
+      return masked;
+    }
+    return phoneNumber;
+  }
+
+  async verifyDeviceId(userId, deviceId) {
+    try {
+      const user = await prisma.user.findUnique({
+        where: { id: userId }
+      });
+
+      if (!user) {
+        return { valid: false, message: 'User not found' };
+      }
+
+      if (user.deviceId !== deviceId) {
+        logger.warn(`Device ID mismatch for user ${userId}. Expected: ${user.deviceId}, Got: ${deviceId}`);
+        return { valid: false, message: 'Device verification failed' };
+      }
+
+      return { valid: true };
+    } catch (error) {
+      logger.error('Device ID verification error:', error);
+      return { valid: false, message: 'Device verification failed' };
     }
   }
 

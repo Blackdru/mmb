@@ -33,6 +33,11 @@ const verifyOTPSchema = Joi.object({
     .allow('', null)
     .messages({
       'string.pattern.base': 'Invalid referral code format. Must start with BZ followed by 4-8 alphanumeric characters.'
+    }),
+  deviceId: Joi.string()
+    .required()
+    .messages({
+      'any.required': 'Device ID is required'
     })
 });
 
@@ -94,12 +99,21 @@ router.post('/verify-otp', async (req, res) => {
       });
     }
 
-    const { phoneNumber, otp, referralCode } = value;
-    const result = await authService.verifyOTP(phoneNumber, otp, referralCode);
+    const { phoneNumber, otp, referralCode, deviceId } = value;
+    const result = await authService.verifyOTP(phoneNumber, otp, referralCode, deviceId);
     
     res.json(result);
   } catch (err) {
     logger.error('Verify OTP error:', err);
+    
+    // Handle device restriction errors with specific status code
+    if (err.message && err.message.includes('Device already registered')) {
+      return res.status(403).json({ 
+        success: false, 
+        message: err.message 
+      });
+    }
+    
     res.status(400).json({ 
       success: false, 
       message: err.message || 'Invalid OTP. Please try again.' 
@@ -181,6 +195,25 @@ router.put('/profile', authenticateToken, async (req, res) => {
 router.post('/refresh-token', authenticateToken, async (req, res) => {
   try {
     const userId = req.user.id;
+    const { deviceId } = req.body;
+
+    if (!deviceId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Device ID is required'
+      });
+    }
+
+    // Verify device ID matches the user's registered device
+    const deviceVerification = await authService.verifyDeviceId(userId, deviceId);
+    if (!deviceVerification.valid) {
+      logger.warn(`Device verification failed for user ${userId} during token refresh`);
+      return res.status(403).json({
+        success: false,
+        message: 'Device verification failed. Please log in again.'
+      });
+    }
+
     const user = await require('../config/database').user.findUnique({
       where: { id: userId },
       include: { wallet: true }
